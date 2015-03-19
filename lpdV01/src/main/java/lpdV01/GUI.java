@@ -87,18 +87,22 @@ public class GUI extends JFrame{
                 
                 if(!text.isEmpty()){
                 	//Nome do medicamento
-                	try {
-    					f = mi.InfoByName(text);
+                	try {                		
+                		text = text.toLowerCase();                		
+                		String s = text.substring(0, 1).toUpperCase() + text.substring(1);
+                		
+    					f = mi.InfoByName(s);
     					
     					line = null;
     					
     				    bufferedReader = new BufferedReader(new FileReader(f));
     				 
-    				    while ((line = bufferedReader.readLine()) != null)
-    				    {
+    				    while ((line = bufferedReader.readLine()) != null){
     				        ta.append(line + "\n");
     				    }
+    				    
     				    bufferedReader.close();
+    				    
     				} catch (Exception e1) {
     					e1.printStackTrace();
     				}
