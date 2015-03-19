@@ -1,30 +1,24 @@
 package lpdV01;
 
-import java.io.DataInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import org.apache.lucene.document.Document;
-
+import com.snowtide.pdf.Document;
+import com.snowtide.PDF;
 import com.snowtide.pdf.OutputTarget;
-import com.snowtide.pdf.PDFTextStream;
 
 public class ReadPDF {
 
-	public ArrayList<String> readRCM(InputStream is){
+	public ArrayList<String> readRCM(InputStream is) throws java.io.IOException{
 		
-		
-		
-		PDFTextStream pdf = new PDFTextStream(is, "pdfName");
-		StringBuffer text = new StringBuffer(1024);
-        
+		Document pdf = PDF.open(is, "pdfName");		
+		StringBuffer text = new StringBuffer(1024);        
 		OutputTarget ot =  new OutputTarget(text);
         
         pdf.pipe(ot);
-        pdf.close();
+		pdf.close();
         
         String line[] = text.toString().split("\n");
-        //System.out.println("File legth: " + line.length);
         
         int l = 0;
         String s;
@@ -34,8 +28,7 @@ public class ReadPDF {
         String contraindications = "";
         String interactions = "";
         
-        ArrayList<String> information = new ArrayList<String>();
-        
+        ArrayList<String> information = new ArrayList<String>();        
         
         while(l < line.length){
         	s = line[l];
@@ -147,36 +140,21 @@ public class ReadPDF {
         information.add(contraindications);
         information.add(interactions);
         
-        /*
-        System.out.println("COMPOSITION:");
-        System.out.println(composition);
-        System.out.println("INDICATIONS:");
-        System.out.println(indications);
-        System.out.println("POSOLOGY:");
-        System.out.println(posology);
-        System.out.println("CONTRAINDICATIONS:");
-        System.out.println(contraindications);
-        System.out.println("INTERACTIONS:");
-        System.out.println(interactions);
-        */
-        
         return information;
 	}
 	
 	
 	
-	public ArrayList<String> readFI(InputStream is){
+	public ArrayList<String> readFI(InputStream is) throws java.io.IOException {
 		
-		PDFTextStream pdf = new PDFTextStream(is, "pdfName");
-		StringBuffer text = new StringBuffer(1024);
-        
+		Document pdf = PDF.open(is, "pdfName");
+		StringBuffer text = new StringBuffer(1024);        
 		OutputTarget ot =  new OutputTarget(text);
         
         pdf.pipe(ot);
         pdf.close();
         
         String line[] = text.toString().split("\n");
-        //System.out.println("File length: " + line.length);
         
         ArrayList<String> information = new ArrayList<String>();
         int l = 0;
@@ -411,36 +389,9 @@ public class ReadPDF {
         information.add(sideEffects);
         information.add(howToConserve);
         
-        /*
-        System.out.println("DEFINITION:");
-        System.out.println(definition);
-        System.out.println("NOT USE:");
-        System.out.println(notUse);
-        System.out.println("INTERACTIONS:");
-        System.out.println(interactions);
-        System.out.println("PREGNANCY:");
-        System.out.println(pregnancy);
-        System.out.println("DRIVING:");
-        System.out.println(driving);
-        System.out.println("HOW TO TAKE:");
-        System.out.println(howToTake);
-        System.out.println("OVERDOSAGE:");
-        System.out.println(overdosage);
-        System.out.println("IF FORGOTTEN:");
-        System.out.println(ifForgotten);
-        System.out.println("SIDE EFFECTS:");
-        System.out.println(sideEffects);
-        System.out.println("HOW TO CONSERVE:");
-        System.out.println(howToConserve);
-        */
-        
+                
         return information;
 	}
-	
-	
-	
-	
-	
 	
 	
 }
