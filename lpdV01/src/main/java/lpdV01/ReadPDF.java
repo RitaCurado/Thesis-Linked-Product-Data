@@ -34,7 +34,7 @@ public class ReadPDF {
         	s = line[l];
         	
 //      -------------------------------------------------------------------------
-        	if(s.equals("2. COMPOSIÇÃO QUALITATIVA E QUANTITATIVA")){
+        	if(s.contains("2. COMPOSIÇÃO QUALITATIVA E QUANTITATIVA") && !s.contains("ver")){
         		l += 2;
         		s = line[l];
         		char[] c;
@@ -51,7 +51,7 @@ public class ReadPDF {
         			l+= 2;
         			s = line[l];
         			
-        			if(s.equals("Excipientes:")){
+        			if(s.contains("Excipientes:")){
         				l++;
         				s = line[l];
         			}
@@ -59,11 +59,12 @@ public class ReadPDF {
         	}
 //      -------------------------------------------------------------------------
         	
-        	if(s.equals("4.1 Indicações terapêuticas") || s.equals("4.1. Indicações terapêuticas") ||s.equals("4.1. Indicações Terapêuticas")){
+        	if((s.contains("4.1 Indicações terapêuticas") || s.contains("4.1. Indicações terapêuticas") ||
+        			s.contains("4.1. Indicações Terapêuticas")) && !s.contains("ver")){
         		l+= 2;
         		s = line[l];
-        		while(!(s.equals("4.2 Posologia e modo de administração")) &&
-        				!(s.equals("4.2. Posologia e modo de administração"))){
+        		while(!(s.contains("4.2 Posologia e modo de administração")) &&
+        				!(s.contains("4.2. Posologia e modo de administração"))){
         			indications = indications.concat(s);
         			indications += '\n';
         			l++;
@@ -72,10 +73,11 @@ public class ReadPDF {
         	}
 //       -------------------------------------------------------------------------        	
         	
-        	if(s.equals("4.2 Posologia e modo de administração") || s.equals("4.2. Posologia e modo de administração")){
+        	if((s.contains("4.2 Posologia e modo de administração") || s.contains("4.2. Posologia e modo de administração")) &&
+        			!s.contains("ver")){
         		l += 2;
         		s = line[l];
-        		while(!(s.equals("4.3 Contra-indicações"))){
+        		while(!(s.contains("4.3 Contra-indicações"))){
         			if(s.contains("por dia") || s.contains("diária máxima")){
         				posology = posology.concat(s);
         				break;
@@ -86,11 +88,12 @@ public class ReadPDF {
         	}
 //       --------------------------------------------------------------------------
         	
-        	if(s.equals("4.3 Contra-indicações") || s.equals("4.3. Contra-indicações") || s.equals("4.3 Contraindicações")){
+        	if((s.contains("4.3 Contra-indicações") || s.contains("4.3. Contra-indicações") || s.contains("4.3 Contraindicações")) &&
+        			!s.contains("ver")){
         		l += 2;
         		s = line[l];
-        		while(!(s.equals("4.4 Advertências e precauções especiais de utilização")) &&
-        				!(s.equals("4.4. Advertências e precauções especiais de utilização"))){
+        		while(!(s.contains("4.4 Advertências e precauções especiais de utilização")) &&
+        				!(s.contains("4.4. Advertências e precauções especiais de utilização"))){
         			contraindications = contraindications.concat(s);
         			contraindications += '\n';
         			l++;
@@ -98,15 +101,16 @@ public class ReadPDF {
         		}
         	}
 //        --------------------------------------------------------------------------
-        	if(s.equals("4.5 Interacções medicamentosas e outras formas de interacção") || 
-        			s.equals("4.5. Interacções medicamentosas e outras formas de interacção") ||
-        			s.equals("4.5 Interações medicamentosas e outras formas de interação")){
+        	if((s.contains("4.5 Interacções medicamentosas e outras formas de interacção") || 
+        			s.contains("4.5. Interaccções medicamentosas e outras formas de interacção") ||
+        			s.contains("4.5 Interações medicamentosas e outras formas de interação")) &&
+        			!s.contains("ver")){
         		l += 2;
         		s = line[l];
-        		while(!(s.equals("4.6 Gravidez e aleitamento")) &&
-        				!(s.equals("4.6. Gravidez e aleitamento")) &&
-        				!(s.equals("4.6 Fertilidade, gravidez e aleitamento"))){
-        			if(! (s.equals(""))){
+        		while(!(s.contains("4.6 Gravidez e aleitamento")) &&
+        				!(s.contains("4.6. Gravidez e aleitamento")) &&
+        				!(s.contains("4.6 Fertilidade, gravidez e aleitamento"))){
+        			if(!(s.equals("")) && !(s.equals("\r"))){
 	        			if(s.charAt(0) == '-'){
 	            			interactions = interactions.concat(s);
 	            			interactions += '\n';
@@ -117,11 +121,12 @@ public class ReadPDF {
         		}        		
         	}
 //         --------------------------------------------------------------------------
-        	if(s.equals("6.1 Lista dos excipientes") || s.equals("6.1. Lista dos excipientes") || 
-        			s.equals("6.1 Lista de excipientes")){
+        	if((s.contains("6.1 Lista dos excipientes") || s.contains("6.1. Lista dos excipientes") || 
+        			s.contains("6.1 Lista de excipientes")) &&
+        			!s.contains("ver")){
         		l += 2;
         		s = line[l];
-        		while(!(s.equals("6.2 Incompatibilidades")) && !(s.equals("6.2. Incompatibilidades"))){
+        		while(!(s.contains("6.2 Incompatibilidades")) && !(s.contains("6.2. Incompatibilidades"))){
         			composition = composition.concat(s);
         			composition += '\n';
         			l++;
@@ -180,7 +185,7 @@ public class ReadPDF {
         			s.contains("Este folheto contém")){
         		l += 7;
         		s = line[l];
-        		if(!s.equals("")){
+        		if(!(s.contains("")) && !(s.contains("\r"))){
         			l++;
         			s = line[l];
         		}
@@ -322,7 +327,7 @@ public class ReadPDF {
         	if(s.contains("Caso se tenha esquecido")){
         		l += 2;
         		s = line[l];
-        		while(!s.equals("")){
+        		while(!(s.equals("")) && !(s.equals("\r"))){
         			ifForgotten = ifForgotten.concat(s);
         			ifForgotten += ' ';
         			l++;
@@ -339,9 +344,9 @@ public class ReadPDF {
         			if(s.contains("mais frequentemente observados") || s.contains("efeitos secundários frequentes")
         					|| s.contains("efeitos secundários mais frequentes")
         					|| s.contains("seguintes sintomas") || s.contains("com maior frequência")
-        					|| s.contains("mais frequentemente associados à utilização")){
+        					|| s.contains("mais frequentemente associados � utilização")){
             			sideEffects = "";
-            			while(!s.equals("")){
+            			while(!(s.equals("")) && !(s.equals("\r"))){
             				sideEffects = sideEffects.concat(s);
             				sideEffects += ' ';
                 			l++;
@@ -350,7 +355,7 @@ public class ReadPDF {
             		}
             		
             		if( (s.contains(":") && sideEffects.isEmpty()) || (s.contains(":") && sideEffects.contains(":")) ){
-            			while(!s.equals("")){
+            			while(!(s.equals("")) && !(s.equals("\r"))){
             				sideEffects = sideEffects.concat(s);
             				sideEffects += ' ';
                 			l++;

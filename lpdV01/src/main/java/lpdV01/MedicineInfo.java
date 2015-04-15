@@ -3,6 +3,7 @@ package lpdV01;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -28,41 +29,62 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 public class MedicineInfo {
 	
-	private ArrayList<Model> infarModel;
-	private ArrayList<Model> infoModel;
-	private Model completeModel;
+	private Model infarModel;
+	private Model infoModel;
+	
+	//private ArrayList<Model> infarModel;
+	//private ArrayList<Model> infoModel;
+	//private Model completeModel;
 	
 	public MedicineInfo(){
 		
-		infarModel = new ArrayList<Model>();
-		infoModel = new ArrayList<Model>();
+		infarModel = ModelFactory.createDefaultModel();
+		infoModel = ModelFactory.createDefaultModel();
 		
-		completeModel = ModelFactory.createDefaultModel();
+		//infarModel = new ArrayList<Model>();
+		//infoModel = new ArrayList<Model>();
+		//completeModel = ModelFactory.createDefaultModel();
 	}
 	
-	public Model getCompleteModel(){
-		return this.completeModel;
-	}
-	
-	public void setCompleteModel(Model m){
-		this.completeModel = m;
-	}
-	
-	public ArrayList<Model> getInfarModel(){
+	public Model getInfarModel(){
 		return this.infarModel;
 	}
 	
-	public void clearInfarModel(){
-		this.infarModel.clear();
+	public void setInfarModel(Model m){
+		this.infarModel = m;
 	}
 	
-	public ArrayList<Model> getInfoModel(){
+	public Model getInfoModel(){
 		return this.infoModel;
 	}
 	
-	public void clearInfoModel(){
-		this.infoModel.clear();
+	public void setInfoModel(Model m){
+		this.infoModel = m;
 	}
+	
+//	public Model getCompleteModel(){
+//		return this.completeModel;
+//	}
+//	
+//	public void setCompleteModel(Model m){
+//		this.completeModel = m;
+//	}
+	
+//	public ArrayList<Model> getInfarModel(){
+//		return this.infarModel;
+//	}
+//	
+//	public void clearInfarModel(){
+//		this.infarModel.clear();
+//	}
+//	
+//	public ArrayList<Model> getInfoModel(){
+//		return this.infoModel;
+//	}
+//	
+//	public void clearInfoModel(){
+//		this.infoModel.clear();
+//	}
 
 
 	public void getInfarmedInfo(HtmlPage page, Medicine med, WebClient webClient) throws Exception{
@@ -146,11 +168,11 @@ public class MedicineInfo {
 				ww.close();
 //				--------------------------------------------------------------------------------
 
-				m = med.infarmedModel(substancyAct, name, type, dosage,
+				m = med.infarmedModel(getInfarModel(), substancyAct, name, type, dosage,
 						numUnits, prescriptionCode, price, generic, rcm, rcmInfo, fi, fiInfo);
 				
-				//setInfarModel(m);
-				getInfarModel().add(m);
+				setInfarModel(m);
+				//getInfarModel().add(m);
 				
 				name = type = dosage = numUnits = generic = rcm = fi = "";
 				prescriptionCode = 0;
@@ -167,6 +189,8 @@ public class MedicineInfo {
 		
 		HtmlTable table = (HtmlTable)pageResult.getElementsByTagName("table").item(2);
 		
+		//System.out.println(table.getRowCount());
+		
 		int line = 1;
 		int numMeds = 0;
 		int length;
@@ -179,11 +203,18 @@ public class MedicineInfo {
 		String generic;
 		String holder;
 		
-		Model m;
+		Model m = null;
+		int numRows = table.getRowCount();
+		int maxRows;		
 		
-		
-		while(numMeds < 4){
-			if(permited.equals(table.getCellAt(line, 5).asText())){
+		if(numRows > 4)
+			maxRows = 4;
+		else
+			maxRows = numRows - 1;
+			
+		while(numMeds < maxRows){
+			String coluna5 = table.getCellAt(line, 5).asText();
+			if(permited.equals(coluna5)){
 				numMeds++;
 				
 				String s = table.getCellAt(line, 0).asText().toLowerCase();
@@ -196,76 +227,18 @@ public class MedicineInfo {
 				holder = table.getCellAt(line, 4).asText();
 				generic = table.getCellAt(line, 7).asText();
 				
-				m = med.infomedModel(actSubs, name, type, dosage, holder, generic);
+				m = med.infomedModel(getInfoModel(), actSubs, name, type, dosage, holder, generic);
 				
-				//setInfoModel(m);
-				getInfoModel().add(m);
+				setInfoModel(m);
+				//getInfoModel().add(m);
 			}
 			
 			name = type = dosage = holder = generic = "";			
 			line++;
 		}
+		//m.write(System.out, "TTL");
 	}
 	
-	public void linkModels(Medicine med){
-		
-		String name_infar, name_info;
-    	String type_infar, type_info;
-    	String dose_infar, dose_info;
-    	
-    	
-    	Model infar, info;
-    	ArrayList<Model> rmInfar = new ArrayList<Model>();
-    	ArrayList<Model> rmInfo = new ArrayList<Model>();
-    	
-    	for(int i=0; i< infarModel.size(); i++){
-    		infar = infarModel.get(i);
-    		
-	    	name_infar = infar.listObjectsOfProperty(infar.getProperty("http://infarmed/NAME")).next().toString();
-	    	type_infar = infar.listObjectsOfProperty(infar.getProperty("http://infarmed/TYPE")).next().toString();
-	    	dose_infar = infar.listObjectsOfProperty(infar.getProperty("http://infarmed/DOSAGE")).next().toString();
-	    	
-	    	for(int j=0; j<infoModel.size(); j++){
-	    		info = infoModel.get(j);
-	    		
-	    		name_info = info.listObjectsOfProperty(info.getProperty("http://infomed/NAME")).next().toString();
-	    		type_info = info.listObjectsOfProperty(info.getProperty("http://infomed/TYPE")).next().toString();
-	    		dose_info = info.listObjectsOfProperty(info.getProperty("http://infomed/DOSAGE")).next().toString();
-	    		
-	    		if(name_infar.equals(name_info) && type_infar.equals(type_info) && dose_infar.equals(dose_info)){
-	    				    			
-	    			Model m = med.completeModel(getCompleteModel(), infar, info);	    					
-	    			
-	    			setCompleteModel(m);
-	    			rmInfo.add(info);
-	    			rmInfar.add(infar);
-	    		}
-	    	}
-    	}
-    	
-    	for(Model m: rmInfar){
-    		infarModel.remove(m);
-    	}
-    	
-    	for(Model m: rmInfo){
-    		infoModel.remove(m);
-    	}
-    	
-    	for(Model m: infarModel){
-    		m = med.completeModel(getCompleteModel(), m, null);
-    		setCompleteModel(m);
-    	}
-    	
-    	for(Model m: infoModel){
-    		m = med.completeModel(getCompleteModel(), null, m);
-    		setCompleteModel(m);
-    	}
-		
-		clearInfarModel();
-		clearInfoModel();
-    	    	
-    		
-	}
 	
 //	---------------------------------------------- By Name ---------------------------------------------------------------
 	public void getInfoByName(String medicine, Medicine med) throws Exception{
@@ -321,7 +294,7 @@ public class MedicineInfo {
 		HtmlPage page2 = b.click();
 		
 		HtmlTable tablePesquisa = (HtmlTable) page2.getElementById("tabela_pesquisa");
-		HtmlTextInput input = (HtmlTextInput) tablePesquisa.getCellAt(1, 1).getElementsByTagName("input").item(0);
+		HtmlTextInput input = (HtmlTextInput) tablePesquisa.getCellAt(1, 1).getElementsByTagName("input").item(0);		
 		input.setAttribute("value", substance);
 		
 		HtmlTable tableButtons = (HtmlTable)page2.getElementsByTagName("table").item(2);		
@@ -339,7 +312,12 @@ public class MedicineInfo {
 		WebClient webClient = new WebClient();
 		HtmlPage page = webClient.getPage("http://www.infarmed.pt/genericos/pesquisamg/pesquisaMG.php");
 
-		DomElement nameMed = page.getElementById("i_dci");		
+		DomElement nameMed = page.getElementById("i_dci");
+		
+		//remove accents
+		substance = Normalizer.normalize(substance, Normalizer.Form.NFD);
+		substance = substance.replaceAll("[^\\p{ASCII}]", "");
+		
 		nameMed.setAttribute("value", substance.toUpperCase());
 
 		DomElement button = page.getElementById("pesquisa");
@@ -398,166 +376,272 @@ public class MedicineInfo {
 	
 	
 //	------------------------------------------------------------------------------------------------------------------------
-	public File InfoByName(String name) throws Exception{
+	public File InfoByName(String name, String source, String select, String where) throws Exception{
 		
 		Medicine med = new Medicine();
 		
-		String queryString =
-	    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-	    		"SELECT ?x\n" +
-	    		"WHERE{ ?x :NAME " + "\"" + name + "\" .}";
-	    
-	    Query query = QueryFactory.create(queryString);
-	    QueryExecution qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    ResultSet results =  qe.execSelect();
-	    
-	    
-	    if(!results.hasNext()){
-	    	getInfoByName(name, med);
-	    	getInfarByName(name, med);
-	    	linkModels(med);
-	    }
-	    
-	    qe.close();
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
 		
 		File file = new File("getInfo.txt");
-		file.createNewFile();		
+		file.createNewFile();
 		FileOutputStream fout = new FileOutputStream(file);
 		
-		queryString = 
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-				"SELECT ?Substância ?Tipo ?Dose ?Titular ?Genérico ?Unidades ?Código ?Preço\n" +
-				"WHERE { ?x :NAME " + "\"" + name + "\" .\n" +
-				     "?x :SUBSTANCE ?Substância." +
-				     "?x :TYPE ?Tipo." +
-				     "?x :DOSAGE ?Dose." +
-				     "?x :HOLDER ?Titular." +
-				     "?x :GENERIC ?Genérico." +
-				     "?x :UNITS ?Unidades." +
-				     "?x :CODE ?Código." +
-				     "?x :PRICE ?Preço.}";
-	    
-	    query = QueryFactory.create(queryString);
-	    qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    results =  qe.execSelect();
-	    ResultSetFormatter.out(fout, results, query);
-	    qe.close();
-	    		
-		fout.flush();
-		fout.close();
 		
+		if(source.equals("Infarmed")){
+			
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :NAME ?s ."
+		    				+ "FILTER regex(str(?s)," + "\"" + name + "\"" + ")"
+		    				+ "}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfarModel());
+			results =  qe.execSelect();
+			
+			if(!results.hasNext())
+		    	getInfarByName(name, med);
+			qe.close();
+			
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+					"PREFIX RCM: <http://infarmed/RCM/>" +
+					"PREFIX FI: <http://infarmed/FI/>"  +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :NAME ?s ."
+					     + where 
+					     + "FILTER regex(str(?s)," + "\"" + name + "\"" + ")"
+				    	 + "}";
+			
+			query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfarModel());
+		    results =  qe.execSelect();
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+		}
+		    
+		else{
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :NAME ?s ."
+		    				+ "FILTER regex(str(?s)," + "\"" + name + "\"" + ")"
+		    				+ "}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    
+		    if(!results.hasNext())
+		    	getInfoByName(name, med);
+		    qe.close();
+
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :NAME ?s ."
+					     + where 
+					     + "FILTER regex(str(?s)," + "\"" + name + "\"" + ")"
+				    	 + "}";
+		    
+		    query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+			
+		}		
 		
 		return file;
 	}
 	
-	public File InfoBySubstance(String substance) throws Exception{
+	public File InfoBySubstance(String substance, String source, String select, String where) throws Exception{
 		
 		Medicine med = new Medicine();
 		
-		String queryString =
-	    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-	    		"SELECT ?x\n" +
-	    		"WHERE{ ?x :SUBSTANCE " + "\"" + substance + "\" .}";
+		Query query;
+	    QueryExecution qe;
+	    ResultSet results;
 	    
-	    Query query = QueryFactory.create(queryString);
-	    QueryExecution qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    ResultSet results =  qe.execSelect();
-	    
-	    
-	    if(!results.hasNext()){
-	    	getInfoBySubstance(substance, med);
-	    	getInfarBySubstance(substance, med);
-	    	linkModels(med);
-	    }
-	    
-	    qe.close();
-
-		//getCompleteModel().write(System.out, "TTL");
-		
-		File file = new File("getInfo.txt");
+	    File file = new File("getInfo.txt");
 		file.createNewFile();		
 		FileOutputStream fout = new FileOutputStream(file);
 		
-		queryString = 
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-				"SELECT ?Nome \n" +
-				"WHERE { ?x :SUBSTANCE " + "\"" + substance + "\" .\n" +
-				     "?x :NAME ?Nome.}";
-	    
-	    query = QueryFactory.create(queryString);
-	    qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    results =  qe.execSelect();
-	    ResultSetFormatter.out(fout, results, query);
-	    qe.close();
-	    		
-		fout.flush();
-		fout.close();
-		
+		if(source.equals("Infarmed")){
+			
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :SUBSTANCE ?s ."
+		    				+ "FILTER regex(str(?s)," + "\"" + substance + "\"" + ")"
+		    				+ "}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfarModel());
+			results =  qe.execSelect();
+			
+			if(!results.hasNext())
+		    	getInfarBySubstance(substance, med);
+			qe.close();
+			
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+					"PREFIX RCM: <http://infarmed/RCM/>" +
+					"PREFIX FI: <http://infarmed/FI/>"  +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :SUBSTANCE ?s ." //+ "\"" + substance + "\" .\n" +
+							+ where 
+						    + "FILTER regex(str(?s)," + "\"" + substance + "\"" + ")"
+					    	+ "}";
+			
+			query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfarModel());
+		    results =  qe.execSelect();
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+		}
+		    
+		else{
+			getInfoModel().write(System.out, "TTL");
+			
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :SUBSTANCE ?s ."
+		    				+ "FILTER regex(str(?s)," + "\"" + substance + "\"" + ")"
+		    				+ "}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    
+		    if(!results.hasNext())
+		    	getInfoBySubstance(substance, med);
+		    qe.close();
+
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :SUBSTANCE ?s ." //+ "\"" + substance + "\" .\n" +
+							+ where 
+						    + "FILTER regex(str(?s)," + "\"" + substance + "\"" + ")"
+					    	+ "}";
+		    
+		    query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+			
+		}
 		
 		return file;
 	}
 
-	public File InfoByCode(String code) throws Exception{
+	public File InfoByCode(String code, String source, String select, String where) throws Exception{
 		
 		Medicine med = new Medicine();
 		
-		String queryString =
-	    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-	    		"SELECT ?x\n" +
-	    		"WHERE{ ?x :CODE " + "\"" + code + "\" .}";
+		Query query;
+	    QueryExecution qe;
+	    ResultSet results;
 	    
-	    Query query = QueryFactory.create(queryString);
-	    QueryExecution qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    ResultSet results =  qe.execSelect();
-	    
-	    
-	    if(!results.hasNext()){
-	    	getInfoByCode(code, med);
-	    	getInfarByCode(code, med);
-	    	linkModels(med);
-	    }
-	    
-	    qe.close();
-	
-		//getCompleteModel().write(System.out, "TTL");
-		
-		File file = new File("getInfo.txt");
+	    File file = new File("getInfo.txt");
 		file.createNewFile();		
 		FileOutputStream fout = new FileOutputStream(file);
 		
-		queryString = 
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://medicine/>" +
-				"PREFIX RCM: <http://medicine/RCM/>" +
-				"PREFIX FI: <http://medicine/FI/>"  +
-				"SELECT ?Nome \n" +
-				"WHERE { ?x :CODE " + "\"" + code + "\" .\n" +
-				     "?x :NAME ?Nome.}";
-	    
-	    query = QueryFactory.create(queryString);
-	    qe = QueryExecutionFactory.create(query, getCompleteModel());
-	    results =  qe.execSelect();
-	    ResultSetFormatter.out(fout, results, query);
-	    qe.close();
-	    		
-		fout.flush();
-		fout.close();
 		
+		if(source.equals("Infarmed")){
+			
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :CODE " + "\"" + code + "\" .}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfarModel());
+			results =  qe.execSelect();
+			
+			if(!results.hasNext())
+		    	getInfarByCode(code, med);
+			qe.close();
+			
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infarmed/>" +
+					"PREFIX RCM: <http://infarmed/RCM/>" +
+					"PREFIX FI: <http://infarmed/FI/>"  +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :CODE " + "\"" + code + "\" .\n" +
+					     where + "}";
+			
+			query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfarModel());
+		    results =  qe.execSelect();
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+		}
+		    
+		else{
+			String queryString =
+		    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+		    		"SELECT ?x\n" +
+		    		"WHERE{ ?x :CODE " + "\"" + code + "\" .}";
+			
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    
+		    if(!results.hasNext())
+		    	getInfoByCode(code, med);
+		    qe.close();
+
+			queryString = 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+		    		"PREFIX : <http://infomed/>" +
+					"SELECT" + select + "\n" +
+					"WHERE { ?x :CODE " + "\"" + code + "\" .\n" +
+					     where + "}";
+		    
+		    query = QueryFactory.create(queryString);
+		    qe = QueryExecutionFactory.create(query, getInfoModel());
+		    results =  qe.execSelect();
+		    ResultSetFormatter.out(fout, results, query);
+		    qe.close();
+		    		
+			fout.flush();
+			fout.close();
+			
+		}
 		
 		return file;
 	}

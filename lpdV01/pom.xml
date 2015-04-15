@@ -3,7 +3,7 @@
   <groupId>pt.tecnico</groupId>
   <artifactId>lpdV01</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>LPD V01</name>
+  <name>LPD</name>
   <dependencies>
   	<dependency>
   		<groupId>org.apache.jena</groupId>
