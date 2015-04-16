@@ -114,8 +114,16 @@ public class MedicineInfo {
 		String partialHref;
 		int numMeds = 0;
 		int row = 1;
-
-		while (numMeds < 6){
+		
+		int numRows = table.getRowCount();
+		int maxRows;		
+		
+		if(numRows > 6)
+			maxRows = 6;
+		else
+			maxRows = numRows - 1;
+			
+		while(numMeds < maxRows){
 			
 			if(marketed.equals(table.getCellAt(row, 12).asText())){
 				

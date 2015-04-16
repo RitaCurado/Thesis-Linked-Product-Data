@@ -96,7 +96,8 @@ public class GUI extends JFrame{
 				for(int i = 0; i < components.length; i++){
 					cb = (JCheckBox) components[i];
 					cb.setSelected(false);
-					if(i == 5 || i == 6 || i == 7){
+					if(i == 5 || i == 6 || i == 7 ||
+						i == 9 || i == 10 || i == 11 || i == 12 || i == 13){
 						cb.setEnabled(false);
 					}
 					else
@@ -139,7 +140,7 @@ public class GUI extends JFrame{
 	
 	public void createPanel4(){
 		panel4 = new JPanel();
-		panel4.setLayout( new GridLayout(3, 3) );
+		panel4.setLayout( new GridLayout(3, 5) );
 		
 		JCheckBox name = new JCheckBox("Nome");
 		JCheckBox substance = new JCheckBox("Substância");
@@ -150,6 +151,12 @@ public class GUI extends JFrame{
 		JCheckBox code = new JCheckBox("Código");
 		JCheckBox price = new JCheckBox("Preço");
 		JCheckBox owner = new JCheckBox("Titular");
+		
+		JCheckBox composition = new JCheckBox("Composição");
+		JCheckBox posology = new JCheckBox("Posologia");
+		JCheckBox interactions = new JCheckBox("Interações");
+		JCheckBox sideEffects = new JCheckBox("Efeitos_Secundários");
+		JCheckBox indications = new JCheckBox("Indicações");
 		
 		//substance.setEnabled(false);
 		
@@ -162,6 +169,12 @@ public class GUI extends JFrame{
 		panel4.add(code);
 		panel4.add(price);
 		panel4.add(owner);
+		
+		panel4.add(composition);
+		panel4.add(posology);
+		panel4.add(interactions);
+		panel4.add(sideEffects);
+		panel4.add(indications);
 		
 		panel4.getComponent(8).setEnabled(false);
 	}
@@ -230,6 +243,32 @@ public class GUI extends JFrame{
         		if(cb.isSelected()){
         			select += " ?" + cb.getText();
         			where += "?x" + ":HOLDER" + " ?" + cb.getText() + ".";
+        		}
+        		
+        		cb = (JCheckBox) panel4.getComponent(9);
+        		if(cb.isSelected()){
+        			select += " ?" + cb.getText();
+        			where += "?x" + ":RCM [ RCM:Composition" + " ?" + cb.getText() + " ] .";
+        		}
+        		cb = (JCheckBox) panel4.getComponent(10);
+        		if(cb.isSelected()){
+        			select += " ?" + cb.getText();
+        			where += "?x" + ":RCM [ RCM:Posology" + " ?" + cb.getText() + " ] .";
+        		}
+        		cb = (JCheckBox) panel4.getComponent(11);
+        		if(cb.isSelected()){
+        			select += " ?" + cb.getText();
+        			where += "?x" + ":FI [ FI:Interactions" + " ?" + cb.getText() + " ] .";
+        		}
+        		cb = (JCheckBox) panel4.getComponent(12);
+        		if(cb.isSelected()){
+        			select += " ?" + cb.getText();
+        			where += "?x" + ":FI [ FI:SideEffects" + " ?" + cb.getText() + " ] .";
+        		}
+        		cb = (JCheckBox) panel4.getComponent(13);
+        		if(cb.isSelected()){
+        			select += " ?" + cb.getText();
+        			where += "?x" + ":RCM [ RCM:Indications" + " ?" + cb.getText() + " ] .";
         		}
         		
         		//System.out.println(select);
