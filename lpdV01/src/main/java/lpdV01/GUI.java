@@ -140,7 +140,7 @@ public class GUI extends JFrame{
 	
 	public void createPanel4(){
 		panel4 = new JPanel();
-		panel4.setLayout( new GridLayout(3, 5) );
+		panel4.setLayout( new GridLayout(5, 3) );
 		
 		JCheckBox name = new JCheckBox("Nome");
 		JCheckBox substance = new JCheckBox("Substância");
