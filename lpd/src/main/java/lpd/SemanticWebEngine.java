@@ -4,6 +4,10 @@ import java.io.ByteArrayOutputStream;
 //import java.io.File;
 //import java.io.FileOutputStream;
 
+
+
+import java.util.ArrayList;
+
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -24,25 +28,28 @@ public class SemanticWebEngine {
 	
 	public String showProperties(String source) throws Exception{
 		
-		Model model = null;		
 		ByteArrayOutputStream go = new ByteArrayOutputStream ();
-		
-		if(source.equals("Infarmed")){
-			model = infarDC.getModel();
-			if(model == null)
-				model = infarDC.getSchemaModel();
-		}
-		if(source.equals("Infomed")){
-			model = infoDC.getModel();
-			if(model == null)
-				model = infoDC.getSchemaModel();
-		}
+		Model model = null;
+		String properties = null;
 		
 		Query query;
 	    QueryExecution qe;
 	    ResultSet results;
 	    String result;
-	    String properties;
+		
+		if(source.equals("Infarmed")){
+			model = infarDC.getModel();
+			if(model == null)
+				model = infarDC.getSchemaModel();
+			properties = "INFARMED:\n";
+		}
+		if(source.equals("Infomed")){
+			model = infoDC.getModel();
+			if(model == null)
+				model = infoDC.getSchemaModel();
+			properties = "INFOMED:\n";
+		}
+		
 	    
 	    String queryString =
 	    		"SELECT DISTINCT ?class\n" +
@@ -60,7 +67,7 @@ public class SemanticWebEngine {
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
 		
-		properties = result;
+		properties = properties.concat(result);
 		properties = properties.concat("\n");
 		
 	    qe.close();
@@ -83,6 +90,7 @@ public class SemanticWebEngine {
 		result = result.replace("|", "");
 		
 		properties = properties.concat(result);
+		properties = properties.concat("\n");
 		
 	    qe.close();
 	    
@@ -199,6 +207,118 @@ public class SemanticWebEngine {
 	    qe.close();
 		
 		return queryResult;
+	}
+	
+	public String makeQuery(String searchProperty, String value, ArrayList<String> sources, String[] propsList, String[] mappings){
+		
+		String result = "\n";
+		String partialResult = null;
+		
+		String select = "";
+		String where = "";
+		String property = "";		
+		String column = "";
+		String[] splt = null;
+		
+		ArrayList<String> infarProps = new ArrayList<String>();
+		ArrayList<String> infoProps = new ArrayList<String>();
+		
+		String[] byName = {"<http://infarmed/Nome_do_Medicamento>", "<http://infomed/Nome_do_Medicamento>"};
+		String[] bySubstance = {"<http://infarmed/Substância_Activa>", "<http://infomed/Nome_Genérico>"};
+		
+		for(String p: propsList){
+			if(p.contains("infarmed"))
+				infarProps.add(p);
+			if(p.contains("infomed"))
+				infoProps.add(p);
+		}
+		
+		if(mappings == null){
+			
+			for(String s : sources){
+				
+				select = "";
+				where = "";
+				property = "";		
+				column = "";
+				splt = null;
+				
+				if(s.equals("Infarmed")){
+					
+					result = result.concat("INFARMED:\n");
+					
+					for(String pp: infarProps){
+						
+						property = pp;
+						splt = pp.split("/");        			
+						column = splt[splt.length - 1];
+						column = column.replace(">", "");
+						
+						select += " ?" + column;
+						
+						if(property.contains("FI"))
+							where += " ?x " + "<http://infarmed/FI> [ " + property + " ?" + column + " ] .";
+						
+						if(property.contains("RCM"))
+							where += " ?x " + "<http://infarmed/RCM> [ " + property + " ?" + column + " ] .";
+						
+						else
+							where += " ?x " + property + " ?" + column + " .";
+					}					
+					
+					try {
+						
+						if(searchProperty.equals("Name")){
+							partialResult = queryInfar(byName[0], value, select, where);
+							result = result.concat(partialResult + "\n");
+						}
+						if(searchProperty.equals("Substance")){
+							partialResult = queryInfar(bySubstance[0], value, select, where);
+							result = result.concat(partialResult + "\n");
+						}
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+				if(s.equals("Infomed")){
+					
+					result = result.concat("INFOMED:\n");
+					
+					for(String pp: infoProps){
+						
+						property = pp;
+						splt = pp.split("/");        			
+						column = splt[splt.length - 1];
+						column = column.replace(">", "");
+						
+						select += " ?" + column;
+						where += " ?x " + property + " ?" + column + " .";
+					}
+					
+					try {
+						if(searchProperty.equals("Name")){
+							partialResult = queryInfo(byName[1], value, select, where);
+							result = result.concat(partialResult + "\n");
+						}
+						if(searchProperty.equals("Substance")){
+							partialResult = queryInfo(bySubstance[1], value, select, where);
+							result = result.concat(partialResult + "\n");
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+		else{
+			result = "Under construction";
+		}
+		
+		
+		return result;
 	}
 	
 }

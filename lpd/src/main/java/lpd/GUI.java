@@ -5,90 +5,91 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 //import java.io.File;
 
 public class GUI extends JFrame{
 
-	private static final long serialVersionUID = 1L;	
-	private final GUI gui = this;
-	private String source = "Infarmed";
+	private static final long serialVersionUID = 1L;
+	
+	private ArrayList<String> sources = new ArrayList<String>();
+	
 	final InfarmedDataConverter infarDC = new InfarmedDataConverter();
 	final InfomedDataConverter infoDC = new InfomedDataConverter();
 	final SemanticWebEngine swe = new SemanticWebEngine();
 	
 	private     JSplitPane  splitPaneV;
+	private     JSplitPane  splitPaneV2;
+	
 	private     JSplitPane  splitPaneH;
 	private     JSplitPane  splitPaneH2;
 	private     JSplitPane  splitPaneH3;
+	
 	private     JPanel      panel1;
 	private     JPanel      panel2;
 	private     JPanel      panel3;
 	private     JPanel      panel4;
 	private     JPanel      panel5;
+	private     JPanel      panel6;
 	
-	
-	public void setSource(String s){
-		this.source = s;
-	}
 
 	public void createPanel1(){
 		panel1 = new JPanel();
-		panel1.setLayout( new GridLayout(3, 2) );
+		panel1.setLayout( new GridLayout(2, 2) );
 
 		// Add some buttons
 		panel1.add(new JLabel("Nome do Medicamento:"));
 		panel1.add( new JTextField());
 		
-		panel1.add(new JLabel("Código de Prescrição:"));
-		panel1.add( new JTextField());
-		
 		panel1.add(new JLabel("Substância Activa:"));
 		panel1.add( new JTextField());
-
 	}
 
+	
 	public void createPanel2(){
 		
-		JRadioButton jrbInfar = new JRadioButton("Infarmed");
-		jrbInfar.setMnemonic(KeyEvent.VK_0);
-		jrbInfar.setActionCommand("infar");
-		jrbInfar.setSelected(true);
-		jrbInfar.addActionListener(new ActionListener() {
-			
-			public void actionPerformed(ActionEvent e) {
-				gui.setSource("Infarmed");
-				JTextField byCode = (JTextField) panel1.getComponent(3);
-				byCode.setEnabled(true);
-			}
+		JCheckBox checkInfar = new JCheckBox("Infarmed");
+		checkInfar.setSelected(false);
+		
+		checkInfar.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent event) {
+		        JCheckBox cb = (JCheckBox) event.getSource();
+		        if (cb.isSelected()) {
+		        	sources.add("Infarmed");
+		            
+		        } else {
+		            int index = sources.indexOf("Infarmed");
+		            sources.remove(index);
+		        }
+		    }
 		});
 		
-		JRadioButton jrbInfo = new JRadioButton("Infomed");
-		jrbInfo.setMnemonic(KeyEvent.VK_1);
-		jrbInfo.setActionCommand("info");
-		jrbInfo.addActionListener(new ActionListener() {
-			
-			public void actionPerformed(ActionEvent e) {				
-				gui.setSource("Infomed");
-				JTextField byCode = (JTextField) panel1.getComponent(3);
-				byCode.setEnabled(false);
-			}
+		JCheckBox checkInfo = new JCheckBox("Infomed");
+		checkInfo.setSelected(false);
+		
+		checkInfo.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent event) {
+		        JCheckBox cb = (JCheckBox) event.getSource();
+		        if (cb.isSelected()) {
+		        	sources.add("Infomed");
+		            
+		        } else {
+		            int index = sources.indexOf("Infomed");
+		            sources.remove(index);
+		        }
+		    }
 		});
-		
-		ButtonGroup group = new ButtonGroup();
-		group.add(jrbInfar);
-		group.add(jrbInfo);
-		
-		JPanel jplRadio = new JPanel();
-		jplRadio.setLayout(new GridLayout(0, 1));
-		jplRadio.add(jrbInfar);
-		jplRadio.add(jrbInfo);
+				
+		JPanel jplCheckBox = new JPanel();
+		jplCheckBox.setLayout(new GridLayout(0, 1));
+		jplCheckBox.add(checkInfar);
+		jplCheckBox.add(checkInfo);
 
 		panel2 = new JPanel();
 		panel2.setLayout( new GridLayout(1, 1) );
-		panel2.add(jplRadio);
-		
+		panel2.add(jplCheckBox);
 	}
+	
 	
 	public void createPanel3(){
 		panel3 = new JPanel();
@@ -101,169 +102,141 @@ public class GUI extends JFrame{
 		
 		panel3.add(example);
 		panel3.add(new JTextField());
-				
 	}
+	
 	
 	public void createPanel4(){
 		panel4 = new JPanel();
-		panel4.setLayout( new GridLayout(2, 1) );
-		panel4.add(new JButton("Ver Propriedades"));
-		panel4.add( new JButton("Pesquisar"));
+		panel4.setLayout(new GridLayout(3, 1));
+		
+		panel4.add(new JLabel("Regra de Mapeamento:"));
+		
+		JLabel example = new JLabel("(ex: <http://infarmed/Dosagem>-<http://infomed/Dose>|<http://infarmed/Nome>-<http://infomed/Titulo>)");
+		example.setFont(new Font("Serif", Font.PLAIN, 11));
+		example.setForeground(Color.GRAY);
+		
+		panel4.add(example);
+		panel4.add(new JTextField());
+	}
+	
+	
+	
+	public void createPanel5(){
+		panel5 = new JPanel();
+		panel5.setLayout( new GridLayout(2, 1) );
+		panel5.add(new JButton("Ver Propriedades"));
+		panel5.add( new JButton("Pesquisar"));
 		
 		//Properties Listener
-		JButton props = (JButton) panel4.getComponent(0);
+		JButton props = (JButton) panel5.getComponent(0);
 		
 		props.addActionListener(new ActionListener(){
 			
 			public void actionPerformed(ActionEvent e){
 								
-				JScrollPane scroll = (JScrollPane) panel5.getComponent(1);
+				JScrollPane scroll = (JScrollPane) panel6.getComponent(1);
                 JViewport view = scroll.getViewport();
                 JTextArea ta = (JTextArea)view.getView();
                 String properties = null;
+                
+                for(String src: sources){
 				
-				try {
-					properties = swe.showProperties(source);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				
-				ta.append(properties);
+					try {
+						properties = swe.showProperties(src);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					
+					ta.append(properties);
+                }
 			}
 		});
-		
-		
 				
-	//Search Listener//
-		JButton search = (JButton) panel4.getComponent(1);
+		//Search Listener//
+		JButton search = (JButton) panel5.getComponent(1);
 		
 		search.addActionListener(new ActionListener() {
 			 
-            public void actionPerformed(ActionEvent e)
-            {
-            	String select = "";
-        		String where = "";
-        		String property = "";
-        		String column = "";
-        		String[] splt;
+            public void actionPerformed(ActionEvent e){
+            	
+            	String result = null;
         		
-        		String result = null;
-        		
-        		JScrollPane scroll = (JScrollPane) panel5.getComponent(1);
+        		JScrollPane scroll = (JScrollPane) panel6.getComponent(1);
                 JViewport view = scroll.getViewport();
                 JTextArea ta = (JTextArea)view.getView();
         		
+                //Properties List
         		JTextField tf = (JTextField) panel3.getComponent(2);
         		String props = tf.getText();
         		
+        		//properties list (format: <http://....> )
         		String[] propsList = props.split("\\|");
         		
-        		for(String s : propsList){
-        			property = s;
-        			splt = s.split("/");        			
-        			column = splt[splt.length - 1];
-        			column = column.replace(">", "");
-        			
-        			select += " ?" + column;
-        			
-        			if(property.contains("FI"))
-        				where += " ?x " + "<http://infarmed/FI> [ " + property + " ?" + column + " ] .";
-        			
-        			if(property.contains("RCM"))
-        				where += " ?x " + "<http://infarmed/RCM> [ " + property + " ?" + column + " ] .";
-        			
-        			else
-        				where += " ?x " + property + " ?" + column + " .";
-        		}
+        		//Mapping rules
+        		JTextField mapping = (JTextField) panel4.getComponent(2);
+        		String mappings = mapping.getText();
         		
+        		//mapping list (format: <http://...>-<http://...> )
+        		String[] mappingRules = null;
+        		
+        		if(!mappings.equals(""))
+        			mappingRules = mappings.split("\\|");
+        		
+        		
+        		//Medicine Name
             	JTextField byName = (JTextField) panel1.getComponent(1);
                 String text = byName.getText();
                 
-              //Nome do medicamento
         		if(!text.isEmpty()){                	
         			
                 	String value = text.substring(0, 1).toUpperCase() + text.substring(1);
                 	
-                	try{
-                		
-                		if(source.equals("Infarmed")){
-                    		result = swe.queryInfar("<http://infarmed/Nome_do_Medicamento>", value, select, where);
-                    	}
-                		
-                		if(source.equals("Infomed")){
-                    		result = swe.queryInfo("<http://infomed/Nome_do_Medicamento>", value, select, where);
-                    	}
-                		
+                	try{                		
+                		result = swe.makeQuery("Name", value, sources, propsList, mappingRules);
                 	}
                 	catch (Exception e1){
                 		e1.printStackTrace();
                 	}
                 	
                 	//append to text area
-                	ta.append(result);                	
-        		}
-        		
+                	ta.append(result);
+        		}        		
         		else{
-                	JTextField byCode = (JTextField) panel1.getComponent(3);
-                	text = byCode.getText();
+                		
+        			//Active substance
+            		JTextField bySubstance = (JTextField) panel1.getComponent(3);
+                	text = bySubstance.getText();
                 	
-                	//Codigo de prescrição
                 	if(!text.isEmpty()){
-                		try {
-                        	result = swe.queryInfar("<http://infarmed/CNPEM>", text, select, where);
+                		try{
+                    		result = swe.makeQuery("Substance", text, sources, propsList, mappingRules);
                     	}
                     	catch (Exception e1){
                     		e1.printStackTrace();
                     	}
                     	
                     	//append to text area
-                		ta.append(result);
-                	}
-                	
-                	else{
-                		
-                		JTextField bySubstance = (JTextField) panel1.getComponent(5);
-                    	text = bySubstance.getText();
-                    	
-                    	//Substância Activa
-                    	if(!text.isEmpty()){
-                    		try{
-                        		
-                        		if(source.equals("Infarmed")){
-                            		result = swe.queryInfar("<http://infarmed/Substância_Activa>", text, select, where);
-                            	}
-                        		
-                        		if(source.equals("Infomed")){
-                            		result = swe.queryInfo("<http://infomed/Nome_Genérico>", text, select, where);
-                            	}
-                        		
-                        	}
-                        	catch (Exception e1){
-                        		e1.printStackTrace();
-                        	}
-                        	
-                        	//append to text area
-                        	ta.append(result);
-                		}
-                	}
+                    	ta.append(result);
+            		}
                 }
             }
         });
 	}
+	
 		
-	public void createPanel5(){
-		panel5 = new JPanel();
-		panel5.setLayout( new BorderLayout() );
-		panel5.setPreferredSize( new Dimension( 400, 100 ) );
-		panel5.setMinimumSize( new Dimension( 100, 50 ) );
+	public void createPanel6(){
+		panel6 = new JPanel();
+		panel6.setLayout( new BorderLayout() );
+		panel6.setPreferredSize( new Dimension( 400, 100 ) );
+		panel6.setMinimumSize( new Dimension( 100, 50 ) );
 
-		panel5.add( new JLabel( "Resultados:" ), BorderLayout.NORTH );
+		panel6.add( new JLabel( "Resultados:" ), BorderLayout.NORTH );
 		
 		JTextArea textArea = new JTextArea();
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportView(textArea);
-		panel5.add(scrollPane, BorderLayout.CENTER);	
+		panel6.add(scrollPane, BorderLayout.CENTER);	
 		
 	}
 	
@@ -283,10 +256,14 @@ public class GUI extends JFrame{
 		createPanel3();
 		createPanel4();
 		createPanel5();
+		createPanel6();
 
 		// Create a splitter pane
 		splitPaneV = new JSplitPane( JSplitPane.VERTICAL_SPLIT );
 		topPanel.add( splitPaneV, BorderLayout.CENTER );
+		
+		splitPaneV2 = new JSplitPane( JSplitPane.VERTICAL_SPLIT );
+		topPanel.add( splitPaneV2, BorderLayout.CENTER );
 
 		splitPaneH = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT );
 		splitPaneH.setLeftComponent( panel1 );
@@ -297,12 +274,14 @@ public class GUI extends JFrame{
 		splitPaneH2.setRightComponent(panel3);
 		
 		splitPaneH3 = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT );
-		splitPaneH3.setLeftComponent(splitPaneH2);
-		splitPaneH3.setRightComponent(panel4);
+		splitPaneH3.setLeftComponent(panel4);
+		splitPaneH3.setRightComponent(panel5);
 		
+		splitPaneV.setLeftComponent(splitPaneH2);
+		splitPaneV.setBottomComponent(splitPaneH3);		
 
-		splitPaneV.setLeftComponent( splitPaneH3 );
-		splitPaneV.setBottomComponent( panel5 );
+		splitPaneV2.setLeftComponent( splitPaneV );
+		splitPaneV2.setBottomComponent( panel6 );
 	}
 
 	
@@ -318,4 +297,3 @@ public class GUI extends JFrame{
 		
 	
 }
-
