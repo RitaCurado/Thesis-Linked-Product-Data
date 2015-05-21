@@ -1,4 +1,4 @@
-package lpdV01;
+package lpd;
 
 import javax.swing.*;
 

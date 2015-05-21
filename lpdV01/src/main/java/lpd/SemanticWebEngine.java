@@ -1,4 +1,4 @@
-package lpdV01;
+package lpd;
 
 import java.io.ByteArrayOutputStream;
 //import java.io.File;

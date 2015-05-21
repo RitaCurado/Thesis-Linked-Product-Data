@@ -1,4 +1,4 @@
-package lpdV01;
+package lpd;
 
 import java.io.InputStream;
 import java.util.ArrayList;
