@@ -3,7 +3,7 @@
 To run this project add it to eclipse as a Java Project;
 Open the GUI.java class and press run;
 
-There will be open a simple user interface.
+There will be open a user interface.
+The searches can be made in two different ways: given the drug name or active substance.
 
-The searches can be made in three different ways: given the drug name, code or active substance.
-After that search it is possible to select some specific information that dinamically appear on the bottom of the user interface window.
+There are two data sources of information that can be selected simultaneously. Besides that, the user can see the existent properties of the different data sources and also choose which of those properties he want to be presented in a table format.
