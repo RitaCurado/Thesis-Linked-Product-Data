@@ -1,4 +1,4 @@
-# Thesis - V.01
+# Thesis
 
 To run this project add it to eclipse as a Java Project;
 Open the GUI.java class and press run;
