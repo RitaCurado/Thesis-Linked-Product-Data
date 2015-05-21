@@ -1,6 +1,6 @@
 # Thesis
 
-To run this project add it to eclipse as a Java Project;
+To run this project add it to eclipse as a Maven Project;
 Open the GUI.java class and press run;
 
 There will be open a user interface.
