@@ -14,9 +14,7 @@ public class GUI extends JFrame{
 	
 	private ArrayList<String> sources = new ArrayList<String>();
 	
-	final InfarmedDataConverter infarDC = new InfarmedDataConverter();
-	final InfomedDataConverter infoDC = new InfomedDataConverter();
-	final SemanticWebEngine swe = new SemanticWebEngine();
+	private SemanticWebEngine swe = new SemanticWebEngine();
 	
 	private     JSplitPane  splitPaneV;
 	private     JSplitPane  splitPaneV2;
@@ -31,6 +29,11 @@ public class GUI extends JFrame{
 	private     JPanel      panel4;
 	private     JPanel      panel5;
 	private     JPanel      panel6;
+	
+//	public GUI(){
+//		this.sources = new ArrayList<String>();
+//		this.swe = new SemanticWebEngine();
+//	}
 	
 
 	public void createPanel1(){
@@ -55,10 +58,10 @@ public class GUI extends JFrame{
 		    public void actionPerformed(ActionEvent event) {
 		        JCheckBox cb = (JCheckBox) event.getSource();
 		        if (cb.isSelected()) {
-		        	sources.add("Infarmed");
+		        	sources.add("infarmed");
 		            
 		        } else {
-		            int index = sources.indexOf("Infarmed");
+		            int index = sources.indexOf("infarmed");
 		            sources.remove(index);
 		        }
 		    }
@@ -71,10 +74,10 @@ public class GUI extends JFrame{
 		    public void actionPerformed(ActionEvent event) {
 		        JCheckBox cb = (JCheckBox) event.getSource();
 		        if (cb.isSelected()) {
-		        	sources.add("Infomed");
+		        	sources.add("infomed");
 		            
 		        } else {
-		            int index = sources.indexOf("Infomed");
+		            int index = sources.indexOf("infomed");
 		            sources.remove(index);
 		        }
 		    }
@@ -96,7 +99,7 @@ public class GUI extends JFrame{
 		panel3.setLayout(new GridLayout(3, 1));
 		panel3.add(new JLabel("Propriedades:"));
 		
-		JLabel example = new JLabel("(ex: <http://infarmed/Dosagem>|<http://infarmed/CNPEM>)");
+		JLabel example = new JLabel("(ex: <prop 1>|<prop 2>|<prop 3>)");
 		example.setFont(new Font("Serif", Font.PLAIN, 11));
 		example.setForeground(Color.GRAY);
 		
@@ -111,7 +114,7 @@ public class GUI extends JFrame{
 		
 		panel4.add(new JLabel("Regra de Mapeamento:"));
 		
-		JLabel example = new JLabel("(ex: <http://infarmed/Dosagem>-<http://infomed/Dose>|<http://infarmed/Nome>-<http://infomed/Titulo>)");
+		JLabel example = new JLabel("(ex: <prop 1>-<prop 2>|<prop 3>-<prop 4)");
 		example.setFont(new Font("Serif", Font.PLAIN, 11));
 		example.setForeground(Color.GRAY);
 		
@@ -165,7 +168,7 @@ public class GUI extends JFrame{
                 JViewport view = scroll.getViewport();
                 JTextArea ta = (JTextArea)view.getView();
         		
-                //Properties List
+              //Properties List
         		JTextField tf = (JTextField) panel3.getComponent(2);
         		String props = tf.getText();
         		
@@ -178,7 +181,6 @@ public class GUI extends JFrame{
         		
         		//mapping list (format: <http://...>-<http://...> )
         		String[] mappingRules = null;
-        		
         		if(!mappings.equals(""))
         			mappingRules = mappings.split("\\|");
         		
@@ -295,5 +297,5 @@ public class GUI extends JFrame{
 	    
 	}
 		
-	
+	//<http://infarmed/Nome_do_Medicamento>|<http://infarmed/Substância_Activa>
 }

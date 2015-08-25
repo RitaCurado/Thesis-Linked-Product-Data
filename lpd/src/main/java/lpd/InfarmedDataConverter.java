@@ -14,30 +14,68 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
 import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class InfarmedDataConverter {
 	
-	private Model infarModel;
+	private int drugID;
 	
-	public InfarmedDataConverter(){
-		this.infarModel = null;
-	}
-	
-	public Model getModel(){
-		return this.infarModel;
-	}
-	
-	public void setModel(Model m){
-		this.infarModel = m;
+	public InfarmedDataConverter(Model dbModel){
+		
+		this.drugID = 0;
+		
+		try {
+			setSchemaModel(dbModel);
+			getInfarBySubstance(dbModel, "ácido acetilsalicílico");
+			getInfarBySubstance(dbModel, "amoxicilina");
+			getInfarBySubstance(dbModel, "Ibuprofeno");
+			getInfarBySubstance(dbModel, "Paracetamol");
+			getInfarBySubstance(dbModel, "Iodopovidona");
+			getInfarBySubstance(dbModel, "Levotiroxina sódica");
+			getInfarBySubstance(dbModel, "Perindopril");
+			getInfarBySubstance(dbModel, "Atorvastatina");
+			getInfarBySubstance(dbModel, "Fluvastatina");
+			getInfarBySubstance(dbModel, "Pravastatina");
+			getInfarBySubstance(dbModel, "midodrina");
+			getInfarBySubstance(dbModel, "captopril");
+			getInfarBySubstance(dbModel, "Furosemida");
+			getInfarBySubstance(dbModel, "Espironolactona");
+			getInfarBySubstance(dbModel, "Digoxina");
+			getInfarBySubstance(dbModel, "Carbonato de cálcio");
+			getInfarBySubstance(dbModel, "cloreto de magnésio");			
+			getInfarBySubstance(dbModel, "metformina");
+			getInfarBySubstance(dbModel, "Nitrofurantoína");
+			getInfarBySubstance(dbModel, "Glibenclamida");
+			getInfarBySubstance(dbModel, "Glipizida");
+			getInfarBySubstance(dbModel, "Glimepirida");
+			getInfarBySubstance(dbModel, "Metformina");
+			getInfarBySubstance(dbModel, "Pioglitazona");
+			getInfarBySubstance(dbModel, "Acarbose");
+			
+//			getInfarBySubstance(dbModel, "Nateglinida");
+//			getInfarBySubstance(dbModel, "Sitagliptina");
+			
+			getInfarBySubstance(dbModel, "ciclosporina");
+			getInfarBySubstance(dbModel, "metotrexato");
+			getInfarBySubstance(dbModel, "Prednisona");
+			getInfarBySubstance(dbModel, "Metilprednisolona");
+			getInfarBySubstance(dbModel, "Leflunomida");
+			getInfarBySubstance(dbModel, "Azatioprina");
+			getInfarBySubstance(dbModel, "Cloreto de sódio");
+			getInfarBySubstance(dbModel, "ETINILESTRADIOL GESTODENO");
+			getInfarBySubstance(dbModel, "SACCHAROMYCES BOULARDII");
+			getInfarBySubstance(dbModel, "Bromexina");
+			getInfarBySubstance(dbModel, "dextrometorfano");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	public Model getSchemaModel() throws Exception{
+	public void setSchemaModel(Model model) throws Exception{
 		
-		Model model = ModelFactory.createDefaultModel();
+		//Model model = ModelFactory.createDefaultModel();
 		ArrayList<Resource> properties = new ArrayList<Resource>();
 		ArrayList<Resource> fiProperties = new ArrayList<Resource>();
 		ArrayList<Resource> rcmProperties = new ArrayList<Resource>();
@@ -46,22 +84,25 @@ public class InfarmedDataConverter {
 		HtmlPage page = webClient.getPage("http://www.infarmed.pt/genericos/pesquisamg/pesquisaMG.php");
 		HtmlTable table = (HtmlTable) page.getElementById("mainResult");
 		
-		Resource medicine = model.createResource("http://infarmed/Medicine");		
+		String baseURI = "http://www.infarmed.pt/";
+		
+		Resource medicine = model.createResource(baseURI + "Medicine");		
 		medicine.addProperty(RDF.type, RDFS.Class);
 		
-		Resource fiR = model.createResource("http://infarmed/Fi");
-		Resource rcmR = model.createResource("http://infarmed/Rcm");
-				
-		//columns: row=0
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 2).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 1).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 4).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 5).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 6).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 8).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/" + table.getCellAt(0, 11).asText().replace(' ', '_')));
-		properties.add(model.createResource("http://infarmed/FI"));
-		properties.add(model.createResource("http://infarmed/RCM"));
+		Resource fiR = model.createResource(baseURI + "FiNode");
+		Resource rcmR = model.createResource(baseURI + "RcmNode");
+		
+		//Infarmed properties
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 2).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 1).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 3).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 4).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 5).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 6).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 8).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + table.getCellAt(0, 11).asText().replace(' ', '_')));
+		properties.add(model.createResource(baseURI + "FI"));
+		properties.add(model.createResource(baseURI + "RCM"));
 		
 		for(Resource p: properties){
 			p.addProperty(RDF.type, RDF.Property);
@@ -72,23 +113,23 @@ public class InfarmedDataConverter {
 		properties.get(properties.size()-2).addProperty(RDFS.range, rcmR.getURI());		
 		
 		
-		fiProperties.add(model.createResource("http://infarmed/FI/" + "Url"));
-		fiProperties.add(model.createResource("http://infarmed/FI/" + "Definição"));
-		fiProperties.add(model.createResource("http://infarmed/FI/" + "Não_usar"));
-		fiProperties.add(model.createResource("http://infarmed/FI/" + "Efeitos_Secundários"));
-		fiProperties.add(model.createResource("http://infarmed/FI/" + "Como_conservar"));
+		fiProperties.add(model.createResource(baseURI + "FI/" + "Url"));
+		fiProperties.add(model.createResource(baseURI + "FI/" + "Definição"));
+		fiProperties.add(model.createResource(baseURI + "FI/" + "Não_usar"));
+		fiProperties.add(model.createResource(baseURI + "FI/" + "Efeitos_Secundários"));
+		fiProperties.add(model.createResource(baseURI + "FI/" + "Como_conservar"));
 		
 		for(Resource p: fiProperties){
 			p.addProperty(RDF.type, RDF.Property);
 			p.addProperty(RDFS.domain, fiR.getURI());
 		}
 		
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Url"));
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Composição"));
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Indicações"));
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Posologia"));
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Contraindicações"));
-		rcmProperties.add(model.createResource("http://infarmed/RCM/" + "Interações"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Url"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Composição"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Indicações"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Posologia"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Contraindicações"));
+		rcmProperties.add(model.createResource(baseURI + "RCM/" + "Interações"));
 		
 		for(Resource p: rcmProperties){
 			p.addProperty(RDF.type, RDF.Property);
@@ -96,70 +137,59 @@ public class InfarmedDataConverter {
 		}
 		
 		webClient.closeAllWindows();
-		setModel(model);
-		return model;		
 	}
 	
-	public Model infarmedModel(String substancy, String name, String type, String dosage,
+	public void infarmedModel(Model infar, String substancy, String name, String type, String dosage,
 			String numUnits, int prescriptionCode, float price, String generic,
 			String rcm, ArrayList<String> rcmInfo, String fi, ArrayList<String> fiInfo){
 
+		this.drugID++;
+		String baseURI = "http://www.infarmed.pt/";
 		
-		Model infar = getModel();
-		if(infar == null)
-			try {
-				infar = getSchemaModel();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		infar.setNsPrefix("", baseURI);
+		infar.setNsPrefix("RCM", baseURI + "RCM/");
+		infar.setNsPrefix("FI", baseURI + "FI/");
 		
-		String infarmedURI = "http://infarmed/";
+		Resource r = infar.createResource(baseURI + name + "_" + drugID);
+		r.addProperty(RDF.type, baseURI + "Medicine");
 		
-		infar.setNsPrefix("", infarmedURI);
-		infar.setNsPrefix("RCM", "http://infarmed/RCM/");
-		infar.setNsPrefix("FI", "http://infarmed/FI/");
-		
-		Resource r = infar.createResource(infarmedURI + name + "_" + prescriptionCode);
-		r.addProperty(RDF.type, "http://infomed/Medicine");		
-		
-		r.addProperty(infar.getProperty("http://infarmed/Nome_do_Medicamento"), name);
-		r.addProperty(infar.getProperty("http://infarmed/Substância_Activa"), substancy);
-		r.addProperty(infar.getProperty("http://infarmed/Dosagem"), dosage);
-		r.addProperty(infar.getProperty("http://infarmed/Tamanho_da_Embalagem"), numUnits);
-		r.addProperty(infar.getProperty("http://infarmed/CNPEM"), Integer.toString(prescriptionCode));
-		r.addProperty(infar.getProperty("http://infarmed/Preço_(PVP)"), Float.toString(price));
-		r.addProperty(infar.getProperty("http://infarmed/Genérico"), generic);
+		r.addProperty(infar.getProperty(baseURI + "Nome_do_Medicamento"), name);
+		r.addProperty(infar.getProperty(baseURI + "Substância_Activa"), substancy);
+		r.addProperty(infar.getProperty(baseURI + "Forma_Farmacêutica"), type);
+		r.addProperty(infar.getProperty(baseURI + "Dosagem"), dosage);
+		r.addProperty(infar.getProperty(baseURI + "Tamanho_da_Embalagem"), numUnits);
+		r.addProperty(infar.getProperty(baseURI + "CNPEM"), Integer.toString(prescriptionCode));
+		r.addProperty(infar.getProperty(baseURI + "Preço_(PVP)"), Float.toString(price));
+		r.addProperty(infar.getProperty(baseURI + "Genérico"), generic);
 		
 		
 		Resource rcmR = infar.createResource();		
-		rcmR.addProperty(RDF.type, "http://infarmed/Rcm");
+		rcmR.addProperty(RDF.type, baseURI + "RcmNode");
 		
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Url"), rcm);
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Composição"), rcmInfo.get(0));
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Indicações"), rcmInfo.get(1));
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Posologia"), rcmInfo.get(2));
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Contraindicações"), rcmInfo.get(3));
-		rcmR.addProperty(infar.getProperty("http://infarmed/RCM/Interações"), rcmInfo.get(4));
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Url"), rcm);
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Composição"), rcmInfo.get(0));
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Indicações"), rcmInfo.get(1));
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Posologia"), rcmInfo.get(2));
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Contraindicações"), rcmInfo.get(3));
+		rcmR.addProperty(infar.getProperty(baseURI + "RCM/Interações"), rcmInfo.get(4));
 		
-		r.addProperty(infar.getProperty("http://infarmed/RCM"), rcmR);
+		r.addProperty(infar.getProperty(baseURI + "RCM"), rcmR);
 		
 		
 		Resource fiR = infar.createResource();		
-		fiR.addProperty(RDF.type, "http://infarmed/Fi");
+		fiR.addProperty(RDF.type, baseURI + "FiNode");
 		
-		fiR.addProperty(infar.getProperty("http://infarmed/FI/Url"), fi);
-		fiR.addProperty(infar.getProperty("http://infarmed/FI/Definição"), fiInfo.get(0));
-		fiR.addProperty(infar.getProperty("http://infarmed/FI/Não_usar"), fiInfo.get(1));
-		fiR.addProperty(infar.getProperty("http://infarmed/FI/Efeitos_Secundários"), fiInfo.get(8));
-		fiR.addProperty(infar.getProperty("http://infarmed/FI/Como_conservar"), fiInfo.get(9));
+		fiR.addProperty(infar.getProperty(baseURI + "FI/Url"), fi);
+		fiR.addProperty(infar.getProperty(baseURI + "FI/Definição"), fiInfo.get(0));
+		fiR.addProperty(infar.getProperty(baseURI + "FI/Não_usar"), fiInfo.get(1));
+		fiR.addProperty(infar.getProperty(baseURI + "FI/Efeitos_Secundários"), fiInfo.get(8));
+		fiR.addProperty(infar.getProperty(baseURI + "FI/Como_conservar"), fiInfo.get(9));
 		
-		r.addProperty(infar.getProperty("http://infarmed/FI"), fiR);
-
-		setModel(infar);
-		return infar;
+		r.addProperty(infar.getProperty(baseURI + "FI"), fiR);
+		
 	}
 	
-	public void getInfarmedInfo(HtmlPage page, WebClient webClient) throws Exception{
+	public void getInfarmedInfo(HtmlPage page, WebClient webClient, Model infar) throws Exception{
 		
 		HtmlTable table = (HtmlTable) page.getElementById("mainResult");
 
@@ -172,34 +202,32 @@ public class InfarmedDataConverter {
 		String priceTemp;
 		int prescriptionCode;
 		float price;
+		String rcm = "";
+		String fi = "";
+		ArrayList<String> rcmInfo = new ArrayList<String>() {{add(""); add(""); add(""); add(""); add("");}};
+		ArrayList<String> fiInfo = new ArrayList<String>() {{add(""); add(""); add(""); add(""); add(""); add(""); add(""); add(""); add(""); add("");}};
+		
 		HtmlAnchor ha;
-		String rcm;
-		String fi;
-		ArrayList<String> rcmInfo;
-		ArrayList<String> fiInfo;
-		
-		Model m = null;		
-		
-		String marketed = "Comercializado";
-		ReadPDF reader = new ReadPDF();
 		TopLevelWindow ww;
 		String partialHref;
-		int numMeds = 0;
+		ReadPDF reader = new ReadPDF();
+		String marketed = "Comercializado";
+		
+		int i = 0;		
 		int row = 1;
+		int numRows = table.getRowCount() - 1;
 		
-		int numRows = table.getRowCount();
-		int maxRows;		
-		
-		if(numRows > 6)
-			maxRows = 6;
-		else
-			maxRows = numRows - 1;
 			
-		while(numMeds < maxRows){
+		while(i < numRows){
 			
 			if(marketed.equals(table.getCellAt(row, 12).asText())){
 				
-				numMeds++;
+				name = table.getCellAt(row, 2).asText();
+				if(name.equals("Juliperla") || name.equals("Sofiperla")){
+					row++;
+					i++;
+					continue;
+				}
 				
 				substancyAct = table.getCellAt(row, 1).asText().toLowerCase();	    
 				name = table.getCellAt(row, 2).asText();
@@ -224,47 +252,59 @@ public class InfarmedDataConverter {
 				
 //				-------------------------------------------------------------------------------
 				ha = (HtmlAnchor)anchors.next();
-				ha = (HtmlAnchor)anchors.next();
-				partialHref = ha.getAttribute("href");
-				rcm = partialHref.replace("../../", "http://www.infarmed.pt/");
-				ha.setAttribute("href", rcm);
+				InputStream is;
 				
-				InputStream is = ha.openLinkInNewWindow().getWebResponse().getContentAsStream();
-				rcmInfo = reader.readRCM(is);
+				if(anchors.hasNext()){					
+					ha = (HtmlAnchor)anchors.next();
+					partialHref = ha.getAttribute("href");
+					
+					if(partialHref.contains("tipo_doc=rcm")){						
+						rcm = partialHref.replace("../../", "http://www.infarmed.pt/");					
+						ha.setAttribute("href", rcm);
+						
+						is = ha.openLinkInNewWindow().getWebResponse().getContentAsStream();
+						rcmInfo = reader.readRCM(is, rcmInfo);
+						
+						ww = (TopLevelWindow) webClient.getCurrentWindow().getParentWindow();
+						ww.close();
+					}
+				}
 				
 //		        --------------------------------------------------------------------------------
-				ww = (TopLevelWindow) webClient.getCurrentWindow().getParentWindow();
-				ww.close();
 				
-				ha = (HtmlAnchor)anchors.next();
-				partialHref = ha.getAttribute("href");
-				fi = partialHref.replace("../../", "http://www.infarmed.pt/");
-				ha.setAttribute("href", fi);
-				
-				is = ha.openLinkInNewWindow().getWebResponse().getContentAsStream();
-				fiInfo = reader.readFI(is);
-				
-				ww = (TopLevelWindow) webClient.getCurrentWindow().getParentWindow();
-				ww.close();
+				if(anchors.hasNext()){					
+					ha = (HtmlAnchor)anchors.next();
+					partialHref = ha.getAttribute("href");
+					
+					if(partialHref.contains("tipo_doc=fi")){						
+						fi = partialHref.replace("../../", "http://www.infarmed.pt/");
+						ha.setAttribute("href", fi);
+						
+						is = ha.openLinkInNewWindow().getWebResponse().getContentAsStream();
+						fiInfo = reader.readFI(is, fiInfo);
+						
+						ww = (TopLevelWindow) webClient.getCurrentWindow().getParentWindow();
+						ww.close();
+					}
+				}
 //				--------------------------------------------------------------------------------
 
-				m = infarmedModel(substancyAct, name, type, dosage,
-						numUnits, prescriptionCode, price, generic, rcm, rcmInfo, fi, fiInfo);
-				
-				setModel(m);
+				infarmedModel(infar, substancyAct, name, type, dosage, numUnits, prescriptionCode,
+								price, generic, rcm, rcmInfo, fi, fiInfo);
 				
 				name = type = dosage = numUnits = generic = rcm = fi = "";
 				prescriptionCode = 0;
 				price = 0;
-				rcmInfo.clear();
-				fiInfo.clear();
+				//rcmInfo.clear();
+				//fiInfo.clear();
 			}			
 			
+			i++;
 			row++;
 		}
 	}
 	
-	public void getInfarByName(String name) throws Exception{
+	public void getInfarByName(Model m, String name) throws Exception{
 		
 		WebClient webClient = new WebClient();
 		HtmlPage page = webClient.getPage("http://www.infarmed.pt/genericos/pesquisamg/pesquisaMG.php");
@@ -276,12 +316,12 @@ public class InfarmedDataConverter {
 		HtmlButtonInput b = (HtmlButtonInput) button;
 		HtmlPage page2 = b.click();
 		
-		getInfarmedInfo(page2, webClient);
+		getInfarmedInfo(page2, webClient, m);
 		
 		webClient.closeAllWindows();
 	}
 	
-	public void getInfarBySubstance(String substance) throws Exception{
+	public void getInfarBySubstance(Model m, String substance) throws Exception{
 		
 		WebClient webClient = new WebClient();
 		HtmlPage page = webClient.getPage("http://www.infarmed.pt/genericos/pesquisamg/pesquisaMG.php");
@@ -298,12 +338,12 @@ public class InfarmedDataConverter {
 		HtmlButtonInput b = (HtmlButtonInput) button;
 		HtmlPage page2 = b.click();
 		
-		getInfarmedInfo(page2, webClient);
+		getInfarmedInfo(page2, webClient, m);
 		
 		webClient.closeAllWindows();
 	}
 	
-	public void getInfarByCode(String code) throws Exception{
+	public void getInfarByCode(Model m, String code) throws Exception{
 		
 		WebClient webClient = new WebClient();
 		HtmlPage page = webClient.getPage("http://www.infarmed.pt/genericos/pesquisamg/pesquisaMG.php");
@@ -315,7 +355,7 @@ public class InfarmedDataConverter {
 		HtmlButtonInput b = (HtmlButtonInput) button;
 		HtmlPage page2 = b.click();
 		
-		getInfarmedInfo(page2, webClient);
+		getInfarmedInfo(page2, webClient, m);
 		
 		webClient.closeAllWindows();
 	}

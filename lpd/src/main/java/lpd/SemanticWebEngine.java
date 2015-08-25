@@ -4,321 +4,482 @@ import java.io.ByteArrayOutputStream;
 //import java.io.File;
 //import java.io.FileOutputStream;
 
-
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
+//import com.hp.hpl.jena.rdf.model.Resource;
+//import com.hp.hpl.jena.sparql.resultset.RDFOutput;
+import com.hp.hpl.jena.tdb.TDBFactory;
 
 public class SemanticWebEngine {
-	
+
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
-	
-	public SemanticWebEngine(){
-		this.infarDC = new InfarmedDataConverter();
-		this.infoDC = new InfomedDataConverter();
-	}
-	
-	public String showProperties(String source) throws Exception{
-		
-		ByteArrayOutputStream go = new ByteArrayOutputStream ();
-		Model model = null;
-		String properties = null;
-		
-		Query query;
-	    QueryExecution qe;
-	    ResultSet results;
-	    String result;
-		
-		if(source.equals("Infarmed")){
-			model = infarDC.getModel();
-			if(model == null)
-				model = infarDC.getSchemaModel();
-			properties = "INFARMED:\n";
-		}
-		if(source.equals("Infomed")){
-			model = infoDC.getModel();
-			if(model == null)
-				model = infoDC.getSchemaModel();
-			properties = "INFOMED:\n";
-		}
-		
-	    
-	    String queryString =
-	    		"SELECT DISTINCT ?class\n" +
-	    			"WHERE {" +
-	    				  "?class a <http://www.w3.org/2000/01/rdf-schema#Class> .}\n" +
-	    				"LIMIT 25\n" +
-	    				"OFFSET 0";
-		
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, model);
-		results =  qe.execSelect();
-		ResultSetFormatter.out(go ,results, query);
-		
-		result = go.toString();
-		result = result.replace("-", "_");
-		result = result.replace("|", "");
-		
-		properties = properties.concat(result);
-		properties = properties.concat("\n");
-		
-	    qe.close();
-		
-	    go.reset();
-		queryString =
-				"SELECT DISTINCT ?property\n" +
-		    			"WHERE {" +
-		    				  "?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .}\n" +
-		    				"LIMIT 25\n" +
-		    				"OFFSET 0";
-		
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, model);
-		results =  qe.execSelect();
-		ResultSetFormatter.out(go ,results, query);
-		
-		result = go.toString();
-		result = result.replace("-", "_");
-		result = result.replace("|", "");
-		
-		properties = properties.concat(result);
-		properties = properties.concat("\n");
-		
-	    qe.close();
-	    
-	    return properties;
-	}
-	
-	
-	public String queryInfar(String property, String value, String select, String where) throws Exception{
-		
-		Query query;
-		QueryExecution qe;
-		ResultSet results;
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream ();
-		String queryResult = "";
-		
-		String queryString =
-	    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://infarmed/>" +
-	    		"SELECT ?x\n" +
-	    		"WHERE{ ?x " + property + " ?s ."
-	    				+ "FILTER regex(str(?s)," + "\"" + value + "\"" + ")"
-	    				+ "}";
-		
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, infarDC.getModel());
-		results =  qe.execSelect();
-		
-		if(!results.hasNext()){
-			
-			if(property.equals("<http://infarmed/Nome_do_Medicamento>"))
-				infarDC.getInfarByName(value);
-			if(property.equals("<http://infarmed/Substância_Activa>"))
-				infarDC.getInfarBySubstance(value);
-			if(property.equals("<http://infarmed/CNPEM>"))
-				infarDC.getInfarByCode(value);
-		}
-	    
-		qe.close();
-		
-		queryString = 
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://infarmed/>" +
-				"PREFIX RCM: <http://infarmed/RCM/>" +
-				"PREFIX FI: <http://infarmed/FI/>"  +
-				"SELECT" + select + "\n" +
-				"WHERE{ ?x " + property + " ?s ."
-				     + where 
-				     + "FILTER regex(str(?s)," + "\"" + value + "\"" + ")"
-			    	 + "}";
-		
-		query = QueryFactory.create(queryString);
-	    qe = QueryExecutionFactory.create(query, infarDC.getModel());
-	    results =  qe.execSelect();
-	    ResultSetFormatter.out(baos, results, query);
-	    
-	    queryResult = baos.toString();
-		queryResult = queryResult.replace("-", "_");
-	    
-	    qe.close();
-		
-		return queryResult;
-	}
-	
-	public String queryInfo(String property, String value, String select, String where) throws Exception{
-		
-		Query query;
-		QueryExecution qe;
-		ResultSet results;
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream ();
-		String queryResult = "";
-		
-		String queryString =
-	    		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://infomed/>" +
-	    		"SELECT ?x\n" +
-	    		"WHERE{ ?x " + property + " ?s ."
-	    				+ "FILTER regex(str(?s)," + "\"" + value + "\"" + ")"
-	    				+ "}";
-		
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, infoDC.getModel());
-	    results =  qe.execSelect();
-	    
-	    if(!results.hasNext()){
-			
-			if(property.equals("<http://infomed/Nome_do_Medicamento>"))
-				infoDC.getInfoByName(value);
-			if(property.equals("<http://infomed/Nome_Genérico>"))
-				infoDC.getInfoBySubstance(value);
-		}
-	    
-	    qe.close();
 
-		queryString = 
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-	    		"PREFIX : <http://infomed/>" +
-				"SELECT" + select + "\n" +
-				"WHERE{ ?x " + property + " ?s ."
-				     + where 
-				     + "FILTER regex(str(?s)," + "\"" + value + "\"" + ")"
-			    	 + "}";
-	    
-	    query = QueryFactory.create(queryString);
-	    qe = QueryExecutionFactory.create(query, infoDC.getModel());
-	    results =  qe.execSelect();
-	    
-	    ResultSetFormatter.out(baos, results, query);
-	    
-	    queryResult = baos.toString();
-		queryResult = queryResult.replace("-", "_");
-	    
-	    qe.close();
-		
-		return queryResult;
+	Model dbModel;
+
+	public SemanticWebEngine() {
+
+		// open TDB dataset
+		String directory = "TDB";
+		Dataset dataset = null;
+
+		dataset = TDBFactory.createDataset(directory);
+
+		// assume we want the default model, or we could get a named model here
+		this.dbModel = dataset.getDefaultModel();
+
+		if (dbModel.isEmpty()) {
+			System.out.println("Model is empty!!");
+			dataset.begin(ReadWrite.WRITE);
+
+			try {
+				this.infarDC = new InfarmedDataConverter(dbModel);
+				this.infoDC = new InfomedDataConverter(dbModel);
+				dataset.commit();
+			}
+
+			finally {
+				dataset.end();
+			}
+
+			// run a query
+			String q = "select * where {?s ?p ?o}";
+			Query query = QueryFactory.create(q);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+			ResultSet results = qexec.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File("output.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, results);
+		}
+
+
 	}
-	
-	public String makeQuery(String searchProperty, String value, ArrayList<String> sources, String[] propsList, String[] mappings){
-		
-		String result = "\n";
-		String partialResult = null;
-		
+
+	public String showProperties(String source) throws Exception {
+
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		// Model model = null;
+		String properties = "";
+
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+
+		String queryString = "SELECT DISTINCT ?class\n" + "WHERE {"
+				+ "?class a <http://www.w3.org/2000/01/rdf-schema#Class> ."
+				+ "FILTER (regex(str(?class), '" + source + "')) }";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+
+		properties = properties.concat(result);
+		properties = properties.concat("\n");
+
+		qe.close();
+
+		go.reset();
+		queryString = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ "?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ "FILTER (regex(str(?property), '" + source + "')) }";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+
+		properties = properties.concat(result);
+		properties = properties.concat("\n");
+
+		qe.close();
+
+		return properties;
+	}
+
+	public String makeQuery(String searchProperty, String value,
+			ArrayList<String> sources, String[] propsList, String[] mappings){
+
 		String select = "";
 		String where = "";
-		String property = "";		
+		String property = "";
 		String column = "";
+		String concat = "";
+		String propToShow = "";
+		String propSource = "";
+		String[] mapping = null;
 		String[] splt = null;
 		
-		ArrayList<String> infarProps = new ArrayList<String>();
-		ArrayList<String> infoProps = new ArrayList<String>();
+		String partialResult = null;
+		String result = "\n";
 		
-		String[] byName = {"<http://infarmed/Nome_do_Medicamento>", "<http://infomed/Nome_do_Medicamento>"};
-		String[] bySubstance = {"<http://infarmed/Substância_Activa>", "<http://infomed/Nome_Genérico>"};
+		int count = 0;
+		int sid = 0;
+		int oid = 0;
 		
-		for(String p: propsList){
-			if(p.contains("infarmed"))
-				infarProps.add(p);
-			if(p.contains("infomed"))
-				infoProps.add(p);
+		boolean mappingOnProp = false; //property in mapping is also in the list of properties to show
+		
+		HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>();//key - source name; value - properties list
+		HashMap<String, String> subjectBySource = new HashMap<String, String>(); //define variables per source		
+		ArrayList<String> oneElement = new ArrayList<String>();//one source at a time if mapping rules doesn't exist
+		ArrayList<String> propList = null; //auxiliary properties list by source
+
+		
+		//ignore mapping rules if only one source
+		if(sources.size() == 1)
+			mappings = null;
+		
+		//split properties by source
+		for(int i=0; i < sources.size(); i++){
+			propsBySource.put(sources.get(i).toLowerCase(), new ArrayList<String>());
 		}
-		
-		if(mappings == null){
-			
-			for(String s : sources){
-				
-				select = "";
-				where = "";
-				property = "";		
-				column = "";
-				splt = null;
-				
-				if(s.equals("Infarmed")){
-					
-					result = result.concat("INFARMED:\n");
-					
-					for(String pp: infarProps){
-						
-						property = pp;
-						splt = pp.split("/");        			
-						column = splt[splt.length - 1];
-						column = column.replace(">", "");
-						
+		for(String p: propsList){
+			propSource = getPropertySource(p);
+			propList = propsBySource.get(propSource);
+			propList.add(p);
+		}
+
+		if(mappings != null){			
+
+			for(String s: mappings){
+				mapping = s.split("-");
+				mappingOnProp = false;
+
+				//find out if property in mapping is to be shown in results table (if so, add it to the select clause)
+				for(int i=0; i<2; i++){
+					propSource = getPropertySource(mapping[i]);
+					propList = propsBySource.get(propSource);
+					if(propList.contains(mapping[i])){
+						mappingOnProp = true;
+						propToShow = mapping[i];
+						column = getPropertyName(propToShow);
 						select += " ?" + column;
-						
-						if(property.contains("FI"))
-							where += " ?x " + "<http://infarmed/FI> [ " + property + " ?" + column + " ] .";
-						
-						if(property.contains("RCM"))
-							where += " ?x " + "<http://infarmed/RCM> [ " + property + " ?" + column + " ] .";
-						
-						else
-							where += " ?x " + property + " ?" + column + " .";
-					}					
-					
-					try {
-						
-						if(searchProperty.equals("Name")){
-							partialResult = queryInfar(byName[0], value, select, where);
-							result = result.concat(partialResult + "\n");
+						for(int j=0; j<2; j++){
+							propSource = getPropertySource(mapping[j]);
+							propList = propsBySource.get(propSource);
+							propList.remove(propList.indexOf(mapping[j]));
 						}
-						if(searchProperty.equals("Substance")){
-							partialResult = queryInfar(bySubstance[0], value, select, where);
-							result = result.concat(partialResult + "\n");
-						}
-						
-					} catch (Exception e) {
-						e.printStackTrace();
+						break;
 					}
 				}
-				
-				if(s.equals("Infomed")){
+
+				if(!mappingOnProp)
+					oid++;
+
+				for(String prop: mapping){
+
+					splt = null;
+					concat = "";
+
+					propSource = getPropertySource(prop);
+					count = StringUtils.countMatches(prop, "/");
+					splt = prop.split("/");
 					
-					result = result.concat("INFOMED:\n");
-					
-					for(String pp: infoProps){
-						
-						property = pp;
-						splt = pp.split("/");        			
-						column = splt[splt.length - 1];
-						column = column.replace(">", "");
-						
-						select += " ?" + column;
-						where += " ?x " + property + " ?" + column + " .";
+					if(!mappingOnProp)
+						column = getPropertyName(prop);
+
+					if(!subjectBySource.containsKey(propSource)){
+						sid++;
+						subjectBySource.put(propSource, "s" + sid);
 					}
-					
-					try {
-						if(searchProperty.equals("Name")){
-							partialResult = queryInfo(byName[1], value, select, where);
-							result = result.concat(partialResult + "\n");
+
+					if(mappingOnProp){
+						if(count > 3){
+							for(int i=0; i < splt.length - 1; i++){
+								concat += splt[i];
+								concat += "/";
+							}
+							concat = concat.substring(0, concat.length()-1);
+							concat += ">";
+							where += " ?" + subjectBySource.get(propSource) + " " + concat + " [ " + prop + " ?" + column + " ] .";
 						}
-						if(searchProperty.equals("Substance")){
-							partialResult = queryInfo(bySubstance[1], value, select, where);
-							result = result.concat(partialResult + "\n");
+						else
+							where += " ?" + subjectBySource.get(propSource) + " " + prop + " ?" + column + " .";
+					}
+					else{
+						if(count > 3){
+							for(int i=0; i < splt.length - 1; i++){
+								concat += splt[i];
+								concat += "/";
+							}
+							concat = concat.substring(0, concat.length()-1);
+							concat += ">";
+							where += " ?" + subjectBySource.get(propSource) + " " + concat + " [ " + prop + " ?o" + oid + " ] .";
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
+						else
+							where += " ?" + subjectBySource.get(propSource) + " " + prop + " ?o" + oid + " .";
 					}
 				}
 			}
+
+			for(String s : sources){
+
+				propList = propsBySource.get(s.toLowerCase());
+
+				for(String pp: propList){
+
+					property = "";
+					column = "";
+					splt = null;
+					concat = "";
+					count = 0;
+
+					property = pp;
+					splt = pp.split("/");
+					column = splt[splt.length - 1];
+					column = column.replace(">", "");
+
+					select += " ?" + column;
+
+					count = StringUtils.countMatches(property, "/");
+					if(count > 3){
+						for(int i=0; i < splt.length - 1; i++){
+							concat += splt[i];
+							concat += "/";
+						}
+						concat = concat.substring(0, concat.length()-1);
+						concat += ">";
+						where += " ?" + subjectBySource.get(s) + " " + concat + " [ " + property + " ?" + column + " ] .";
+					}
+
+					else
+						where += " ?" + subjectBySource.get(s) + " " + property + " ?" + column + " .";
+				}
+			}
+			System.out.println("Select: " + select);
+			System.out.println("Where: " + where);
+			partialResult = queryDB(sources, searchProperty, value, select, where, subjectBySource);
+			result = result.concat(partialResult + "\n");
 		}
 		
 		else{
-			result = "Under construction";
+			for(String s : sources){
+
+				select = "";
+				where = "";
+
+				propList = propsBySource.get(s.toLowerCase());
+				result = result.concat(s + "\n");
+				
+				oneElement.clear();
+				oneElement.add(s);
+
+				for(String pp: propList){
+
+					property = "";
+					column = "";
+					splt = null;
+					concat = "";
+					count = 0;
+
+					property = pp;
+					splt = pp.split("/");
+					column = splt[splt.length - 1];
+					column = column.replace(">", "");
+
+					select += " ?" + column;
+
+					count = StringUtils.countMatches(property, "/");
+					if(count > 3){
+						for(int i=0; i < splt.length - 1; i++){
+							concat += splt[i];
+							concat += "/";
+						}
+						concat = concat.substring(0, concat.length()-1);
+						concat += ">";
+						where += " ?s " + concat + " [ " + property + " ?" + column + " ] .";
+					}
+
+					else
+						where += " ?s " + property + " ?" + column + " .";
+				}
+				
+				partialResult = queryDB(oneElement, searchProperty, value, select, where, null);
+				result = result.concat(partialResult + "\n");
+			}
 		}
-		
-		
+
 		return result;
 	}
-	
+
+	public String queryDB(ArrayList<String> sources, String searchProperty, String value, String select, String where, 
+			HashMap<String, String> subjectBySource){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+		boolean multipleSources = false;
+		String queryResult = "";
+		String propSource = "";
+		String subjectId = "";
+		String property = null;
+		int index = 0;
+
+		String[] byName = {"<http://www.infarmed.pt/Nome_do_Medicamento>", "<http://www.infomed.pt/Nome_do_Medicamento>"};
+		String[] bySubstance = {"<http://www.infarmed.pt/Substância_Activa>", "<http://www.infomed.pt/Nome_Genérico>"};
+
+		if(sources.size() == 1){
+			switch(sources.get(0)){
+				case "infarmed":
+					index = 0;
+					break;
+				case "infomed":
+					index = 1;
+					break;
+				default:
+					break;
+			}
+		}
+		else{
+			index = 0;
+			multipleSources = true;
+		}
+
+		switch(searchProperty){
+			case "Name":
+				property = byName[index];
+				break;
+			case "Substance":
+				property = bySubstance[index];
+				break;
+			default:
+				break;
+		}
+
+		String queryString =
+				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+						"SELECT ?s\n" +
+						"WHERE{ ?s " + property + " ?o ."
+						+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+						+ "}";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+
+		if(!results.hasNext()){
+			switch(searchProperty){
+				case "Name":
+					try {
+						infarDC.getInfarByName(dbModel, value);
+						infoDC.getInfoByName(dbModel, value);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					break;
+				case "Substance":
+					try {
+						infarDC.getInfarBySubstance(dbModel, value);
+						infoDC.getInfoBySubstance(dbModel, value);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					break;
+				default:
+					break;
+			}
+		}
+
+		qe.close();
+		
+		if(multipleSources){
+			
+			propSource = getPropertySource(property);
+			subjectId = subjectBySource.get(propSource);
+			
+			queryString =
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+					"PREFIX Infarmed: <http://www.infarmed.pt/>" +
+					"PREFIX Infomed: <http://www.infomed.pt/>" +
+					"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
+					"PREFIX FI: <http://www.infarmed.pt/FI/>" +
+					"SELECT" + select + "\n" +
+					"WHERE{ ?" + subjectId + " " + property + " ?o ."
+						+ where
+						+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+						+ "}";
+		}
+		else{
+			
+			queryString =
+				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+				"PREFIX Infarmed: <http://www.infarmed.pt/>" +
+				"PREFIX Infomed: <http://www.infomed.pt/>" +
+				"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
+				"PREFIX FI: <http://www.infarmed.pt/FI/>" +
+				"SELECT" + select + "\n" +
+				"WHERE{ ?s " + property + " ?o ."
+					+ where
+					+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+					+ "}";
+		}
+
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+
+		ResultSetFormatter.out(baos, results, query);
+
+		queryResult = baos.toString();
+		queryResult = queryResult.replace("-", "_");
+
+		qe.close();
+
+		return queryResult;
+	}
+
+	String getPropertySource(String property){
+
+		String splitProp[] = null;
+		String source[] = null;
+
+		splitProp = property.split("/");
+		source = splitProp[2].split("\\.");
+
+		return source[1];
+	}
+
+	String getPropertyName(String property){
+
+		String column = "";
+		String[] splt = null;
+
+		splt = property.split("/");
+		column = splt[splt.length - 1];
+		column = column.replace(">", "");
+
+		return column;
+	}
+
 }
