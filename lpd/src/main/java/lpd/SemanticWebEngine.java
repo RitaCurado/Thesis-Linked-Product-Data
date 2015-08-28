@@ -136,6 +136,7 @@ public class SemanticWebEngine {
 		String concat = "";
 		String propToShow = "";
 		String propSource = "";
+		String sourceSubj = "";
 		String[] mapping = null;
 		String[] splt = null;
 		
@@ -145,6 +146,7 @@ public class SemanticWebEngine {
 		int count = 0;
 		int sid = 0;
 		int oid = 0;
+		int subjID = 0;
 		
 		boolean mappingOnProp = false; //property in mapping is also in the list of properties to show
 		
@@ -244,6 +246,8 @@ public class SemanticWebEngine {
 			for(String s : sources){
 
 				propList = propsBySource.get(s.toLowerCase());
+				sourceSubj = subjectBySource.get(s);
+				subjID = Integer.parseInt(sourceSubj.substring(1));
 
 				for(String pp: propList){
 
@@ -258,7 +262,7 @@ public class SemanticWebEngine {
 					column = splt[splt.length - 1];
 					column = column.replace(">", "");
 
-					select += " ?" + column;
+					select += " ?" + column + subjID;
 
 					count = StringUtils.countMatches(property, "/");
 					if(count > 3){
@@ -268,15 +272,15 @@ public class SemanticWebEngine {
 						}
 						concat = concat.substring(0, concat.length()-1);
 						concat += ">";
-						where += " ?" + subjectBySource.get(s) + " " + concat + " [ " + property + " ?" + column + " ] .";
+						where += " ?" + subjectBySource.get(s) + " " + concat + " [ " + property + " ?" + column + subjID + " ] .";
 					}
 
 					else
-						where += " ?" + subjectBySource.get(s) + " " + property + " ?" + column + " .";
+						where += " ?" + subjectBySource.get(s) + " " + property + " ?" + column + subjID + " .";
 				}
 			}
-			System.out.println("Select: " + select);
-			System.out.println("Where: " + where);
+			//System.out.println("Select: " + select);
+			//System.out.println("Where: " + where);
 			partialResult = queryDB(sources, searchProperty, value, select, where, subjectBySource);
 			result = result.concat(partialResult + "\n");
 		}
