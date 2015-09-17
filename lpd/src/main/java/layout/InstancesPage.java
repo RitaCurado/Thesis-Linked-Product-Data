@@ -9,7 +9,7 @@ import javax.swing.*;
 import lpd.SemanticWebEngine;
 
 public class InstancesPage {
-	
+
 	private JLabel source;
 	private JLabel classNameLabel;
 	private JLabel numInstances;
@@ -19,9 +19,9 @@ public class InstancesPage {
 	private JSplitPane pageInstances;
 	private SemanticWebEngine swe;
 	private String className;
-	
+
 	public InstancesPage(SemanticWebEngine swe, String className, JButton back){
-		
+
 		pageInstances = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		source = new JLabel("Information source: " + swe.getPropertySource(className));
 		classNameLabel = new JLabel("Class name: " + className);
@@ -31,37 +31,37 @@ public class InstancesPage {
 		backButton = back;
 		this.swe = swe;
 		this.className = className;
-		
+
 		createPage();
 	}
-	
+
 	public JSplitPane getPage(){
 		return pageInstances;
 	}
-	
+
 	public void createPage(){
 		JPanel sourceInfo = new JPanel();
 		JPanel instPanel = new JPanel();
 		JPanel backPanel = new JPanel();
-		
+
 		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		
+
 		output.setText(swe.selectAllInfo(className));
-		
+
 		sourceInfo.setLayout(new GridLayout(1, 2));
 		sourceInfo.add(source);
 		sourceInfo.add(classNameLabel);
-		
+
 		upPanel.add(sourceInfo);
 		upPanel.add(numInstances);
 		upPanel.setDividerSize(1);
-		
+
 		instPanel.setLayout(new BorderLayout());
 		instPanel.setPreferredSize(new Dimension(400, 250));		
 		scrollPane.setViewportView(output);
 		instPanel.add(scrollPane);
-		
+
 		backPanel.setLayout(new GridLayout(1, 6));
 		backPanel.add(backButton);
 		backPanel.add(new JLabel());
@@ -69,11 +69,11 @@ public class InstancesPage {
 		backPanel.add(new JLabel());
 		backPanel.add(new JLabel());
 		backPanel.add(new JLabel());
-		
+
 		downPanel.add(instPanel);
 		downPanel.add(backPanel);
 		downPanel.setDividerSize(1);
-		
+
 		pageInstances.add(upPanel);
 		pageInstances.add(downPanel);
 		pageInstances.setDividerSize(1);

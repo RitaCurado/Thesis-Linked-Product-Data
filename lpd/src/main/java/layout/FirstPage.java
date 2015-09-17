@@ -14,26 +14,26 @@ public class FirstPage {
 
 	private JSplitPane page1;
 	private JTabbedPane tabbedPane;
-	
+
 	private JSplitPane sourceInfo;
 	private JSplitPane properties;
 	private JSplitPane upPanel;
 	private JSplitPane downPanel;
-	
+
 	private JPanel instances;
 	private JPanel propsPanel;
 	private JPanel nextPanel;
-	
+
 	private JLabel infoTitle;
 	private JLabel instancesTitle;
 	private JLabel propertiesTitle;
-	
+
 	private JButton show;
 	private JButton next;
-	
+
 	private JTextArea propertiesText;
 	private JScrollPane propsScrollPane;
-	
+
 	private JList<String> infarList;
 	private JList<String> infoList;
 
@@ -43,30 +43,30 @@ public class FirstPage {
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		
+
 		instances = new JPanel();
 		propsPanel = new JPanel();
 		nextPanel = new JPanel();
 		tabbedPane = new JTabbedPane();
 		propertiesText = new JTextArea();
 		propsScrollPane = new JScrollPane();
-		
+
 		infoTitle = new JLabel("Sources' Classes:");
 		instancesTitle = new JLabel("Number of instances: ");
 		propertiesTitle = new JLabel("Properties:");
 		show = instancesButton;
 		next = new JButton("Next >");
-		
+
 		this.swe = swe;
 		className = "";
-		
+
 		createPage();
 	}
 
 	public JSplitPane getPage(){
 		return page1;
 	}
-	
+
 	public String getClassName(){
 		return className;
 	}
@@ -189,12 +189,12 @@ public class FirstPage {
 		infoScrollPane.setViewportView(infoList);
 		infoPanel.add(infoScrollPane);
 
-		
+
 		tabbedPane.addTab("Infarmed", infarPanel);
 		tabbedPane.addTab("Infomed", infoPanel);
 
 	}
-	
+
 	public class selectionListener implements ListSelectionListener{
 
 		@Override
@@ -202,15 +202,15 @@ public class FirstPage {
 			//String className = "";
 			String classProps = "";
 			String classInstances = "";
-			
+
 			if(!infarList.isSelectionEmpty()){
 				className = infarList.getSelectedValue();
 			}
-			
+
 			if(!infoList.isSelectionEmpty()){
 				className = infoList.getSelectedValue();
 			}
-			
+
 			if(className != ""){
 				try {
 					classProps = swe.showClassProperties(className);
@@ -222,7 +222,7 @@ public class FirstPage {
 					e.printStackTrace();
 				}
 			}
-			
+
 			infarList.clearSelection();
 			infoList.clearSelection();
 		}		

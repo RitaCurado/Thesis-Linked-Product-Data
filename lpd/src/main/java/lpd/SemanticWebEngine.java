@@ -73,7 +73,7 @@ public class SemanticWebEngine {
 
 
 	}
-	
+
 	public String getPropertySource(String property){
 
 		String splitProp[] = null;
@@ -90,10 +90,10 @@ public class SemanticWebEngine {
 		int count;
 		String column = "";
 		String[] splt = null;
-		
+
 		count = StringUtils.countMatches(property, "/");
 		splt = property.split("/");
-		
+
 		if(count > 3){
 			column = splt[splt.length-2];
 			column += "_";
@@ -109,26 +109,26 @@ public class SemanticWebEngine {
 
 		return column;
 	}
-	
+
 	public String getComposedProperty(String property){
-		
+
 		String[] splt = null;
 		String cProp = "";
-		
+
 		splt = property.split("/");
 		for(int i = 0; i < splt.length-1; i++){
 			cProp += splt[i];
 			cProp += "/";
 		}
-		
+
 		cProp = cProp.substring(0, cProp.length()-1);
 		cProp += ">";
-		
+
 		return cProp;
 	}
-	
+
 	public String showSourceClasses(String source) throws Exception{
-		
+
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -148,9 +148,9 @@ public class SemanticWebEngine {
 		result = go.toString();
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
-		
+
 		qe.close();
-		
+
 		return result;
 	}
 
@@ -163,22 +163,22 @@ public class SemanticWebEngine {
 		QueryExecution qe;
 		ResultSet results;
 		String result;
-		
+
 		cl = cl.substring(2, cl.length()-2);
 
 		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
 				+ "{"
-					+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-					+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
 				+ "}"
 				+ " UNION "
 				+ "{"
-					+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-					+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
-					+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
-					+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-					+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
+				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
 				+ "} }";
 
 		query = QueryFactory.create(queryString);
@@ -197,7 +197,7 @@ public class SemanticWebEngine {
 
 		return properties;
 	}
-	
+
 	public String countClassInstances(String cl){
 		Query query;
 		QueryExecution qe;
@@ -206,9 +206,9 @@ public class SemanticWebEngine {
 		String queryString;
 		String numInstances = "";
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		
+
 		cl = cl.substring(2, (cl.length()-2));
-		
+
 		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
 				+ "WHERE {"
 				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + cl + "\" .}";
@@ -217,10 +217,10 @@ public class SemanticWebEngine {
 		qe = QueryExecutionFactory.create(query, dbModel);
 		results = qe.execSelect();
 		ResultSetFormatter.out(go, results, query);
-		
+
 		result = go.toString().split("\\r?\\n");
 		numInstances = result[3].substring(2, 5);
-		
+
 		return numInstances;
 	}
 
@@ -230,33 +230,33 @@ public class SemanticWebEngine {
 		String select = "";
 		String where = "";
 		String column = "";
-		
+
 		String propToShow = "";
 		String propSource = "";
 		String sourceSubj = "";
-		
+
 		String[] mapping = null;
-		
+
 		String partialResult = null;
 		String result = "\n";
-		
+
 		int count = 0;
 		int sid = 0;
 		int oid = 0;
 		int subjID = 0;
-		
+
 		boolean mappingOnProp = false; //property in mapping is also in the list of properties to show
-		
+
 		HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>();//key - source name; value - properties list
 		HashMap<String, String> subjectBySource = new HashMap<String, String>(); //define variables per source		
 		ArrayList<String> oneElement = new ArrayList<String>();//one source at a time if mapping rules doesn't exist
 		ArrayList<String> propList = null; //auxiliary properties list by source
 
-		
+
 		//ignore mapping rules if only one source
 		if(sources.size() == 1)
 			mappings = null;
-		
+
 		//split properties by source
 		for(int i=0; i < sources.size(); i++){
 			propsBySource.put(sources.get(i).toLowerCase(), new ArrayList<String>());
@@ -295,10 +295,10 @@ public class SemanticWebEngine {
 					oid++;
 
 				for(String prop: mapping){
-					
+
 					propSource = getPropertySource(prop);
 					count = StringUtils.countMatches(prop, "/");
-					
+
 					if(!mappingOnProp)
 						column = getPropertyName(prop);
 
@@ -338,18 +338,18 @@ public class SemanticWebEngine {
 					select += " ?" + column + subjID;
 
 					count = StringUtils.countMatches(property, "/");
-					
+
 					if(count > 3)
 						this.writeClauses(where, subjectBySource.get(s), property, "remainPropsC", sid, -1);
 					else
 						this.writeClauses(where, subjectBySource.get(s), property, "remainPropsS", sid, -1);
 				}
 			}
-			
+
 			partialResult = queryDB(sources, searchProperty, value, select, where, subjectBySource);
 			result = result.concat(partialResult + "\n");
 		}
-		
+
 		//mappings==null
 		else{
 			for(String s : sources){
@@ -359,26 +359,26 @@ public class SemanticWebEngine {
 
 				propList = propsBySource.get(s.toLowerCase());
 				result = result.concat(s + "\n");
-				
+
 				oneElement.clear();
 				oneElement.add(s);
 
 				for(String property: propList){
-					
+
 					count = 0;
 					column = "";
-					
+
 					column = this.getPropertyName(property);
 					select += " ?" + column;
 
 					count = StringUtils.countMatches(property, "/");
-					
+
 					if(count > 3)
 						this.writeClauses(where, null, property, "simpleComp", -1, -1);
 					else
 						this.writeClauses(where, null, property, "simple", -1, -1);
 				}
-				
+
 				partialResult = queryDB(oneElement, searchProperty, value, select, where, null);
 				result = result.concat(partialResult + "\n");
 			}
@@ -386,7 +386,7 @@ public class SemanticWebEngine {
 
 		return result;
 	}
-	
+
 	public String queryDB(ArrayList<String> sources, String searchProperty, String value, String select, String where, 
 			HashMap<String, String> subjectBySource){
 		Query query;
@@ -406,14 +406,14 @@ public class SemanticWebEngine {
 
 		if(sources.size() == 1){
 			switch(sources.get(0)){
-				case "infarmed":
-					index = 0;
-					break;
-				case "infomed":
-					index = 1;
-					break;
-				default:
-					break;
+			case "infarmed":
+				index = 0;
+				break;
+			case "infomed":
+				index = 1;
+				break;
+			default:
+				break;
 			}
 		}
 		else{
@@ -422,14 +422,14 @@ public class SemanticWebEngine {
 		}
 
 		switch(searchProperty){
-			case "Name":
-				property = byName[index];
-				break;
-			case "Substance":
-				property = bySubstance[index];
-				break;
-			default:
-				break;
+		case "Name":
+			property = byName[index];
+			break;
+		case "Substance":
+			property = bySubstance[index];
+			break;
+		default:
+			break;
 		}
 
 		String queryString =
@@ -445,59 +445,59 @@ public class SemanticWebEngine {
 
 		if(!results.hasNext()){
 			switch(searchProperty){
-				case "Name":
-					try {
-						infarDC.getInfarByName(dbModel, value);
-						infoDC.getInfoByName(dbModel, value);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					break;
-				case "Substance":
-					try {
-						infarDC.getInfarBySubstance(dbModel, value);
-						infoDC.getInfoBySubstance(dbModel, value);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					break;
-				default:
-					break;
+			case "Name":
+				try {
+					infarDC.getInfarByName(dbModel, value);
+					infoDC.getInfoByName(dbModel, value);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				break;
+			case "Substance":
+				try {
+					infarDC.getInfarBySubstance(dbModel, value);
+					infoDC.getInfoBySubstance(dbModel, value);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				break;
+			default:
+				break;
 			}
 		}
 
 		qe.close();
-		
+
 		if(multipleSources){
-			
+
 			propSource = getPropertySource(property);
 			subjectId = subjectBySource.get(propSource);
-			
+
 			queryString =
 					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-					"PREFIX Infarmed: <http://www.infarmed.pt/>" +
-					"PREFIX Infomed: <http://www.infomed.pt/>" +
-					"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
-					"PREFIX FI: <http://www.infarmed.pt/FI/>" +
-					"SELECT" + select + "\n" +
-					"WHERE{ ?" + subjectId + " " + property + " ?o ."
-						+ where
-						+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
-						+ "}";
+							"PREFIX Infarmed: <http://www.infarmed.pt/>" +
+							"PREFIX Infomed: <http://www.infomed.pt/>" +
+							"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
+							"PREFIX FI: <http://www.infarmed.pt/FI/>" +
+							"SELECT" + select + "\n" +
+							"WHERE{ ?" + subjectId + " " + property + " ?o ."
+							+ where
+							+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+							+ "}";
 		}
 		else{
-			
+
 			queryString =
-				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-				"PREFIX Infarmed: <http://www.infarmed.pt/>" +
-				"PREFIX Infomed: <http://www.infomed.pt/>" +
-				"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
-				"PREFIX FI: <http://www.infarmed.pt/FI/>" +
-				"SELECT" + select + "\n" +
-				"WHERE{ ?s " + property + " ?o ."
-					+ where
-					+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
-					+ "}";
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
+							"PREFIX Infarmed: <http://www.infarmed.pt/>" +
+							"PREFIX Infomed: <http://www.infomed.pt/>" +
+							"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
+							"PREFIX FI: <http://www.infarmed.pt/FI/>" +
+							"SELECT" + select + "\n" +
+							"WHERE{ ?s " + property + " ?o ."
+							+ where
+							+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+							+ "}";
 		}
 
 
@@ -514,19 +514,19 @@ public class SemanticWebEngine {
 
 		return queryResult;
 	}
-	
+
 	public String selectAllInfo(String className){
 		int count = 0;
 		String output = "";
 		String[] classProps = null;
 		String select = "", where = "", property = "", column = "";
-		
+
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
 		String queryString;
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		
+
 		try {
 			output = this.showClassProperties(className);
 			classProps = output.split("\\r?\\n");
@@ -534,23 +534,23 @@ public class SemanticWebEngine {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		if(classProps != null){
 			for(int i = 3; i < classProps.length-1; i++){
-				
+
 				property = classProps[i];
 				column = this.getPropertyName(property);
 				select += " ?" + column;
-			
+
 				count = StringUtils.countMatches(property, "/");
 				if(count > 3)
 					where += this.writeClauses(where, null, property, "simpleComp", -1, -1);
 				else
 					where += this.writeClauses(where, null, property, "simple", -1, -1);
 			}
-			
+
 			className = className.substring(2, (className.length()-2));
-			
+
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
 					+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + className + "\" ."
@@ -560,57 +560,57 @@ public class SemanticWebEngine {
 			qe = QueryExecutionFactory.create(query, dbModel);
 			results = qe.execSelect();
 			ResultSetFormatter.out(go, results, query);
-			
+
 			output = go.toString();
 			output = output.replace("-", "_");
 
 			qe.close();
 		}
-		
+
 		return output;
 	}
-	
+
 	private String writeClauses(String where, String subject, String prop, String mode, int sid, int oid){
-		
+
 		int count;
 		String column, composedProp = "";
-		
+
 		column = this.getPropertyName(prop);
 		count = StringUtils.countMatches(prop, "/");
-		
+
 		if(count >3)
 			composedProp = this.getComposedProperty(prop);
-		
+
 		switch(mode){
-		
-			case "simple":
-				return " ?s " + prop + " ?" + column + " .";
-				
-			case "simpleComp":
-				return " ?s " + composedProp + " [ " + prop + " ?" + column + " ] .";
-				
-			case "mappingOnPropS":
-				return " ?" + subject + " " +  prop + " ?" + column + " .";
-				
-			case "mappingOnPropC":
-				return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + " ] .";
-				
-			case "normalMappingS":
-				return " ?" + subject + " " +  prop + " ?o" + oid + " .";
-			
-			case "normalMappingC":
-				return " ?" + subject + " " + composedProp + " [ " + prop + " ?o" + oid + " ] .";
-				
-			case "remainPropsS":
-				return " ?" + subject + " " +  prop + " ?" + column + sid + " .";
-				
-			case "remainPropsC":
-				return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
-				
-			default:
-				break;
+
+		case "simple":
+			return " ?s " + prop + " ?" + column + " .";
+
+		case "simpleComp":
+			return " ?s " + composedProp + " [ " + prop + " ?" + column + " ] .";
+
+		case "mappingOnPropS":
+			return " ?" + subject + " " +  prop + " ?" + column + " .";
+
+		case "mappingOnPropC":
+			return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + " ] .";
+
+		case "normalMappingS":
+			return " ?" + subject + " " +  prop + " ?o" + oid + " .";
+
+		case "normalMappingC":
+			return " ?" + subject + " " + composedProp + " [ " + prop + " ?o" + oid + " ] .";
+
+		case "remainPropsS":
+			return " ?" + subject + " " +  prop + " ?" + column + sid + " .";
+
+		case "remainPropsC":
+			return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
+
+		default:
+			break;
 		}
-		
+
 		return "";
 	}
 
