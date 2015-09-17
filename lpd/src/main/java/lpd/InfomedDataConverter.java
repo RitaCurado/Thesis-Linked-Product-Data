@@ -47,9 +47,8 @@ public class InfomedDataConverter {
 			getInfoBySubstance(dbModel, "Glibenclamida");
 			getInfoBySubstance(dbModel, "Glipizida");
 			getInfoBySubstance(dbModel, "Glimepirida");
-			getInfoBySubstance(dbModel, "Nateglinida");
-			getInfoBySubstance(dbModel, "Sitagliptina");
-			getInfoBySubstance(dbModel, "Metformina");
+			getInfoBySubstance(dbModel, "Nateglinida");//
+			getInfoBySubstance(dbModel, "Sitagliptina");//
 			getInfoBySubstance(dbModel, "Pioglitazona");
 			getInfoBySubstance(dbModel, "Acarbose");
 			getInfoBySubstance(dbModel, "ciclosporina");

@@ -50,7 +50,6 @@ public class InfarmedDataConverter {
 			getInfarBySubstance(dbModel, "Glibenclamida");
 			getInfarBySubstance(dbModel, "Glipizida");
 			getInfarBySubstance(dbModel, "Glimepirida");
-			getInfarBySubstance(dbModel, "Metformina");
 			getInfarBySubstance(dbModel, "Pioglitazona");
 			getInfarBySubstance(dbModel, "Acarbose");
 			

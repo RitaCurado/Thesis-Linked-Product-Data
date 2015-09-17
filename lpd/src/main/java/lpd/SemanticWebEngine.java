@@ -73,19 +73,70 @@ public class SemanticWebEngine {
 
 
 	}
+	
+	public String getPropertySource(String property){
 
-	public String showProperties(String source) throws Exception {
+		String splitProp[] = null;
+		String source[] = null;
 
-		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		// Model model = null;
-		String properties = "";
+		splitProp = property.split("/");
+		source = splitProp[2].split("\\.");
 
+		return source[1];
+	}
+
+	public String getPropertyName(String property){
+
+		int count;
+		String column = "";
+		String[] splt = null;
+		
+		count = StringUtils.countMatches(property, "/");
+		splt = property.split("/");
+		
+		if(count > 3){
+			column = splt[splt.length-2];
+			column += "_";
+			column += splt[splt.length - 1];
+		}		
+		else{
+			column = splt[splt.length - 1];			
+		}
+
+		column = column.replace(">", "");
+		column = column.replace("(", "");
+		column = column.replace(")", "");
+
+		return column;
+	}
+	
+	public String getComposedProperty(String property){
+		
+		String[] splt = null;
+		String cProp = "";
+		
+		splt = property.split("/");
+		for(int i = 0; i < splt.length-1; i++){
+			cProp += splt[i];
+			cProp += "/";
+		}
+		
+		cProp = cProp.substring(0, cProp.length()-1);
+		cProp += ">";
+		
+		return cProp;
+	}
+	
+	public String showSourceClasses(String source) throws Exception{
+		
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
 		String result;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
-		String queryString = "SELECT DISTINCT ?class\n" + "WHERE {"
+		String queryString = "SELECT DISTINCT ?class\n"
+				+ "WHERE {"
 				+ "?class a <http://www.w3.org/2000/01/rdf-schema#Class> ."
 				+ "FILTER (regex(str(?class), '" + source + "')) }";
 
@@ -97,17 +148,38 @@ public class SemanticWebEngine {
 		result = go.toString();
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
-
-		properties = properties.concat(result);
-		properties = properties.concat("\n");
-
+		
 		qe.close();
+		
+		return result;
+	}
 
-		go.reset();
-		queryString = "SELECT DISTINCT ?property\n"
+	public String showClassProperties(String cl) throws Exception {
+
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		String properties = "";
+
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		
+		cl = cl.substring(2, cl.length()-2);
+
+		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
-				+ "?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ "FILTER (regex(str(?property), '" + source + "')) }";
+				+ "{"
+					+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+					+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
+				+ "}"
+				+ " UNION "
+				+ "{"
+					+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+					+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
+					+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
+					+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+					+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
+				+ "} }";
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
@@ -125,20 +197,45 @@ public class SemanticWebEngine {
 
 		return properties;
 	}
+	
+	public String countClassInstances(String cl){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String[] result;
+		String queryString;
+		String numInstances = "";
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		cl = cl.substring(2, (cl.length()-2));
+		
+		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
+				+ "WHERE {"
+				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + cl + "\" .}";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+		
+		result = go.toString().split("\\r?\\n");
+		numInstances = result[3].substring(2, 5);
+		
+		return numInstances;
+	}
 
 	public String makeQuery(String searchProperty, String value,
 			ArrayList<String> sources, String[] propsList, String[] mappings){
 
 		String select = "";
 		String where = "";
-		String property = "";
 		String column = "";
-		String concat = "";
+		
 		String propToShow = "";
 		String propSource = "";
 		String sourceSubj = "";
+		
 		String[] mapping = null;
-		String[] splt = null;
 		
 		String partialResult = null;
 		String result = "\n";
@@ -165,7 +262,7 @@ public class SemanticWebEngine {
 			propsBySource.put(sources.get(i).toLowerCase(), new ArrayList<String>());
 		}
 		for(String p: propsList){
-			propSource = getPropertySource(p);
+			propSource = this.getPropertySource(p);
 			propList = propsBySource.get(propSource);
 			propList.add(p);
 		}
@@ -178,7 +275,7 @@ public class SemanticWebEngine {
 
 				//find out if property in mapping is to be shown in results table (if so, add it to the select clause)
 				for(int i=0; i<2; i++){
-					propSource = getPropertySource(mapping[i]);
+					propSource = this.getPropertySource(mapping[i]);
 					propList = propsBySource.get(propSource);
 					if(propList.contains(mapping[i])){
 						mappingOnProp = true;
@@ -186,7 +283,7 @@ public class SemanticWebEngine {
 						column = getPropertyName(propToShow);
 						select += " ?" + column;
 						for(int j=0; j<2; j++){
-							propSource = getPropertySource(mapping[j]);
+							propSource = this.getPropertySource(mapping[j]);
 							propList = propsBySource.get(propSource);
 							propList.remove(propList.indexOf(mapping[j]));
 						}
@@ -198,13 +295,9 @@ public class SemanticWebEngine {
 					oid++;
 
 				for(String prop: mapping){
-
-					splt = null;
-					concat = "";
-
+					
 					propSource = getPropertySource(prop);
 					count = StringUtils.countMatches(prop, "/");
-					splt = prop.split("/");
 					
 					if(!mappingOnProp)
 						column = getPropertyName(prop);
@@ -215,76 +308,49 @@ public class SemanticWebEngine {
 					}
 
 					if(mappingOnProp){
-						if(count > 3){
-							for(int i=0; i < splt.length - 1; i++){
-								concat += splt[i];
-								concat += "/";
-							}
-							concat = concat.substring(0, concat.length()-1);
-							concat += ">";
-							where += " ?" + subjectBySource.get(propSource) + " " + concat + " [ " + prop + " ?" + column + " ] .";
-						}
+						if(count > 3)
+							this.writeClauses(where, subjectBySource.get(propSource), prop, "mappingOnPropC", -1, -1);
 						else
-							where += " ?" + subjectBySource.get(propSource) + " " + prop + " ?" + column + " .";
+							this.writeClauses(where, subjectBySource.get(propSource), prop, "mappingOnPropS", -1, -1);
 					}
 					else{
-						if(count > 3){
-							for(int i=0; i < splt.length - 1; i++){
-								concat += splt[i];
-								concat += "/";
-							}
-							concat = concat.substring(0, concat.length()-1);
-							concat += ">";
-							where += " ?" + subjectBySource.get(propSource) + " " + concat + " [ " + prop + " ?o" + oid + " ] .";
-						}
+						if(count > 3)
+							this.writeClauses(where, subjectBySource.get(propSource), prop, "normalMappingC", -1, oid);
 						else
-							where += " ?" + subjectBySource.get(propSource) + " " + prop + " ?o" + oid + " .";
+							this.writeClauses(where, subjectBySource.get(propSource), prop, "normalMappingS", -1, oid);
 					}
 				}
 			}
 
+			//remain properties (not included in mapping rules)
 			for(String s : sources){
 
 				propList = propsBySource.get(s.toLowerCase());
 				sourceSubj = subjectBySource.get(s);
 				subjID = Integer.parseInt(sourceSubj.substring(1));
 
-				for(String pp: propList){
+				for(String property: propList){
 
-					property = "";
-					column = "";
-					splt = null;
-					concat = "";
 					count = 0;
+					column = "";
 
-					property = pp;
-					splt = pp.split("/");
-					column = splt[splt.length - 1];
-					column = column.replace(">", "");
-
+					column = this.getPropertyName(property);
 					select += " ?" + column + subjID;
 
 					count = StringUtils.countMatches(property, "/");
-					if(count > 3){
-						for(int i=0; i < splt.length - 1; i++){
-							concat += splt[i];
-							concat += "/";
-						}
-						concat = concat.substring(0, concat.length()-1);
-						concat += ">";
-						where += " ?" + subjectBySource.get(s) + " " + concat + " [ " + property + " ?" + column + subjID + " ] .";
-					}
-
+					
+					if(count > 3)
+						this.writeClauses(where, subjectBySource.get(s), property, "remainPropsC", sid, -1);
 					else
-						where += " ?" + subjectBySource.get(s) + " " + property + " ?" + column + subjID + " .";
+						this.writeClauses(where, subjectBySource.get(s), property, "remainPropsS", sid, -1);
 				}
 			}
-			//System.out.println("Select: " + select);
-			//System.out.println("Where: " + where);
+			
 			partialResult = queryDB(sources, searchProperty, value, select, where, subjectBySource);
 			result = result.concat(partialResult + "\n");
 		}
 		
+		//mappings==null
 		else{
 			for(String s : sources){
 
@@ -297,34 +363,20 @@ public class SemanticWebEngine {
 				oneElement.clear();
 				oneElement.add(s);
 
-				for(String pp: propList){
-
-					property = "";
-					column = "";
-					splt = null;
-					concat = "";
+				for(String property: propList){
+					
 					count = 0;
-
-					property = pp;
-					splt = pp.split("/");
-					column = splt[splt.length - 1];
-					column = column.replace(">", "");
-
+					column = "";
+					
+					column = this.getPropertyName(property);
 					select += " ?" + column;
 
 					count = StringUtils.countMatches(property, "/");
-					if(count > 3){
-						for(int i=0; i < splt.length - 1; i++){
-							concat += splt[i];
-							concat += "/";
-						}
-						concat = concat.substring(0, concat.length()-1);
-						concat += ">";
-						where += " ?s " + concat + " [ " + property + " ?" + column + " ] .";
-					}
-
+					
+					if(count > 3)
+						this.writeClauses(where, null, property, "simpleComp", -1, -1);
 					else
-						where += " ?s " + property + " ?" + column + " .";
+						this.writeClauses(where, null, property, "simple", -1, -1);
 				}
 				
 				partialResult = queryDB(oneElement, searchProperty, value, select, where, null);
@@ -334,7 +386,7 @@ public class SemanticWebEngine {
 
 		return result;
 	}
-
+	
 	public String queryDB(ArrayList<String> sources, String searchProperty, String value, String select, String where, 
 			HashMap<String, String> subjectBySource){
 		Query query;
@@ -462,28 +514,105 @@ public class SemanticWebEngine {
 
 		return queryResult;
 	}
+	
+	public String selectAllInfo(String className){
+		int count = 0;
+		String output = "";
+		String[] classProps = null;
+		String select = "", where = "", property = "", column = "";
+		
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		try {
+			output = this.showClassProperties(className);
+			classProps = output.split("\\r?\\n");
+			output = "";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if(classProps != null){
+			for(int i = 3; i < classProps.length-1; i++){
+				
+				property = classProps[i];
+				column = this.getPropertyName(property);
+				select += " ?" + column;
+			
+				count = StringUtils.countMatches(property, "/");
+				if(count > 3)
+					where += this.writeClauses(where, null, property, "simpleComp", -1, -1);
+				else
+					where += this.writeClauses(where, null, property, "simple", -1, -1);
+			}
+			
+			className = className.substring(2, (className.length()-2));
+			
+			queryString = "SELECT " + select + "\n"
+					+ "WHERE {"
+					+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + className + "\" ."
+					+ where + "}";
 
-	String getPropertySource(String property){
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, dbModel);
+			results = qe.execSelect();
+			ResultSetFormatter.out(go, results, query);
+			
+			output = go.toString();
+			output = output.replace("-", "_");
 
-		String splitProp[] = null;
-		String source[] = null;
-
-		splitProp = property.split("/");
-		source = splitProp[2].split("\\.");
-
-		return source[1];
+			qe.close();
+		}
+		
+		return output;
+	}
+	
+	private String writeClauses(String where, String subject, String prop, String mode, int sid, int oid){
+		
+		int count;
+		String column, composedProp = "";
+		
+		column = this.getPropertyName(prop);
+		count = StringUtils.countMatches(prop, "/");
+		
+		if(count >3)
+			composedProp = this.getComposedProperty(prop);
+		
+		switch(mode){
+		
+			case "simple":
+				return " ?s " + prop + " ?" + column + " .";
+				
+			case "simpleComp":
+				return " ?s " + composedProp + " [ " + prop + " ?" + column + " ] .";
+				
+			case "mappingOnPropS":
+				return " ?" + subject + " " +  prop + " ?" + column + " .";
+				
+			case "mappingOnPropC":
+				return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + " ] .";
+				
+			case "normalMappingS":
+				return " ?" + subject + " " +  prop + " ?o" + oid + " .";
+			
+			case "normalMappingC":
+				return " ?" + subject + " " + composedProp + " [ " + prop + " ?o" + oid + " ] .";
+				
+			case "remainPropsS":
+				return " ?" + subject + " " +  prop + " ?" + column + sid + " .";
+				
+			case "remainPropsC":
+				return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
+				
+			default:
+				break;
+		}
+		
+		return "";
 	}
 
-	String getPropertyName(String property){
-
-		String column = "";
-		String[] splt = null;
-
-		splt = property.split("/");
-		column = splt[splt.length - 1];
-		column = column.replace(">", "");
-
-		return column;
-	}
 
 }
