@@ -4,10 +4,11 @@ import javax.swing.*;
 
 import java.awt.*;
 import java.awt.event.*;
-//import java.util.ArrayList;
 
 import layout.FirstPage;
 import layout.InstancesPage;
+import layout.SearchPage;
+import layout.SecondPage;
 
 public class GUI extends JFrame{
 
@@ -15,15 +16,21 @@ public class GUI extends JFrame{
 
 	private CardLayout cl;
 	private JPanel contentPanel;
-	private JSplitPane page1, pageInstances;
+	private JSplitPane page1, pageInstances, page2, pageSearch;
 
 	private JButton instances;
 	private JButton backButton;
+	private JButton nextButton;
+	
 	private String className;
 
 	private FirstPage firstPage;
+	private SecondPage secondPage;
 	private InstancesPage instPage;
+	private SearchPage searchPage;
+	
 	private SemanticWebEngine swe;
+	private String visibleComponent;
 
 	public GUI(){
 		super("Advanced Search App");
@@ -38,14 +45,16 @@ public class GUI extends JFrame{
 		backButton = new JButton("< Back");
 		backButton.addActionListener(new backButton());
 
-		firstPage = new FirstPage(swe, instances);
-		page1 = firstPage.getPage();		
+		firstPage = new FirstPage(swe, cl, contentPanel);
+		page1 = firstPage.getPage();
 
 		contentPanel.setLayout(cl);
 		contentPanel.add(page1, "page1");
+		
 
 		this.setContentPane(contentPanel);
 		cl.show(contentPanel, "page1");
+		visibleComponent = "page1";
 
 
 
@@ -57,13 +66,14 @@ public class GUI extends JFrame{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 
-			className = firstPage.getClassName();
-
-			instPage = new InstancesPage(swe, className, backButton);
-			pageInstances = instPage.getPage();
-			contentPanel.add(pageInstances, "page2");
-
-			cl.show(contentPanel, "page2");
+//			className = firstPage.getClassName();
+//
+//			instPage = new InstancesPage(swe, className, backButton);
+//			pageInstances = instPage.getPage();
+//			contentPanel.add(pageInstances, "pageInst");
+//
+//			cl.show(contentPanel, "pageInst");
+//			visibleComponent = "pageInstances";
 		}
 	}
 
@@ -71,13 +81,19 @@ public class GUI extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
-
-			JButton src = (JButton) event.getSource();
-
-			if(src.equals(backButton))
+			
+			if(visibleComponent.equals("pageInstances") || visibleComponent.equals("page2")){
 				cl.show(contentPanel, "page1");
+				visibleComponent = "page1";
+			}
+			
+			if(visibleComponent.equals("pageSearch")){
+				cl.show(contentPanel, "page2");
+				visibleComponent = "page2";
+			}
 		}
 	}
+	
 
 
 	public static void main(String[] args){

@@ -1,6 +1,8 @@
 package layout;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -10,9 +12,14 @@ import lpd.SemanticWebEngine;
 public class FirstPage {
 
 	private SemanticWebEngine swe;
+	private InstancesPage instPage;
+	private SecondPage secondPage;
+	private CardLayout card;
 	private String className;
 
 	private JSplitPane page1;
+	private JSplitPane pageInstances;
+	private JSplitPane page2;
 	private JTabbedPane tabbedPane;
 
 	private JSplitPane sourceInfo;
@@ -23,6 +30,7 @@ public class FirstPage {
 	private JPanel instances;
 	private JPanel propsPanel;
 	private JPanel nextPanel;
+	private JPanel contentPanel;
 
 	private JLabel infoTitle;
 	private JLabel instancesTitle;
@@ -37,7 +45,7 @@ public class FirstPage {
 	private JList<String> infarList;
 	private JList<String> infoList;
 
-	public FirstPage(SemanticWebEngine swe, JButton instancesButton){
+	public FirstPage(SemanticWebEngine swe, CardLayout cl, JPanel content){
 		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -54,13 +62,15 @@ public class FirstPage {
 		infoTitle = new JLabel("Sources' Classes:");
 		instancesTitle = new JLabel("Number of instances: ");
 		propertiesTitle = new JLabel("Properties:");
-		show = instancesButton;
+		show = new JButton("Instances");
 		next = new JButton("Next >");
 
 		this.swe = swe;
+		card = cl;
+		contentPanel = content;
 		className = "";
 
-		createPage();
+		this.createPage();
 	}
 
 	public JSplitPane getPage(){
@@ -74,6 +84,8 @@ public class FirstPage {
 	public void createPage(){
 
 		propertiesText.setEditable(false);
+		show.addActionListener(new instListener());
+		next.addActionListener(new nextListener());
 
 		createTabbedPane();
 
@@ -195,7 +207,7 @@ public class FirstPage {
 
 	}
 
-	public class selectionListener implements ListSelectionListener{
+	private class selectionListener implements ListSelectionListener{
 
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
@@ -226,6 +238,32 @@ public class FirstPage {
 			infarList.clearSelection();
 			infoList.clearSelection();
 		}		
+	}
+	
+	private class instListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent event) {
+			
+			instPage = new InstancesPage(swe, className, card, contentPanel);
+			pageInstances = instPage.getPage();
+			
+			contentPanel.add(pageInstances, "pageInst");
+			card.show(contentPanel, "pageInst");
+		}
+	}
+	
+	private class nextListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent event) {
+			
+			secondPage = new SecondPage(card, contentPanel);
+			page2 = secondPage.getPage();
+			
+			contentPanel.add(page2, "page2");
+			card.show(contentPanel, "page2");
+		}
 	}
 
 }

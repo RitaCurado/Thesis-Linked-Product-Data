@@ -1,8 +1,8 @@
 package layout;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
@@ -17,10 +17,13 @@ public class InstancesPage {
 	private JTextArea output;
 	private JScrollPane scrollPane;
 	private JSplitPane pageInstances;
+	
 	private SemanticWebEngine swe;
+	private CardLayout card;
+	private JPanel contentPanel;
 	private String className;
 
-	public InstancesPage(SemanticWebEngine swe, String className, JButton back){
+	public InstancesPage(SemanticWebEngine swe, String className, CardLayout cl, JPanel content){
 
 		pageInstances = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		source = new JLabel("Information source: " + swe.getPropertySource(className));
@@ -28,7 +31,10 @@ public class InstancesPage {
 		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
 		output = new JTextArea();
 		scrollPane = new JScrollPane();
-		backButton = back;
+		backButton = new JButton("< Back");
+		
+		card = cl;
+		contentPanel = content;
 		this.swe = swe;
 		this.className = className;
 
@@ -48,6 +54,7 @@ public class InstancesPage {
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		output.setText(swe.selectAllInfo(className));
+		backButton.addActionListener(new backListener());
 
 		sourceInfo.setLayout(new GridLayout(1, 2));
 		sourceInfo.add(source);
@@ -77,6 +84,14 @@ public class InstancesPage {
 		pageInstances.add(upPanel);
 		pageInstances.add(downPanel);
 		pageInstances.setDividerSize(1);
+	}
+	
+	private class backListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent event) {
+			card.show(contentPanel, "page1");
+		}
 	}
 
 }
