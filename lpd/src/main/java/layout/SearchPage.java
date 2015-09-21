@@ -15,8 +15,8 @@ public class SearchPage {
 	private JPanel contentPanel;
 	
 	public SearchPage(CardLayout cl, JPanel content){
-		backButton = new JButton("< Back");
-		nextButton = new JButton("Next >");
+		backButton = new JButton("Cancel");
+		nextButton = new JButton("Search");
 		searchPage = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		
 		card = cl;
@@ -29,7 +29,10 @@ public class SearchPage {
 		return searchPage;
 	}
 	
-	public void createPage(){
+	private void createPage(){
+		
+		backButton.setBackground(Color.RED);
+		nextButton.setBackground(Color.GREEN);
 		
 		backButton.addActionListener(new backListener());
 		
@@ -41,6 +44,8 @@ public class SearchPage {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
+			contentPanel.remove(searchPage);
+			contentPanel.revalidate();
 			card.show(contentPanel, "page2");
 		}
 	}

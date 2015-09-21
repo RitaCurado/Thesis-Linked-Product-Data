@@ -61,7 +61,7 @@ public class SecondPage {
 		return searchCriteria;
 	}
 	
-	public void createPage(){
+	private void createPage(){
 		
 		JPanel upPanel = new JPanel();
 		JPanel downPanel = new JPanel();
@@ -137,6 +137,8 @@ public class SecondPage {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
+			contentPanel.remove(page2);
+			contentPanel.revalidate();
 			card.show(contentPanel, "page1");
 		}
 	}

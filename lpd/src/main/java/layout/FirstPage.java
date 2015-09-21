@@ -14,14 +14,18 @@ public class FirstPage {
 	private SemanticWebEngine swe;
 	private InstancesPage instPage;
 	private SecondPage secondPage;
+	private PropertyValuesPage propsPage;
+	
 	private CardLayout card;
 	private String className;
+	private String[] props;
 
 	private JSplitPane page1;
 	private JSplitPane pageInstances;
 	private JSplitPane page2;
+	private JSplitPane pagePropValues;
+	
 	private JTabbedPane tabbedPane;
-
 	private JSplitPane sourceInfo;
 	private JSplitPane properties;
 	private JSplitPane upPanel;
@@ -39,11 +43,13 @@ public class FirstPage {
 	private JButton show;
 	private JButton next;
 
-	private JTextArea propertiesText;
+//	private JTextArea propertiesText;
 	private JScrollPane propsScrollPane;
 
 	private JList<String> infarList;
 	private JList<String> infoList;
+	private JList<String> propsList;
+	private DefaultListModel<String> propsListModel;
 
 	public FirstPage(SemanticWebEngine swe, CardLayout cl, JPanel content){
 		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -56,7 +62,7 @@ public class FirstPage {
 		propsPanel = new JPanel();
 		nextPanel = new JPanel();
 		tabbedPane = new JTabbedPane();
-		propertiesText = new JTextArea();
+//		propertiesText = new JTextArea();
 		propsScrollPane = new JScrollPane();
 
 		infoTitle = new JLabel("Sources' Classes:");
@@ -81,13 +87,12 @@ public class FirstPage {
 		return className;
 	}
 
-	public void createPage(){
+	private void createPage(){
 
-		propertiesText.setEditable(false);
 		show.addActionListener(new instListener());
 		next.addActionListener(new nextListener());
 
-		createTabbedPane();
+		this.createTabbedPane();
 
 		sourceInfo.add(infoTitle);
 		sourceInfo.add(tabbedPane);
@@ -100,15 +105,7 @@ public class FirstPage {
 		instances.add(new JLabel());
 		instances.add(show);
 
-		propsPanel.setLayout(new BorderLayout());
-		propsPanel.setPreferredSize(new Dimension(400, 100));
-
-		propsScrollPane.setViewportView(propertiesText);
-		propsPanel.add(propsScrollPane);
-
-		properties.add(propertiesTitle);
-		properties.add(propsPanel);
-		properties.setDividerSize(0);
+		this.createPropsPane();
 
 		nextPanel.setLayout(new GridLayout(1, 6));
 		nextPanel.add(new JLabel());
@@ -131,7 +128,7 @@ public class FirstPage {
 		page1.setDividerSize(0);
 	}
 
-	public void createTabbedPane(){
+	private void createTabbedPane(){
 
 		String result = null;
 		String[] classes;
@@ -206,6 +203,23 @@ public class FirstPage {
 		tabbedPane.addTab("Infomed", infoPanel);
 
 	}
+	
+	private void createPropsPane(){
+		propsListModel = new DefaultListModel<String>();
+		propsList = new JList<String>(propsListModel);
+		
+		propsList.addListSelectionListener(new propsSelectListener());
+		
+		propsPanel.setLayout(new BorderLayout());
+		propsPanel.setPreferredSize(new Dimension(400, 100));
+
+		propsScrollPane.setViewportView(propsList);
+		propsPanel.add(propsScrollPane);
+
+		properties.add(propertiesTitle);
+		properties.add(propsPanel);
+		properties.setDividerSize(0);
+	}
 
 	private class selectionListener implements ListSelectionListener{
 
@@ -228,8 +242,17 @@ public class FirstPage {
 					classProps = swe.showClassProperties(className);
 					classInstances = swe.countClassInstances(className);
 					instancesTitle.setText("Number of instances: " + classInstances);
-					propertiesText.setText("");
-					propertiesText.append(classProps);
+					propsListModel.removeAllElements();
+					propsList.revalidate();
+					
+					if(classProps != null){
+						props = classProps.split("\\r?\\n");
+						for(int i=3; i < props.length - 1; i++){
+							propsListModel.addElement(props[i]);
+						}
+						propsList.revalidate();
+					}
+					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -238,6 +261,23 @@ public class FirstPage {
 			infarList.clearSelection();
 			infoList.clearSelection();
 		}		
+	}
+	
+	private class propsSelectListener implements ListSelectionListener{
+
+		@Override
+		public void valueChanged(ListSelectionEvent e) {
+			
+			String prop = propsList.getSelectedValue();
+			if(prop != ""){
+				propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
+				pagePropValues = propsPage.getPage();
+				
+				contentPanel.add(pagePropValues, "pageProps");
+				card.show(contentPanel, "pageProps");
+			}
+			
+		}
 	}
 	
 	private class instListener implements ActionListener{

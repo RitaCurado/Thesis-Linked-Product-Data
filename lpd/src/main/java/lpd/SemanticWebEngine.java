@@ -157,7 +157,6 @@ public class SemanticWebEngine {
 	public String showClassProperties(String cl) throws Exception {
 
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		String properties = "";
 
 		Query query;
 		QueryExecution qe;
@@ -190,12 +189,9 @@ public class SemanticWebEngine {
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
 
-		properties = properties.concat(result);
-		properties = properties.concat("\n");
-
 		qe.close();
 
-		return properties;
+		return result;
 	}
 
 	public String countClassInstances(String cl){
@@ -222,6 +218,36 @@ public class SemanticWebEngine {
 		numInstances = result[3].substring(2, 5);
 
 		return numInstances;
+	}
+	
+	public String showPropertyValues(String property){
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString;
+		String output = "";
+		
+		String propName = this.getPropertyName(property);
+		
+		queryString = "SELECT DISTINCT ?" + propName +"\n"
+				+ "WHERE {"
+				+ " ?s " + property + " ?" + propName + " ."
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		output = go.toString();
+		output = output.replace("-", "_");
+		output = output.replace("|", "");
+
+		qe.close();
+		
+		return output;
 	}
 
 	public String makeQuery(String searchProperty, String value,
