@@ -15,7 +15,7 @@ public class FirstPage {
 	private InstancesPage instPage;
 	private SecondPage secondPage;
 	private PropertyValuesPage propsPage;
-	
+
 	private CardLayout card;
 	private String className;
 	private String[] props;
@@ -24,7 +24,7 @@ public class FirstPage {
 	private JSplitPane pageInstances;
 	private JSplitPane page2;
 	private JSplitPane pagePropValues;
-	
+
 	private JTabbedPane tabbedPane;
 	private JSplitPane sourceInfo;
 	private JSplitPane properties;
@@ -43,7 +43,7 @@ public class FirstPage {
 	private JButton show;
 	private JButton next;
 
-//	private JTextArea propertiesText;
+	//	private JTextArea propertiesText;
 	private JScrollPane propsScrollPane;
 
 	private JList<String> infarList;
@@ -62,14 +62,14 @@ public class FirstPage {
 		propsPanel = new JPanel();
 		nextPanel = new JPanel();
 		tabbedPane = new JTabbedPane();
-//		propertiesText = new JTextArea();
+		//		propertiesText = new JTextArea();
 		propsScrollPane = new JScrollPane();
 
 		infoTitle = new JLabel("Sources' Classes:");
 		instancesTitle = new JLabel("Number of instances: ");
 		propertiesTitle = new JLabel("Properties:");
-		show = new JButton("Instances");
-		next = new JButton("Next >");
+		show = new JButton("Instances ");
+		next = new JButton("Next ");
 
 		this.swe = swe;
 		card = cl;
@@ -89,8 +89,18 @@ public class FirstPage {
 
 	private void createPage(){
 
+		show.setIcon(new ImageIcon(getClass().getClassLoader().getResource("listing16px.png")));
+		show.setVerticalTextPosition(SwingConstants.CENTER);
+	    show.setHorizontalTextPosition(SwingConstants.LEFT);
 		show.addActionListener(new instListener());
+		
+		next.setIcon(new ImageIcon(getClass().getClassLoader().getResource("right arrow16px.png")));
+		next.setVerticalTextPosition(SwingConstants.CENTER);
+	    next.setHorizontalTextPosition(SwingConstants.LEFT);
 		next.addActionListener(new nextListener());
+
+		//show.setPreferredSize(new Dimension(40, 10));
+		//next.setPreferredSize(new Dimension(40, 10));
 
 		this.createTabbedPane();
 
@@ -98,12 +108,14 @@ public class FirstPage {
 		sourceInfo.add(tabbedPane);
 		sourceInfo.setDividerSize(0);
 
-		instances.setLayout(new GridLayout(1, 5));
+		instances.setLayout(new GridLayout(1, 6));
 		instances.add(instancesTitle);
 		instances.add(new JLabel());
 		instances.add(new JLabel());
 		instances.add(new JLabel());
+		instances.add(new JLabel());
 		instances.add(show);
+		instances.setPreferredSize(new Dimension(400, 35));
 
 		this.createPropsPane();
 
@@ -143,7 +155,7 @@ public class FirstPage {
 		sl = new selectionListener();
 		infarPanel = new JPanel();
 		infarPanel.setLayout(new BorderLayout());
-		infarPanel.setPreferredSize(new Dimension(400, 100));
+		infarPanel.setPreferredSize(new Dimension(400, 150));
 
 		infarListModel = new DefaultListModel<String>();
 
@@ -174,7 +186,7 @@ public class FirstPage {
 		result = null;
 		infoPanel = new JPanel();
 		infoPanel.setLayout(new BorderLayout());
-		infoPanel.setPreferredSize(new Dimension(400, 100));
+		infoPanel.setPreferredSize(new Dimension(400, 150));
 		infoListModel = new DefaultListModel<String>();
 
 		try {
@@ -203,15 +215,15 @@ public class FirstPage {
 		tabbedPane.addTab("Infomed", infoPanel);
 
 	}
-	
+
 	private void createPropsPane(){
 		propsListModel = new DefaultListModel<String>();
 		propsList = new JList<String>(propsListModel);
-		
+
 		propsList.addListSelectionListener(new propsSelectListener());
-		
+
 		propsPanel.setLayout(new BorderLayout());
-		propsPanel.setPreferredSize(new Dimension(400, 100));
+		propsPanel.setPreferredSize(new Dimension(400, 150));
 
 		propsScrollPane.setViewportView(propsList);
 		propsPanel.add(propsScrollPane);
@@ -244,7 +256,7 @@ public class FirstPage {
 					instancesTitle.setText("Number of instances: " + classInstances);
 					propsListModel.removeAllElements();
 					propsList.revalidate();
-					
+
 					if(classProps != null){
 						props = classProps.split("\\r?\\n");
 						for(int i=3; i < props.length - 1; i++){
@@ -252,7 +264,7 @@ public class FirstPage {
 						}
 						propsList.revalidate();
 					}
-					
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -262,45 +274,51 @@ public class FirstPage {
 			infoList.clearSelection();
 		}		
 	}
-	
+
 	private class propsSelectListener implements ListSelectionListener{
 
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			
+
 			String prop = propsList.getSelectedValue();
 			if(prop != ""){
 				propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
 				pagePropValues = propsPage.getPage();
-				
+				pagePropValues.setName("pageProps");
+
 				contentPanel.add(pagePropValues, "pageProps");
 				card.show(contentPanel, "pageProps");
 			}
-			
+
 		}
 	}
-	
+
 	private class instListener implements ActionListener{
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
-			
-			instPage = new InstancesPage(swe, className, card, contentPanel);
-			pageInstances = instPage.getPage();
-			
-			contentPanel.add(pageInstances, "pageInst");
-			card.show(contentPanel, "pageInst");
+
+			if(className != null){
+
+				instPage = new InstancesPage(swe, className, card, contentPanel);
+				pageInstances = instPage.getPage();
+				pageInstances.setName("pageInst");
+
+				contentPanel.add(pageInstances, "pageInst");
+				card.show(contentPanel, "pageInst");
+			}
 		}
 	}
-	
+
 	private class nextListener implements ActionListener{
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
-			
-			secondPage = new SecondPage(card, contentPanel);
+
+			secondPage = new SecondPage(swe, card, contentPanel);
 			page2 = secondPage.getPage();
-			
+			page2.setName("page2");
+
 			contentPanel.add(page2, "page2");
 			card.show(contentPanel, "page2");
 		}

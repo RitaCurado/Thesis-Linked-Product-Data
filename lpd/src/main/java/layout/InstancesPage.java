@@ -31,7 +31,7 @@ public class InstancesPage {
 		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
 		output = new JTextArea();
 		scrollPane = new JScrollPane();
-		backButton = new JButton("< Back");
+		backButton = new JButton(" Back");
 		
 		card = cl;
 		contentPanel = content;
@@ -54,6 +54,7 @@ public class InstancesPage {
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		output.setText(swe.selectAllInfo(className));
+		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return16px.png")));
 		backButton.addActionListener(new backListener());
 
 		sourceInfo.setLayout(new GridLayout(1, 2));

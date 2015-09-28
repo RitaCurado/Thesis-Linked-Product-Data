@@ -27,6 +27,7 @@ public class GUI extends JFrame{
 
 		firstPage = new FirstPage(swe, cl, contentPanel);
 		page1 = firstPage.getPage();
+		page1.setName("page1");
 
 		contentPanel.setLayout(cl);
 		contentPanel.add(page1, "page1");
@@ -38,7 +39,7 @@ public class GUI extends JFrame{
 	public static void main(String[] args){
 		GUI g = new GUI();
 		g.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		g.setSize(800, 362);
+		g.setSize(800, 480);
 		g.setVisible(true);
 		g.setResizable(true);
 	}

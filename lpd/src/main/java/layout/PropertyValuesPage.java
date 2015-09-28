@@ -34,7 +34,7 @@ public class PropertyValuesPage {
 		
 		output = new JTextArea();
 		scrollPane = new JScrollPane();
-		backButton = new JButton("< Back");
+		backButton = new JButton(" Back");
 		
 		card = cl;
 		contentPanel = content;
@@ -63,6 +63,7 @@ public class PropertyValuesPage {
 		numValues = output.getText().split("\\r?\\n");
 		numInstances.setText("Number of distinct values: " + ((numValues.length)-4));
 		
+		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return16px.png")));
 		backButton.addActionListener(new backListener());
 
 		sourceInfo.setLayout(new GridLayout(1, 2));
