@@ -21,8 +21,6 @@ import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
-//import com.hp.hpl.jena.rdf.model.Resource;
-//import com.hp.hpl.jena.sparql.resultset.RDFOutput;
 import com.hp.hpl.jena.tdb.TDBFactory;
 
 public class SemanticWebEngine {
@@ -127,12 +125,14 @@ public class SemanticWebEngine {
 		return cProp;
 	}
 
-	public String showSourceClasses(String source) throws Exception{
+	public ArrayList<String> showSourceClasses(String source) throws Exception{
 
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
 		String result;
+		String[] spltResult;
+		ArrayList<String> classes = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
 		String queryString = "SELECT DISTINCT ?class\n"
@@ -150,11 +150,16 @@ public class SemanticWebEngine {
 		result = result.replace("|", "");
 
 		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			classes.add(spltResult[i]);
+		}
 
-		return result;
+		return classes;
 	}
 
-	public String showClassProperties(String cl) throws Exception {
+	public ArrayList<String> showClassProperties(String cl) throws Exception {
 
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
@@ -162,6 +167,8 @@ public class SemanticWebEngine {
 		QueryExecution qe;
 		ResultSet results;
 		String result;
+		String[] spltResult;
+		ArrayList<String> props = new ArrayList<String>();
 
 		cl = cl.substring(2, cl.length()-2);
 
@@ -190,8 +197,13 @@ public class SemanticWebEngine {
 		result = result.replace("|", "");
 
 		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			props.add(spltResult[i]);
+		}
 
-		return result;
+		return props;
 	}
 
 	public String countClassInstances(String cl){
@@ -544,8 +556,8 @@ public class SemanticWebEngine {
 	public String selectAllInfo(String className){
 		int count = 0;
 		String output = "";
-		String[] classProps = null;
-		String select = "", where = "", property = "", column = "";
+		ArrayList<String> props = null;
+		String select = "", where = "", column = "";
 
 		Query query;
 		QueryExecution qe;
@@ -554,17 +566,15 @@ public class SemanticWebEngine {
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
 		try {
-			output = this.showClassProperties(className);
-			classProps = output.split("\\r?\\n");
-			output = "";
+			props = this.showClassProperties(className);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		if(classProps != null){
-			for(int i = 3; i < classProps.length-1; i++){
+		if(props != null){
+			for(String property: props){
 
-				property = classProps[i];
+				//property = classProps[i];
 				column = this.getPropertyName(property);
 				select += " ?" + column;
 

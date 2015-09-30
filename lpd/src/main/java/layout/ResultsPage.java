@@ -5,7 +5,6 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
 import lpd.SemanticWebEngine;
 
 public class ResultsPage {

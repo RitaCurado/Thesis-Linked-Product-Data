@@ -133,20 +133,20 @@ public class SecondPage {
 		public void actionPerformed(ActionEvent e) {
 			JComboBox<String> cb = (JComboBox<String>) e.getSource();
 			String source = (String) cb.getSelectedItem();
-			String[] classes = null, props = null;
+			ArrayList<String> classes = null, props = null;
 			checkListener cl = new checkListener();
 			JCheckBox checkB;
 			JTextField tf;
 
 			try {
-				classes = swe.showSourceClasses(source.toLowerCase()).split("\\r?\\n");
-				props = swe.showClassProperties(classes[3]).split("\\r?\\n");
+				classes = swe.showSourceClasses(source.toLowerCase());
+				props = swe.showClassProperties(classes.get(0));
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
 
-				for(int i=3; i < props.length-1; i++){
-					checkB = new JCheckBox(props[i]);
+				for(String p: props){
+					checkB = new JCheckBox(p);
 					checkB.addActionListener(cl);
 					tf = new JTextField();
 					tf.setEditable(false);

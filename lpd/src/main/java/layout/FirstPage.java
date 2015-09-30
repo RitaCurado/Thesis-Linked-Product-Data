@@ -1,8 +1,8 @@
 package layout;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.util.ArrayList;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -18,7 +18,6 @@ public class FirstPage {
 
 	private CardLayout card;
 	private String className;
-	private String[] props;
 
 	private JSplitPane page1;
 	private JSplitPane pageInstances;
@@ -43,7 +42,6 @@ public class FirstPage {
 	private JButton show;
 	private JButton next;
 
-	//	private JTextArea propertiesText;
 	private JScrollPane propsScrollPane;
 
 	private JList<String> infarList;
@@ -99,9 +97,6 @@ public class FirstPage {
 	    next.setHorizontalTextPosition(SwingConstants.LEFT);
 		next.addActionListener(new nextListener());
 
-		//show.setPreferredSize(new Dimension(40, 10));
-		//next.setPreferredSize(new Dimension(40, 10));
-
 		this.createTabbedPane();
 
 		sourceInfo.add(infoTitle);
@@ -142,8 +137,7 @@ public class FirstPage {
 
 	private void createTabbedPane(){
 
-		String result = null;
-		String[] classes;
+		ArrayList<String> result = null;
 		JPanel infarPanel;
 		JPanel infoPanel;
 		JScrollPane infarScrollPane;
@@ -166,9 +160,8 @@ public class FirstPage {
 		}
 
 		if(result != null){
-			classes = result.split("\\r?\\n");
-			for(int i=3; i < classes.length - 1; i++){
-				infarListModel.addElement(classes[i]);
+			for(String s: result){
+				infarListModel.addElement(s);
 			}
 		}
 
@@ -196,9 +189,8 @@ public class FirstPage {
 		}
 
 		if(result != null){
-			classes = result.split("\\r?\\n");
-			for(int i=3; i < classes.length - 1; i++){
-				infoListModel.addElement(classes[i]);
+			for(String s: result){
+				infoListModel.addElement(s);
 			}
 		}
 
@@ -213,6 +205,12 @@ public class FirstPage {
 
 		tabbedPane.addTab("Infarmed", infarPanel);
 		tabbedPane.addTab("Infomed", infoPanel);
+		tabbedPane.addChangeListener(new ChangeListener() {
+	        public void stateChanged(ChangeEvent e) {
+	        	propsListModel.removeAllElements();
+				propsList.revalidate();
+	        }
+	    });
 
 	}
 
@@ -237,8 +235,8 @@ public class FirstPage {
 
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
-			//String className = "";
-			String classProps = "";
+			
+			ArrayList<String> classProps = null;
 			String classInstances = "";
 
 			if(!infarList.isSelectionEmpty()){
@@ -258,9 +256,8 @@ public class FirstPage {
 					propsList.revalidate();
 
 					if(classProps != null){
-						props = classProps.split("\\r?\\n");
-						for(int i=3; i < props.length - 1; i++){
-							propsListModel.addElement(props[i]);
+						for(String prop: classProps){
+							propsListModel.addElement(prop);
 						}
 						propsList.revalidate();
 					}
