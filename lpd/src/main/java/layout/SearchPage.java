@@ -1,8 +1,7 @@
 package layout;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.*;
 
 import java.util.*;
 import java.awt.*;
@@ -57,24 +56,16 @@ public class SearchPage {
 	
 	private void createPage(){
 		
-		JPanel upPanel = new JPanel();
-		JPanel middlePanel = new JPanel();
-		JPanel downPanel = new JPanel();
+		JPanel upPanel = new JPanel(new GridBagLayout());
+		JPanel middlePanel = new JPanel(new GridBagLayout());
+		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		JPanel checkPanel = new JPanel();
-		JPanel rulesPanel = new JPanel();
-		JPanel buttonPanel = new JPanel();
+		JPanel checkPanel = new JPanel(new GridLayout(7, 1));
+		JSplitPane rulesPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JPanel buttonPanel = new JPanel(new GridLayout(1, 6));
 		
 		checkListener cl = new checkListener();
 		GridBagConstraints gbc = new GridBagConstraints();
-
-		upPanel.setLayout(new GridBagLayout());
-		middlePanel.setLayout(new GridBagLayout());
-		downPanel.setLayout(new GridLayout(2, 1));
-		
-		checkPanel.setLayout(new GridLayout(5, 1));
-		rulesPanel.setLayout(new GridLayout(2, 1));
-		buttonPanel.setLayout(new GridBagLayout());
 		
 		infarCb = new JCheckBox("Infarmed");
 		infarCb.addActionListener(cl);
@@ -82,10 +73,12 @@ public class SearchPage {
 		infoCb = new JCheckBox("Infomed");
 		infoCb.addActionListener(cl);
 		
+		checkPanel.add(new JLabel("Information Sources:"));
 		checkPanel.add(new JLabel());
 		checkPanel.add(infarCb);
 		checkPanel.add(new JLabel());
 		checkPanel.add(infoCb);
+		checkPanel.add(new JLabel());
 		checkPanel.add(new JLabel());
 		
 		this.createTabbedPane();
@@ -93,7 +86,7 @@ public class SearchPage {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.weightx = 0.2;
+		gbc.weightx = 0.1;
 		upPanel.add(checkPanel, gbc);
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -109,7 +102,7 @@ public class SearchPage {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.weightx = 0.08;
+		gbc.weightx = 0.25;
 		middlePanel.add(new JLabel("Properties List:"), gbc);
 		
 		propsList.setText("Ex: <www.s1.com/p1>|<www.s2.com/p2>");
@@ -129,7 +122,7 @@ public class SearchPage {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 1;
-		gbc.weightx = 0.08;
+		gbc.weightx = 0.25;
 		middlePanel.add(new JLabel("Mapping Rules:"), gbc);
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -140,52 +133,77 @@ public class SearchPage {
 		
 //		-------------------------------------------
 		
-		JPanel suggestions = new JPanel();
-		suggestions.setPreferredSize(new Dimension(400, 100));
+		JRadioButton r6 = new JRadioButton("<http://www.infarmed.pt/Nome_do_Medicamento>-<http://www.infomed.pt/Nome_do_Medicamento>|"
+				+ "<http://www.infarmed.pt/Dosagem>-<http://www.infomed.pt/Dosagem>");
+		r6.setBackground(Color.WHITE);
+		JRadioButton r7 = new JRadioButton("<http://www.infarmed.pt/Nome_do_Medicamento>-<http://www.infomed.pt/Nome_do_Medicamento>|"
+				+ "<http://www.infarmed.pt/Genérico>-<http://www.infomed.pt/Genérico>");
+		r7.setBackground(Color.WHITE);
+		JRadioButton r11 = new JRadioButton("<http://www.infarmed.pt/Nome_do_Medicamento>-<http://www.infomed.pt/Nome_do_Medicamento>|"
+				+ "<http://www.infarmed.pt/Substância_Activa>-<http://www.infomed.pt/Nome_Genérico>|"
+				+ "<http://www.infarmed.pt/Dosagem>-<http://www.infomed.pt/Dosagem>");
+		r11.setBackground(Color.WHITE);
+		JRadioButton r14 = new JRadioButton("<http://www.infarmed.pt/Nome_do_Medicamento>-<http://www.infomed.pt/Nome_do_Medicamento>|"
+				+ "<http://www.infarmed.pt/Dosagem>-<http://www.infomed.pt/Dosagem>|"
+				+ "<http://www.infarmed.pt/Genérico>-<http://www.infomed.pt/Genérico>");
+		r14.setBackground(Color.WHITE);
 		
-		rulesPanel.add(new JLabel("Mapping Suggestions"));
-		rulesPanel.add(new JTextArea());
+		JPanel radioPanel = new JPanel(new GridLayout(0, 1));
+		radioPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 221, 242)));
+		radioPanel.add(r6);
+		radioPanel.add(r7);
+		radioPanel.add(r11);
+		radioPanel.add(r14);
+		
+		JScrollPane radioScrollPane = new JScrollPane();
+		radioScrollPane.setViewportView(radioPanel);
+		
+		JLabel suggestions = new JLabel("Mapping Suggestions:");
+		suggestions.setBackground(new Color(200, 221, 242));
+		suggestions.setOpaque(true);
+		
+		rulesPanel.add(suggestions);
+		rulesPanel.add(radioScrollPane);
+		rulesPanel.setDividerSize(0);
 		
 //		-------------------------------------------
 		
 		nextButton.setForeground(Color.WHITE);
 		nextButton.setFont(new Font("Arial", Font.BOLD, 16));
-		nextButton.setBackground(new java.awt.Color(005, 220, 105));
+		nextButton.setBackground(new Color(005, 220, 105));
 		nextButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("search100.png")));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
 	    nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 		
 		backButton.setForeground(Color.WHITE);
 		backButton.setFont(new Font("Arial", Font.BOLD, 16));
-		backButton.setBackground(new java.awt.Color(226, 006, 021));
+		backButton.setBackground(new Color(226, 006, 021));
 		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("delete85.png")));
 		
 		backButton.addActionListener(new backListener());
 		nextButton.addActionListener(new searchListener());
-		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 1;
-		gbc.gridy = 0;
-		gbc.weightx = 0;
-		buttonPanel.add(backButton, gbc);
 
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 2;
-		gbc.gridy = 0;
-		gbc.weightx = 0;
-		buttonPanel.add(nextButton, gbc);
+		buttonPanel.add(new JLabel());
+		buttonPanel.add(new JLabel());
+		buttonPanel.add(backButton);
+		buttonPanel.add(nextButton);
+		buttonPanel.add(new JLabel());
+		buttonPanel.add(new JLabel());
 		
 //		-------------------------------------------
 		
 		downPanel.add(middlePanel);
 		downPanel.add(rulesPanel);
+		downPanel.setDividerSize(0);
 		
-		JPanel bottom = new JPanel();
-		bottom.setLayout(new GridLayout(2, 1));
+		JSplitPane bottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
+		downPanel.setPreferredSize(new Dimension(400, 206));
 		bottom.add(downPanel);
 		bottom.add(buttonPanel);
+		bottom.setDividerSize(0);
 		
+		upPanel.setPreferredSize(new Dimension(400, 190));
 		searchPage.add(upPanel);
 		searchPage.add(bottom);
 		searchPage.setDividerSize(0);
@@ -204,7 +222,6 @@ public class SearchPage {
 		selectionListener sl = new selectionListener();
 		
 		infarPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		infarPanel.setPreferredSize(new Dimension(400, 150));
 		infarPanel.setDividerSize(1);
 		
 		infarClass = new JPanel(new GridBagLayout());
@@ -268,7 +285,6 @@ public class SearchPage {
 
 		result = null;
 		infoPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		infoPanel.setPreferredSize(new Dimension(400, 150));
 		infoPanel.setDividerSize(1);
 		
 		infoClass = new JPanel(new GridLayout(2, 1));
@@ -398,6 +414,7 @@ public class SearchPage {
 				
 				for(String p: classProps){
 					infarText.append(p);
+					infarText.append("\n");
 				}
 			}
 
@@ -413,6 +430,7 @@ public class SearchPage {
 				
 				for(String p: classProps){
 					infoText.append(p);
+					infoText.append("\n");
 				}
 			}
 

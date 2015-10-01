@@ -79,7 +79,7 @@ public class PropertyValuesPage {
 		upPanel.setDividerSize(1);
 
 		instPanel.setLayout(new BorderLayout());
-		instPanel.setPreferredSize(new Dimension(400, 250));		
+		instPanel.setPreferredSize(new Dimension(400, 362));		
 		scrollPane.setViewportView(output);
 		instPanel.add(scrollPane);
 
