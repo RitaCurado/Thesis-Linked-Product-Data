@@ -15,7 +15,6 @@ public class SecondPage {
 	private SearchPage searchPage;
 
 	private JLabel title;
-	private JLabel from;
 
 	private JTextField drugName;
 	private JTextField activeSubsName;
@@ -31,14 +30,14 @@ public class SecondPage {
 	private CardLayout card;
 	private JPanel contentPanel;
 	private JPanel criteriaPanel;
+	private JFrame frame;
 	private SemanticWebEngine swe;
 
-	public SecondPage(SemanticWebEngine swe, CardLayout cl, JPanel cotent){
+	public SecondPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel cotent){
 		page2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		title = new JLabel("Search Criteria");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 
-		from = new JLabel("From:");		
 		sourcesList = new JComboBox<String>(sources);
 
 		drugName = new JTextField();
@@ -52,6 +51,7 @@ public class SecondPage {
 		this.swe = swe;
 		card = cl;
 		contentPanel = cotent;
+		frame = gui;
 
 		drugName.setEnabled(false);
 		activeSubsName.setEnabled(false);
@@ -81,14 +81,15 @@ public class SecondPage {
 		JLabel hint = new JLabel("Choose the search criteria from one of the sources");
 
 		hint.setFont(new Font("Arial", Font.PLAIN, 11));
-		hint.setForeground(Color.LIGHT_GRAY);
+		hint.setForeground(Color.GRAY);
 
 		upPanel.setLayout(new GridLayout(3, 1));
 		downPanel.setLayout(new GridLayout(1, 6));
 
-		sourcePanel.setLayout(new GridLayout(1, 4));
+		sourcePanel.setLayout(new GridLayout(1, 2));
 		criteriaPanel.setLayout(new GridLayout(0, 2));
 		criteriaPanel.setPreferredSize(new Dimension(400, 325));
+		criteriaPanel.setBackground(Color.WHITE);
 
 		sourcesList.addActionListener(new comboListListener());
 		sourcesList.setSelectedIndex(0);
@@ -101,8 +102,6 @@ public class SecondPage {
 	    nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 		nextButton.addActionListener(new nextListener());
 
-		sourcePanel.add(new JLabel());
-		sourcePanel.add(from);
 		sourcePanel.add(sourcesList);
 		sourcePanel.add(new JLabel());
 
@@ -146,10 +145,15 @@ public class SecondPage {
 				criteriaPanel.revalidate();
 
 				for(String p: props){
+					p = p.replace(" ", "");
+					
 					checkB = new JCheckBox(p);
 					checkB.addActionListener(cl);
+					checkB.setBackground(Color.WHITE);
+					
 					tf = new JTextField();
 					tf.setEditable(false);
+					tf.setBackground(Color.WHITE);
 
 					criteriaPanel.add(checkB);
 					criteriaPanel.add(tf);
@@ -169,8 +173,6 @@ public class SecondPage {
 		public void actionPerformed(ActionEvent e) {
 			JCheckBox cb = (JCheckBox) e.getSource();
 			JTextField tf = null;
-			
-			System.out.println(cb.getText());
 
 			for (int i = 0; i < criteriaPanel.getComponentCount(); i++) {
 				if (criteriaPanel.getComponent(i) == cb)
@@ -206,24 +208,31 @@ public class SecondPage {
 			HashMap<String, String> searchCriteria = new HashMap<String, String>();
 			JTextField tf = null;
 
-			for(JCheckBox jcb: checkBoxes){
-
-				for (int i = 0; i < criteriaPanel.getComponentCount(); i++) {
-					if (criteriaPanel.getComponent(i) == jcb){
-						tf = (JTextField) criteriaPanel.getComponent(i+1);
-						break;
+			if(!checkBoxes.isEmpty()){
+				
+				for(JCheckBox jcb: checkBoxes){
+					
+					for (int i = 0; i < criteriaPanel.getComponentCount(); i++) {
+						if (criteriaPanel.getComponent(i) == jcb){
+							tf = (JTextField) criteriaPanel.getComponent(i+1);
+							break;
+						}
 					}
+					
+					searchCriteria.put(jcb.getText(), tf.getText());				
 				}
-
-				searchCriteria.put(jcb.getText(), tf.getText());				
+				
+				searchPage = new SearchPage(frame, swe, card, contentPanel, searchCriteria);
+				pageSearch = searchPage.getPage();
+				pageSearch.setName("pageSearch");
+				
+				contentPanel.add(pageSearch, "pageSearch");
+				card.show(contentPanel, "pageSearch");
 			}
-
-			searchPage = new SearchPage(swe, card, contentPanel, searchCriteria);
-			pageSearch = searchPage.getPage();
-			pageSearch.setName("pageSearch");
-
-			contentPanel.add(pageSearch, "pageSearch");
-			card.show(contentPanel, "pageSearch");
+			else{
+				JOptionPane.showMessageDialog(frame, "You have to select at least a property and give it a value.",
+						"Attention!", JOptionPane.WARNING_MESSAGE);
+			}
 
 		}
 	}

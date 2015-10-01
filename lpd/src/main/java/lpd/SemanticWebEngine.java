@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -262,8 +263,7 @@ public class SemanticWebEngine {
 		return output;
 	}
 
-	public String makeQuery(String searchProperty, String value,
-			ArrayList<String> sources, String[] propsList, String[] mappings){
+	public String makeQuery(ArrayList<String> sources, HashMap<String, String> searchCriteria, String[] propsList, String[] mappings){
 
 		String select = "";
 		String where = "";
@@ -384,7 +384,7 @@ public class SemanticWebEngine {
 				}
 			}
 
-			partialResult = queryDB(sources, searchProperty, value, select, where, subjectBySource);
+			partialResult = queryDB(sources, select, where, subjectBySource, searchCriteria);
 			result = result.concat(partialResult + "\n");
 		}
 
@@ -417,7 +417,7 @@ public class SemanticWebEngine {
 						this.writeClauses(where, null, property, "simple", -1, -1);
 				}
 
-				partialResult = queryDB(oneElement, searchProperty, value, select, where, null);
+				partialResult = queryDB(oneElement, select, where, null, searchCriteria);
 				result = result.concat(partialResult + "\n");
 			}
 		}
@@ -425,8 +425,9 @@ public class SemanticWebEngine {
 		return result;
 	}
 
-	public String queryDB(ArrayList<String> sources, String searchProperty, String value, String select, String where, 
-			HashMap<String, String> subjectBySource){
+	public String queryDB(ArrayList<String> sources, String select, String where, 
+			HashMap<String, String> subjectBySource, HashMap<String, String> searchCriteria){
+		
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -436,95 +437,142 @@ public class SemanticWebEngine {
 		String queryResult = "";
 		String propSource = "";
 		String subjectId = "";
-		String property = null;
-		int index = 0;
+		String key, value;
+		String searchWhere = "";
+		String filters = "";
+		int oid = 0;
 
 		String[] byName = {"<http://www.infarmed.pt/Nome_do_Medicamento>", "<http://www.infomed.pt/Nome_do_Medicamento>"};
 		String[] bySubstance = {"<http://www.infarmed.pt/Substância_Activa>", "<http://www.infomed.pt/Nome_Genérico>"};
-
+		
 		if(sources.size() == 1){
-			switch(sources.get(0)){
-			case "infarmed":
-				index = 0;
-				break;
-			case "infomed":
-				index = 1;
-				break;
-			default:
-				break;
-			}
+			multipleSources = false;
 		}
 		else{
-			index = 0;
 			multipleSources = true;
 		}
-
-		switch(searchProperty){
-		case "Name":
-			property = byName[index];
-			break;
-		case "Substance":
-			property = bySubstance[index];
-			break;
-		default:
-			break;
+		
+		for(Map.Entry<String, String> entry : searchCriteria.entrySet()) {
+			oid++;
+		    key = entry.getKey();
+		    value = entry.getValue();
+		    searchWhere += " ?s " + key + " ?obj" + oid + " .";
+		    filters += " FILTER regex (str(?obj" + oid + "), \"" + value + "\")";
 		}
 
 		String queryString =
 				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-						"SELECT ?s\n" +
-						"WHERE{ ?s " + property + " ?o ."
-						+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
-						+ "}";
+				"SELECT ?s\n" +
+				"WHERE{" + searchWhere 
+					+ filters
+					+ "}";
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
 		results = qe.execSelect();
 
 		if(!results.hasNext()){
-			switch(searchProperty){
-			case "Name":
-				try {
-					infarDC.getInfarByName(dbModel, value);
-					infoDC.getInfoByName(dbModel, value);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				break;
-			case "Substance":
-				try {
-					infarDC.getInfarBySubstance(dbModel, value);
-					infoDC.getInfoBySubstance(dbModel, value);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				break;
-			default:
-				break;
+			
+			String byNameInfar = searchCriteria.get(byName[0]);
+			String byNameInfo = searchCriteria.get(byName[1]);
+			String bySubsInfar = searchCriteria.get(bySubstance[0]);
+			String bySubsInfo = searchCriteria.get(bySubstance[1]);
+			String val;
+			Boolean name = false;
+			Boolean subs = false;
+			
+			if(byNameInfar!= null){
+				val = byNameInfar;
+				name = true;
 			}
+			else{
+				if(byNameInfo != null){
+					val = byNameInfo;
+					name = true;
+				}
+				else{
+					if(bySubsInfar != null){
+						val = bySubsInfar;
+						subs = true;
+					}
+					else{
+						val = bySubsInfo;
+						subs = true;
+					}
+				}
+			}
+			
+			if(name){
+				try {
+					infarDC.getInfarByName(dbModel, val);
+					infoDC.getInfoByName(dbModel, val);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			if(subs){
+				try {
+					infarDC.getInfarBySubstance(dbModel, val);
+					infoDC.getInfoBySubstance(dbModel, val);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
 		}
 
 		qe.close();
 
 		if(multipleSources){
+			
+			key = null;
+			value = null;
+			searchWhere = null;
+			filters = null;
+			oid = 0;
+			
+			for(Map.Entry<String, String> entry : searchCriteria.entrySet()) {
+				oid++;
+			    key = entry.getKey();
+			    value = entry.getValue();
+			    
+			    propSource = getPropertySource(key);
+			    subjectId = subjectBySource.get(propSource);
+			    
+			    searchWhere += " ?" + subjectId + " " + key + " ?obj" + oid + " .";
+			    filters += " FILTER regex (str(?obj" + oid + "), \"" + value + "\")";
+			}
 
-			propSource = getPropertySource(property);
-			subjectId = subjectBySource.get(propSource);
 
 			queryString =
 					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-							"PREFIX Infarmed: <http://www.infarmed.pt/>" +
-							"PREFIX Infomed: <http://www.infomed.pt/>" +
-							"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
-							"PREFIX FI: <http://www.infarmed.pt/FI/>" +
-							"SELECT" + select + "\n" +
-							"WHERE{ ?" + subjectId + " " + property + " ?o ."
-							+ where
-							+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
-							+ "}";
+					"PREFIX Infarmed: <http://www.infarmed.pt/>" +
+					"PREFIX Infomed: <http://www.infomed.pt/>" +
+					"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
+					"PREFIX FI: <http://www.infarmed.pt/FI/>" +
+					"SELECT" + select + "\n" +
+					"WHERE{"
+						+ where
+						+ searchWhere
+						+ filters
+						+ "}";
 		}
 		else{
 
+			key = null;
+			value = null;
+			searchWhere = null;
+			filters = null;
+			oid = 0;
+			
+			for(Map.Entry<String, String> entry : searchCriteria.entrySet()) {
+				oid++;
+			    key = entry.getKey();
+			    value = entry.getValue();
+			    searchWhere += " ?s " + key + " ?obj" + oid + " .";
+			    filters += " FILTER regex (str(?obj" + oid + "), \"" + value + "\")";
+			}
+			
 			queryString =
 					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
 							"PREFIX Infarmed: <http://www.infarmed.pt/>" +
@@ -532,9 +580,10 @@ public class SemanticWebEngine {
 							"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
 							"PREFIX FI: <http://www.infarmed.pt/FI/>" +
 							"SELECT" + select + "\n" +
-							"WHERE{ ?s " + property + " ?o ."
+							"WHERE{"
 							+ where
-							+ "FILTER regex(str(?o)," + "\"" + value + "\"" + ")"
+							+ searchWhere
+							+ filters
 							+ "}";
 		}
 

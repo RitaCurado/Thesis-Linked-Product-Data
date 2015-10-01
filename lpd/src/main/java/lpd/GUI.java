@@ -25,7 +25,7 @@ public class GUI extends JFrame{
 		cl = new CardLayout();
 		contentPanel = new JPanel();
 
-		firstPage = new FirstPage(swe, cl, contentPanel);
+		firstPage = new FirstPage(this, swe, cl, contentPanel);
 		page1 = firstPage.getPage();
 		page1.setName("page1");
 

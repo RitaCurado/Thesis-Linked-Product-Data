@@ -18,6 +18,7 @@ public class FirstPage {
 
 	private CardLayout card;
 	private String className;
+	private JFrame frame;
 
 	private JSplitPane page1;
 	private JSplitPane pageInstances;
@@ -49,7 +50,7 @@ public class FirstPage {
 	private JList<String> propsList;
 	private DefaultListModel<String> propsListModel;
 
-	public FirstPage(SemanticWebEngine swe, CardLayout cl, JPanel content){
+	public FirstPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
 		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -72,6 +73,7 @@ public class FirstPage {
 		this.swe = swe;
 		card = cl;
 		contentPanel = content;
+		frame = gui;
 		className = "";
 
 		this.createPage();
@@ -295,7 +297,7 @@ public class FirstPage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			if(className != null){
+			if(className != ""){
 
 				instPage = new InstancesPage(swe, className, card, contentPanel);
 				pageInstances = instPage.getPage();
@@ -303,6 +305,9 @@ public class FirstPage {
 
 				contentPanel.add(pageInstances, "pageInst");
 				card.show(contentPanel, "pageInst");
+			}
+			else{
+				JOptionPane.showMessageDialog(frame, "You have to select a class first.", "Attention!", JOptionPane.WARNING_MESSAGE);
 			}
 		}
 	}
@@ -312,7 +317,7 @@ public class FirstPage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			secondPage = new SecondPage(swe, card, contentPanel);
+			secondPage = new SecondPage(frame, swe, card, contentPanel);
 			page2 = secondPage.getPage();
 			page2.setName("page2");
 

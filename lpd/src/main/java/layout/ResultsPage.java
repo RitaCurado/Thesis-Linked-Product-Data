@@ -5,19 +5,18 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
-import lpd.SemanticWebEngine;
-
 public class ResultsPage {
 
 	private JSplitPane resultPage;
-	private SemanticWebEngine swe;
 	private CardLayout card;
 	private JPanel contentPanel;
+	private String queryResult;
 	
-	public ResultsPage(SemanticWebEngine swe, CardLayout cl, JPanel content){
-		this.swe = swe;
+	public ResultsPage(CardLayout cl, JPanel content, String result){
+		
 		card = cl;
 		contentPanel = content;
+		queryResult = result;
 		resultPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		this.createPage();
@@ -55,6 +54,8 @@ public class ResultsPage {
 		gbc.gridx = 2;
 		gbc.gridy = 0;
 		buttonPanel.add(homepage, gbc);
+		
+		results.append(queryResult);
 		
 		resultPage.add(results);
 		resultPage.add(buttonPanel);
