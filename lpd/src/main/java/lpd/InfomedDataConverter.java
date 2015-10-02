@@ -19,6 +19,10 @@ public class InfomedDataConverter {
 	
 	private int drugID;
 	
+	public InfomedDataConverter(){
+		
+	}
+	
 	public InfomedDataConverter(Model dbModel){
 		this.drugID = 0;
 		

@@ -20,8 +20,7 @@ public class SearchPage {
 	private JPanel contentPanel;
 	private JFrame frame;
 
-	private JButton backButton, nextButton;	
-	private JCheckBox infarCb, infoCb;
+	private JButton backButton, nextButton;
 
 	private JTabbedPane tabPane;
 	private JList<String> infarList, infoList;	
@@ -36,7 +35,7 @@ public class SearchPage {
 	private String propDefault = "Ex: <www.s1.com/p1>|<www.s2.com/p2>";
 	private String ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>";
 
-	public SearchPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content, HashMap<String, String> sc){
+	public SearchPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content, ArrayList<String> sources, HashMap<String, String> sc){
 		tabPane = new JTabbedPane();
 		backButton = new JButton(" Cancel");
 		nextButton = new JButton("Search ");
@@ -46,7 +45,7 @@ public class SearchPage {
 		properties = "";
 		mapRule = "";
 
-		sources = new ArrayList<String>();
+		this.sources = sources;
 		searchPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		this.swe = swe;
@@ -68,39 +67,23 @@ public class SearchPage {
 		JPanel middlePanel = new JPanel(new GridBagLayout());
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		JPanel checkPanel = new JPanel(new GridLayout(7, 1));
 		JSplitPane rulesPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JPanel buttonPanel = new JPanel(new GridLayout(1, 6));
-
-		CheckListener cl = new CheckListener();
+		
 		GridBagConstraints gbc = new GridBagConstraints();
-
-		infarCb = new JCheckBox("Infarmed");
-		infarCb.addActionListener(cl);
-
-		infoCb = new JCheckBox("Infomed");
-		infoCb.addActionListener(cl);
-
-		checkPanel.add(new JLabel("Information Sources:"));
-		checkPanel.add(new JLabel());
-		checkPanel.add(infarCb);
-		checkPanel.add(new JLabel());
-		checkPanel.add(infoCb);
-		checkPanel.add(new JLabel());
-		checkPanel.add(new JLabel());
 
 		this.createTabbedPane();
 
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.weightx = 0.1;
-		upPanel.add(checkPanel, gbc);
+		gbc.weightx = 1;
+		upPanel.add(new JLabel("Information Sources:"), gbc);
 
 		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 1;
-		gbc.gridy = 0;
-		gbc.weightx = 2;
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		gbc.weightx = 3;
 		upPanel.add(tabPane, gbc);
 
 		//		-------------------------------------------
@@ -365,23 +348,6 @@ public class SearchPage {
 
 	}
 
-	private class CheckListener implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent event) {
-			JCheckBox cb = (JCheckBox) event.getSource();
-			String name = cb.getText();
-			int index = 0;
-
-			if (cb.isSelected()) {
-				sources.add(name);
-
-			} else {
-				index = sources.indexOf(name);
-				sources.remove(index);
-			}
-		}
-	}
 
 	private class SelectionListener implements ListSelectionListener{
 

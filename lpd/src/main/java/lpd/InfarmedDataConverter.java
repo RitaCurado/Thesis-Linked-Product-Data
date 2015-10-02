@@ -22,6 +22,10 @@ public class InfarmedDataConverter {
 	
 	private int drugID;
 	
+	public InfarmedDataConverter(){
+		
+	}
+	
 	public InfarmedDataConverter(Model dbModel){
 		
 		this.drugID = 0;

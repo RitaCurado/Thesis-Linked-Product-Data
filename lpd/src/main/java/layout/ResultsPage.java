@@ -29,6 +29,7 @@ public class ResultsPage {
 	private void createPage(){
 		
 		JTextArea results = new JTextArea();
+		JScrollPane scrollPane = new JScrollPane();
 		JPanel buttonPanel = new JPanel();
 		
 		JButton backButton = new JButton(" Back");
@@ -37,7 +38,6 @@ public class ResultsPage {
 		GridBagConstraints gbc = new GridBagConstraints();
 		buttonPanel.setLayout(new GridBagLayout());
 		
-		results.setPreferredSize(new Dimension(400, 200));
 		
 		homepage.setIcon(new ImageIcon(getClass().getClassLoader().getResource("home168.png")));
 		homepage.addActionListener(new homeListener());
@@ -55,9 +55,11 @@ public class ResultsPage {
 		gbc.gridy = 0;
 		buttonPanel.add(homepage, gbc);
 		
-		results.append(queryResult);
+		results.setText(queryResult);
+		scrollPane.setViewportView(results);
+		scrollPane.setPreferredSize(new Dimension(400, 390));
 		
-		resultPage.add(results);
+		resultPage.add(scrollPane);
 		resultPage.add(buttonPanel);
 		resultPage.setDividerSize(1);
 	}
