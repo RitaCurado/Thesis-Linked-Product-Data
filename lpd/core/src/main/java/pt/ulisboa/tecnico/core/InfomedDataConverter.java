@@ -1,4 +1,4 @@
-package lpd;
+package pt.ulisboa.tecnico.core;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package lpd;
+package pt.ulisboa.tecnico.core;
 
 import java.io.ByteArrayOutputStream;
 //import java.io.File;
