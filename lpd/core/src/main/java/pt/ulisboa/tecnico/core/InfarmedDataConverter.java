@@ -207,8 +207,16 @@ public class InfarmedDataConverter {
 		float price;
 		String rcm = "";
 		String fi = "";
-		ArrayList<String> rcmInfo = new ArrayList<String>() {{add(""); add(""); add(""); add(""); add("");}};
-		ArrayList<String> fiInfo = new ArrayList<String>() {{add(""); add(""); add(""); add(""); add(""); add(""); add(""); add(""); add(""); add("");}};
+		ArrayList<String> rcmInfo = new ArrayList<String>();
+		ArrayList<String> fiInfo = new ArrayList<String>();
+		
+		int i;
+		for(i=0; i<5; i++){
+			rcmInfo.add("");
+		}
+		for(i=0; i <10; i++){
+			fiInfo.add("");
+		}
 		
 		HtmlAnchor ha;
 		TopLevelWindow ww;
@@ -216,7 +224,7 @@ public class InfarmedDataConverter {
 		ReadPDF reader = new ReadPDF();
 		String marketed = "Comercializado";
 		
-		int i = 0;		
+		i = 0;		
 		int row = 1;
 		int numRows = table.getRowCount() - 1;
 		
