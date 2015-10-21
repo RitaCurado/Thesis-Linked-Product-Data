@@ -1,4 +1,4 @@
-package layout;
+package pt.ulisboa.tecnico.layout;
 
 import java.awt.*;
 import java.awt.event.*;

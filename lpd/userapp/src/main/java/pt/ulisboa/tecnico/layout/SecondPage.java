@@ -1,4 +1,4 @@
-package layout;
+package pt.ulisboa.tecnico.layout;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -6,7 +6,7 @@ import java.util.*;
 
 import javax.swing.*;
 
-import lpd.SemanticWebEngine;
+import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class SecondPage {
 

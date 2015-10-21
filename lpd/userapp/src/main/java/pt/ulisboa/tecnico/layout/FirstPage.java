@@ -1,4 +1,4 @@
-package layout;
+package pt.ulisboa.tecnico.layout;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import lpd.SemanticWebEngine;
+import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class FirstPage {
 

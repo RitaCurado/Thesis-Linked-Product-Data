@@ -1,4 +1,4 @@
-package layout;
+package pt.ulisboa.tecnico.layout;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -7,7 +7,7 @@ import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import lpd.SemanticWebEngine;
+import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class SearchPage {
 
