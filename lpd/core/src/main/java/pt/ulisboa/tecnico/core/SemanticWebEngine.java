@@ -34,7 +34,7 @@ public class SemanticWebEngine {
 	public SemanticWebEngine() {
 
 		// open TDB dataset
-		String directory = "TDB";
+		String directory = "..\\TDB";
 		Dataset dataset = null;
 
 		dataset = TDBFactory.createDataset(directory);
@@ -70,6 +70,7 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(fos, results);
 		}
 		else{
+			System.out.println("Model EXISTS");
 			this.infarDC = new InfarmedDataConverter();
 			this.infoDC = new InfomedDataConverter();
 		}
