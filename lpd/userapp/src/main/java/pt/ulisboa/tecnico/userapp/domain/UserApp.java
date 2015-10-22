@@ -1,11 +1,11 @@
-package pt.ulisboa.tecnico.userapp;
+package pt.ulisboa.tecnico.userapp.domain;
 
 import java.awt.*;
 
 import javax.swing.*;
 
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
-import pt.ulisboa.tecnico.layout.FirstPage;
+import pt.ulisboa.tecnico.userapp.layout.FirstPage;
 
 
 public class UserApp extends JFrame{
