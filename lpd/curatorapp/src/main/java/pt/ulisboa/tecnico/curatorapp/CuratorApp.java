@@ -4,7 +4,7 @@ package pt.ulisboa.tecnico.curatorapp;
  * Hello world!
  *
  */
-public class App 
+public class CuratorApp 
 {
     public static void main( String[] args )
     {
