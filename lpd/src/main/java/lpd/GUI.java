@@ -36,12 +36,14 @@ public class GUI{ // extends JFrame{
 //		cl.show(contentPanel, "page1");
 //	}
 //
-//	public static void main(String[] args){
+	public static void main(String[] args){
+		
+		System.out.println("Hello!");
 //		GUI g = new GUI();
 //		g.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 //		g.setSize(800, 480);
 //		g.setVisible(true);
 //		g.setResizable(true);
-//	}
+	}
 
 }
