@@ -1,20 +1,26 @@
-package pt.ulisboa.tecnico.userapp.layout;
+package pt.ulisboa.tecnico.curatorapp.layout;
 
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
+import pt.ulisboa.tecnico.curatorapp.layout.InstancesPage;
+import pt.ulisboa.tecnico.curatorapp.layout.PropertyValuesPage;
 
-public class FirstPage {
-
+public class HomePage {
+	
 	private SemanticWebEngine swe;
 	private InstancesPage instPage;
-	private SecondPage secondPage;
+//	private SecondPage secondPage;
 	private PropertyValuesPage propsPage;
 
 	private CardLayout card;
@@ -23,7 +29,7 @@ public class FirstPage {
 
 	private JSplitPane page1;
 	private JSplitPane pageInstances;
-	private JSplitPane page2;
+//	private JSplitPane page2;
 	private JSplitPane pagePropValues;
 
 	private JTabbedPane tabbedPane;
@@ -50,8 +56,9 @@ public class FirstPage {
 	private ArrayList<String> sources;
 	private DefaultListModel<String> propsListModel;
 	private HashMap<String, JList<String>> listsByTab;
-
-	public FirstPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
+	
+	public HomePage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
+		
 		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -80,7 +87,7 @@ public class FirstPage {
 
 		this.createPage();
 	}
-
+	
 	public JSplitPane getPage(){
 		return page1;
 	}
@@ -302,12 +309,12 @@ public class FirstPage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			secondPage = new SecondPage(frame, swe, card, contentPanel);
-			page2 = secondPage.getPage();
-			page2.setName("page2");
-
-			contentPanel.add(page2, "page2");
-			card.show(contentPanel, "page2");
+//			secondPage = new SecondPage(frame, swe, card, contentPanel);
+//			page2 = secondPage.getPage();
+//			page2.setName("page2");
+//
+//			contentPanel.add(page2, "page2");
+//			card.show(contentPanel, "page2");
 		}
 	}
 

@@ -30,8 +30,11 @@ public class SemanticWebEngine {
 	InfomedDataConverter infoDC;
 
 	Model dbModel;
+	ArrayList<String> sources;
 
 	public SemanticWebEngine() {
+		
+		sources = new ArrayList<String>();
 
 		// open TDB dataset
 		String directory = "..\\TDB";
@@ -75,7 +78,12 @@ public class SemanticWebEngine {
 			this.infoDC = new InfomedDataConverter();
 		}
 
-
+		sources.add("Infarmed");
+		sources.add("Infomed");
+	}
+	
+	public ArrayList<String> getSources(){
+		return this.sources;
 	}
 
 	public String getPropertySource(String property){
