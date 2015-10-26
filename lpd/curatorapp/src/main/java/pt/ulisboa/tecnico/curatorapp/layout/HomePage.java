@@ -98,12 +98,12 @@ public class HomePage {
 
 	private void createPage(){
 
-		show.setIcon(new ImageIcon("..\\src\\resources\\listing16px.png"));
+		show.setIcon(new ImageIcon("..\\src\\main\\resources\\listing16px.png"));
 		show.setVerticalTextPosition(SwingConstants.CENTER);
 	    show.setHorizontalTextPosition(SwingConstants.LEFT);
 		show.addActionListener(new instListener());
 		
-		next.setIcon(new ImageIcon("..\\src\\resources\\right arrow16px.png"));
+		next.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		next.setVerticalTextPosition(SwingConstants.CENTER);
 	    next.setHorizontalTextPosition(SwingConstants.LEFT);
 		next.addActionListener(new nextListener());

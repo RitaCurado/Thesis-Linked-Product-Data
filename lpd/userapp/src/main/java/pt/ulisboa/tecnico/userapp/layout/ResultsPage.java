@@ -39,10 +39,10 @@ public class ResultsPage {
 		buttonPanel.setLayout(new GridBagLayout());
 		
 		
-		homepage.setIcon(new ImageIcon(getClass().getClassLoader().getResource("home168.png")));
+		homepage.setIcon(new ImageIcon("..\\src\\main\\resources\\home168.png"));
 		homepage.addActionListener(new homeListener());
 		
-		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return1.png")));
+		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return1.png"));
 		backButton.addActionListener(new backListener());
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;

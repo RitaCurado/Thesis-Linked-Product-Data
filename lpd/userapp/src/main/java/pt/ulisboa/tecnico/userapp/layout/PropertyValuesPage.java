@@ -63,7 +63,7 @@ public class PropertyValuesPage {
 		numValues = output.getText().split("\\r?\\n");
 		numInstances.setText("Number of distinct values: " + ((numValues.length)-4));
 		
-		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return16px.png")));
+		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());
 
 		sourceInfo.setLayout(new GridLayout(1, 2));

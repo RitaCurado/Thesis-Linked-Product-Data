@@ -171,14 +171,14 @@ public class SearchPage {
 		nextButton.setForeground(Color.WHITE);
 		nextButton.setFont(new Font("Arial", Font.BOLD, 16));
 		nextButton.setBackground(new Color(005, 220, 105));
-		nextButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("search100.png")));
+		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search100.png"));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
 		nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 
 		backButton.setForeground(Color.WHITE);
 		backButton.setFont(new Font("Arial", Font.BOLD, 16));
 		backButton.setBackground(new Color(226, 006, 021));
-		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("delete85.png")));
+		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
 
 		backButton.addActionListener(new BackListener());
 		nextButton.addActionListener(new SearchListener());

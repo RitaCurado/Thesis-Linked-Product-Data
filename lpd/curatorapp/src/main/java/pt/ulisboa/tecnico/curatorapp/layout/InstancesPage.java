@@ -54,7 +54,7 @@ public class InstancesPage {
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		output.setText(swe.selectAllInfo(className));
-		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return16px.png")));
+		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());
 
 		sourceInfo.setLayout(new GridLayout(1, 2));

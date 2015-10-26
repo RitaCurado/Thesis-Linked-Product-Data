@@ -96,10 +96,10 @@ public class SecondPage {
 		sourcesList.addActionListener(new comboListListener());
 		sourcesList.setSelectedIndex(0);
 
-		backButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("return16px.png")));
+		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());
 		
-		nextButton.setIcon(new ImageIcon(getClass().getClassLoader().getResource("right arrow16px.png")));
+		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
 	    nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 		nextButton.addActionListener(new nextListener());
