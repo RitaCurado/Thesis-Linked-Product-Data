@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,8 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.tdb.TDBFactory;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class SemanticWebEngine {
 
@@ -73,17 +76,46 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(fos, results);
 		}
 		else{
-			System.out.println("Model EXISTS");
+			System.out.println("Model exists");
 			this.infarDC = new InfarmedDataConverter();
 			this.infoDC = new InfomedDataConverter();
 		}
 
-		sources.add("Infarmed");
-		sources.add("Infomed");
+//		sources.add("Infarmed");
+//		sources.add("Infomed");
 	}
 	
 	public ArrayList<String> getSources(){
-		return this.sources;
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		String queryString, result, source;
+		String[] spltResult;
+		
+		queryString = "SELECT DISTINCT ?s\n"
+				+ "WHERE{"
+				+ " ?s a <http://www.w3.org/2000/01/rdf-schema#Class> ."
+				+ "FILTER (regex(str(?s), \"http://www.[A-Za-z+]*.pt\"))"
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+		qe.close();
+		
+		result = go.toString();
+		spltResult = result.split("\\r?\\n");
+		
+		for(int i=3; i < spltResult.length-1; i++){
+			source = getPropertySource(spltResult[i]);
+			if(!sources.contains(source))
+				sources.add(source);
+		}
+		
+		return sources;
 	}
 
 	public String getPropertySource(String property){
@@ -176,6 +208,7 @@ public class SemanticWebEngine {
 	public ArrayList<String> showClassProperties(String cl) throws Exception {
 
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		//System.out.println("SWE - SHOW CLASS PROPERTIES");
 
 		Query query;
 		QueryExecution qe;
@@ -184,8 +217,9 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> props = new ArrayList<String>();
 
-		cl = cl.substring(2, cl.length()-2);
-
+		//cl = cl.substring(2, cl.length()-2);
+		//System.out.println("SWE: " + cl);
+		
 		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
 				+ "{"
@@ -209,6 +243,7 @@ public class SemanticWebEngine {
 		result = go.toString();
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
+		result = result.replace(" ", "");
 
 		qe.close();
 		
@@ -229,7 +264,8 @@ public class SemanticWebEngine {
 		String numInstances = "";
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
-		cl = cl.substring(2, (cl.length()-2));
+		//cl = cl.substring(2, (cl.length()-2));
+		//System.out.println("SWE: " + cl);
 
 		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
 				+ "WHERE {"
@@ -275,8 +311,119 @@ public class SemanticWebEngine {
 		
 		return output;
 	}
+	
+	public String makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
+										String sourceName, String className, String[] mappingRules){
+		
+		int propID = 0;
+		int count = 0;
+		
+		String newClass;
+		String propConj;
+		String conjuction = "";
+		
+		String source = "";
+		String schema = "";
+		String variables = "";
+		String where = "";
+		String optional = "";
+		
+		HashMap<String, Integer> sourcesIndex = getSourcesIndex(sourceName);
+		String[] props = new String[sourcesIndex.keySet().size()];
+		String[] ruleProperties;
+		
+		newClass = "<" + sourceName + "/" + className + ">";
+		
+		schema += " " + newClass + " <" + RDF.type + "> <" + RDFS.Class + "> .";
+		variables += " ?s1 <" + RDF.type + "> " + newClass + " .";
+		
+		//extract info from each rule
+		for(String mapRule: mappingRules){
+			propID++;
+			//extract info from each property inside a rule
+			ruleProperties = mapRule.split("-");
+			for(String property: ruleProperties){
+				source = getPropertySource(property);
+				
+				ArrayList<String> list = propsBySource.get(source);
+				list.remove(property);
+				
+				//where += " ?" + subjectBySource.get(source) + " " + property + " ?o" + propID + " .";
+				where += writeClauses(where, subjectBySource.get(source), property, "normalMappingS", -1, propID);
+				
+				props[sourcesIndex.get(source)] = getPropertyName(property);
+			}
+			
+			for(int index=0; index < props.length; index++){
+				conjuction += props[index] + ":";
+			}
+			
+			//Conjunction property name. Ex http://www.s1+s2.pt/p1:p2
+			propConj = " <" + sourceName + "/" + conjuction.substring(0, conjuction.length()-2) + ">";
+			
+			schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
+			schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
+			
+			//variables += " ?s1 " + propConj + " ?o" + propID + " .";
+			variables += writeClauses(variables, "s1", propConj, "normalMappingS", -1, propID);
+			
+			Arrays.fill(props, null);
+		}
+		
+		//Treat properties that don't appear in any mapping rule
+		ArrayList<String> properties;
+		int index, pos;
+		
+		
+		for(String key: propsBySource.keySet()){
+			
+			properties = propsBySource.get(key);
+			for(String p: properties){
+				propID++;
+				Arrays.fill(props, null);
+				
+				index = sourcesIndex.get(key);
+				for(pos=0; pos < props.length; pos++){
+					if(pos == index)
+						props[pos] = getPropertyName(p);
+					else
+						props[pos] = "_";
+				}
+				conjuction = "";
+				for(pos=0; pos < props.length; pos++){
+					conjuction += props[pos] + ":";
+				}
+				conjuction = conjuction.substring(0, conjuction.length()-1);
+				propConj = "<" + sourceName + "/" + conjuction + ">";
+				
+				schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
+				schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
+				
+				//variables += " ?s1 " + propConj + " ?o" + propID + " .";
+				variables += writeClauses(variables, "s1", propConj, "normalMappingS", -1, propID);
+				
+				count = StringUtils.countMatches(p, "/");
+				if(count > 3)
+					optional += writeClauses(optional, subjectBySource.get(key), p, "normalMappingC", -1, propID);
+				else
+					optional += writeClauses(optional, subjectBySource.get(key), p, "normalMappingS", -1, propID);
+			}
+		}
+		
+		System.out.println("SCHEMA: ");
+		System.out.println(schema);
+		System.out.println("VARIABLES: ");
+		System.out.println(variables);
+		System.out.println("WHERE: ");
+		System.out.println(where);
+		System.out.println("OPTIONAL: ");
+		System.out.println(optional);
+		
+		return "";
+	}
 
-	public String makeQuery(ArrayList<String> sources, HashMap<String, String> searchCriteria, String[] propsList, String[] mappings){
+	public String makeQuery(ArrayList<String> sources, HashMap<String, String> searchCriteria,
+								String[] propsList, String[] mappings){
 
 		String select = "";
 		String where = "";
@@ -701,8 +848,6 @@ public class SemanticWebEngine {
 					where += this.writeClauses(where, null, property, "simple", -1, -1);
 			}
 
-			className = className.substring(2, (className.length()-2));
-
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
 					+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + className + "\" ."
@@ -764,6 +909,27 @@ public class SemanticWebEngine {
 		}
 
 		return "";
+	}
+	
+	private HashMap<String, Integer> getSourcesIndex(String sourceConjuc){
+		
+		HashMap<String, Integer> sourcesIndex = new HashMap<String, Integer>();
+		String[] splitByPoint;
+		String[] splitByPlus = sourceConjuc.split("\\+");
+		
+		for(int i=0; i < splitByPlus.length; i++){
+			if(splitByPlus[i].contains(".")){
+				splitByPoint = splitByPlus[i].split("\\.");
+				if(splitByPoint[0].contains("www"))
+					sourcesIndex.put(splitByPoint[1], i);
+				else
+					sourcesIndex.put(splitByPoint[0], i);
+			}
+			else
+				sourcesIndex.put(splitByPlus[i], i);
+		}
+		
+		return sourcesIndex;
 	}
 
 

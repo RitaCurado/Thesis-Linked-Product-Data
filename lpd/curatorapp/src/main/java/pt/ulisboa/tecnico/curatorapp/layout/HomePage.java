@@ -20,6 +20,7 @@ public class HomePage {
 	
 	private SemanticWebEngine swe;
 	private InstancesPage instPage;
+	private MappingPage mappingPage;
 //	private SecondPage secondPage;
 	private PropertyValuesPage propsPage;
 
@@ -29,6 +30,7 @@ public class HomePage {
 
 	private JSplitPane page1;
 	private JSplitPane pageInstances;
+	private JSplitPane pageRules;
 //	private JSplitPane page2;
 	private JSplitPane pagePropValues;
 
@@ -148,6 +150,7 @@ public class HomePage {
 
 	private void createTabbedPane(){
 
+		String tab;
 		ArrayList<String> result = null;
 		selectionListener sl = new selectionListener();
 		listsByTab = new HashMap<String, JList<String>>();
@@ -194,7 +197,8 @@ public class HomePage {
 			scroll.setViewportView(tabList);
 			panel.add(scroll);
 			
-			tabbedPane.addTab(source, panel);
+			tab = source.substring(0, 1).toUpperCase() + source.substring(1);
+			tabbedPane.addTab(tab, panel);
 		}
 
 		tabbedPane.addChangeListener(new ChangeListener() {
@@ -240,6 +244,7 @@ public class HomePage {
 
 			if(className != ""){
 				try {
+					className = className.substring(2, className.length()-2);
 					classProps = swe.showClassProperties(className);
 					classInstances = swe.countClassInstances(className);
 					instancesTitle.setText("Number of instances: " + classInstances);
@@ -258,10 +263,10 @@ public class HomePage {
 				}
 			}
 			
-			for(String source: sources){
-				list = listsByTab.get(source);
-				list.clearSelection();
-			}
+//			for(String source: sources){
+//				list = listsByTab.get(source);
+//				list.clearSelection();
+//			}
 
 		}		
 	}
@@ -308,6 +313,13 @@ public class HomePage {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
+			
+			mappingPage = new MappingPage(frame, swe, card, contentPanel);
+			pageRules = mappingPage.getPage();
+			pageRules.setName("pageRules");
+			
+			contentPanel.add(pageRules, "pageRules");
+			card.show(contentPanel, "pageRules");
 
 //			secondPage = new SecondPage(frame, swe, card, contentPanel);
 //			page2 = secondPage.getPage();

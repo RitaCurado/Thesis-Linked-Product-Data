@@ -23,9 +23,10 @@ public class SearchPage {
 	private JButton backButton, nextButton;
 
 	private JTabbedPane tabPane;
-	private JList<String> infarList, infoList;	
-	private JTextArea infarText, infoText;
 	private JTextField propsList, mappRules;
+	
+	private HashMap<String, JList<String>> listBySource;
+	private HashMap<String, JTextArea> textAreaBySource;
 
 	private String className;
 	private String properties, mapRule;
@@ -37,8 +38,11 @@ public class SearchPage {
 
 	public SearchPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content, ArrayList<String> sources, HashMap<String, String> sc){
 		tabPane = new JTabbedPane();
-		backButton = new JButton(" Cancel");
-		nextButton = new JButton("Search ");
+		backButton = new JButton("Cancel");
+		nextButton = new JButton(" Search");
+		
+		listBySource = new HashMap<String, JList<String>>();
+		textAreaBySource = new HashMap<String, JTextArea>();
 
 		propsList = new JTextField();
 		mappRules = new JTextField();
@@ -106,15 +110,15 @@ public class SearchPage {
 		gbc.weightx = 3;
 		middlePanel.add(propsList, gbc);
 
-		mappRules.setText("Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>");
-		mappRules.setForeground(Color.LIGHT_GRAY);
-		mappRules.addFocusListener(tfl);
-
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 1;
 		gbc.weightx = 0.25;
 		middlePanel.add(new JLabel("Mapping Rules:"), gbc);
+
+		mappRules.setText("Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>");
+		mappRules.setForeground(Color.LIGHT_GRAY);
+		mappRules.addFocusListener(tfl);
 
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 1;
@@ -172,21 +176,21 @@ public class SearchPage {
 		nextButton.setFont(new Font("Arial", Font.BOLD, 16));
 		nextButton.setBackground(new Color(005, 220, 105));
 		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search100.png"));
-		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
-		nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 
 		backButton.setForeground(Color.WHITE);
 		backButton.setFont(new Font("Arial", Font.BOLD, 16));
 		backButton.setBackground(new Color(226, 006, 021));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
+		backButton.setVerticalTextPosition(SwingConstants.CENTER);
+		backButton.setHorizontalTextPosition(SwingConstants.LEFT);
 
 		backButton.addActionListener(new BackListener());
 		nextButton.addActionListener(new SearchListener());
 
 		buttonPanel.add(new JLabel());
 		buttonPanel.add(new JLabel());
-		buttonPanel.add(backButton);
 		buttonPanel.add(nextButton);
+		buttonPanel.add(backButton);
 		buttonPanel.add(new JLabel());
 		buttonPanel.add(new JLabel());
 
@@ -212,140 +216,86 @@ public class SearchPage {
 	private void createTabbedPane(){
 
 		ArrayList<String> result = null;
-		JPanel infarClass, infoClass, infarProp, infoProp;
-		JSplitPane infarPanel, infoPanel;
-		JScrollPane infarClassScroll, infoClassScroll;
-		JScrollPane infarPropScroll, infoPropScroll;
-		DefaultListModel<String> infarListModel, infoListModel;
+		
+		HashMap<String, JPanel> classPanelBySource = new HashMap<String, JPanel>();
+		HashMap<String, JPanel> propPanelBySource = new HashMap<String, JPanel>();
+		HashMap<String, JSplitPane> splitPaneBySource = new HashMap<String, JSplitPane>();
+		HashMap<String, JScrollPane> scrollClassBySource = new HashMap<String, JScrollPane>();
+		HashMap<String, JScrollPane> scrollPropBySource = new HashMap<String, JScrollPane>();
+		HashMap<String, DefaultListModel<String>> listModelBySource = new HashMap<String, DefaultListModel<String>>();
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		SelectionListener sl = new SelectionListener();
-
-		infarPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		infarPanel.setDividerSize(1);
-
-		infarClass = new JPanel(new GridBagLayout());
-		infarProp = new JPanel(new GridBagLayout());
-		infarClassScroll = new JScrollPane();
-		infarPropScroll = new JScrollPane();
-
-		infarListModel = new DefaultListModel<String>();
-		infarText = new JTextArea("\n\n\n\n");
-
-		try {
-			result = swe.showSourceClasses("infarmed");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if(result != null){
-			for(String s: result){
-				infarListModel.addElement(s);
-			}
-		}
-
-		infarList = new JList<String>(infarListModel);
-		infarList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		infarList.addListSelectionListener(sl);
-
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.weightx = 1;
-		gbc.weighty = 0;
-		infarClass.add(new JLabel("Classes:"), gbc);
-
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 1;
-		gbc.weightx = 1;
-		infarClass.add(infarList, gbc);
-		infarClassScroll.setViewportView(infarClass);
-
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		infarProp.add(new JLabel("Properties:"), gbc);
-
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 1;
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		infarProp.add(infarText, gbc);
-		infarPropScroll.setViewportView(infarProp);
-
-		infarPanel.add(infarClassScroll);
-		infarPanel.add(infarPropScroll);
-
-
-		//		------------------------------------------------------------
-
-		result = null;
-		infoPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		infoPanel.setDividerSize(1);
-
-		infoClass = new JPanel(new GridBagLayout());
-		infoProp = new JPanel(new GridBagLayout());
-		infoClassScroll = new JScrollPane();
-		infoPropScroll = new JScrollPane();
-
-		infoListModel = new DefaultListModel<String>();
-		infoText = new JTextArea("\n\n\n\n");
-
-		try {
-			result = swe.showSourceClasses("infomed");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if(result != null){
-			for(String s: result){
-				infoListModel.addElement(s);
-			}
-		}
-
-		infoList = new JList<String>(infoListModel);
-		infoList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		infoList.addListSelectionListener(sl);
-
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.weightx = 1;
-		gbc.weighty = 0;
-		infoClass.add(new JLabel("Classes:"), gbc);
 		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 1;
-		gbc.weightx = 1;
-		infoClass.add(infoList, gbc);
-		infoClassScroll.setViewportView(infoClass);
+		for(String source: sources){
+			result = null;
+			
+			JSplitPane sp = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+			sp.setDividerSize(1);
+			splitPaneBySource.put(source, sp);
+			
+			classPanelBySource.put(source, new JPanel(new GridBagLayout()));
+			propPanelBySource.put(source, new JPanel(new GridBagLayout()));
+			
+			scrollClassBySource.put(source, new JScrollPane());
+			scrollPropBySource.put(source, new JScrollPane());
+			
+			listModelBySource.put(source, new DefaultListModel<String>());
+			
+			textAreaBySource.put(source, new JTextArea("\n\n\n\n"));
+			
+			try {
+				result = swe.showSourceClasses(source.toLowerCase());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.weightx = 0;
-		gbc.weighty = 0;
-		infoProp.add(new JLabel("Properties:"), gbc);
+			if(result != null){
+				for(String s: result){
+					listModelBySource.get(source).addElement(s);
+				}
+			}
+			
+			JList<String> jlist = new JList<String>(listModelBySource.get(source));
+			jlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			jlist.addListSelectionListener(sl);
+			listBySource.put(source, jlist);
+			
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.gridx = 0;
+			gbc.gridy = 0;
+			gbc.weightx = 1;
+			gbc.weighty = 0;
+			classPanelBySource.get(source).add(new JLabel("Classes:"), gbc);
+
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.gridx = 0;
+			gbc.gridy = 1;
+			gbc.weightx = 1;
+			classPanelBySource.get(source).add(listBySource.get(source), gbc);
+			scrollClassBySource.get(source).setViewportView(classPanelBySource.get(source));
+
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.gridx = 0;
+			gbc.gridy = 0;
+			gbc.weightx = 0;
+			gbc.weighty = 0;
+			propPanelBySource.get(source).add(new JLabel("Properties:"), gbc);
+
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.gridx = 0;
+			gbc.gridy = 1;
+			gbc.weightx = 1;
+			gbc.weighty = 1;
+			propPanelBySource.get(source).add(textAreaBySource.get(source), gbc);
+			scrollPropBySource.get(source).setViewportView(propPanelBySource.get(source));
+
+			splitPaneBySource.get(source).add(scrollClassBySource.get(source));
+			splitPaneBySource.get(source).add(scrollPropBySource.get(source));
+			
+			tabPane.addTab(source, splitPaneBySource.get(source));
+		}
 		
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.gridx = 0;
-		gbc.gridy = 1;
-		gbc.weightx = 1;
-		gbc.weighty = 1;
-		infoProp.add(infoText, gbc);
-		infoPropScroll.setViewportView(infoProp);
-
-		infoPanel.add(infoClassScroll);
-		infoPanel.add(infoPropScroll);
-
-		tabPane.addTab("Infarmed", infarPanel);
-		tabPane.addTab("Infomed", infoPanel);
-
 	}
 
 
@@ -354,41 +304,25 @@ public class SearchPage {
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
 			ArrayList<String> classProps = null;
-
-			if(!infarList.isSelectionEmpty()){
-				className = infarList.getSelectedValue();
-				try {
-					classProps = swe.showClassProperties(className);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				infarText.setText("");
-
-				for(String p: classProps){
-					p = p.replace(" ", "");
-					infarText.append(p);
-					infarText.append("\n");
-				}
-			}
-
-			if(!infoList.isSelectionEmpty()){
-				className = infoList.getSelectedValue();
-				try {
-					classProps = swe.showClassProperties(className);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				infoText.setText("");
-
-				for(String p: classProps){
-					p = p.replace(" ", "");
-					infoText.append(p);
-					infoText.append("\n");
+			
+			for(String key: listBySource.keySet()){
+				JList<String> value = listBySource.get(key);
+				
+				if(!value.isSelectionEmpty()){
+					className = value.getSelectedValue();
+					try {
+						classProps = swe.showClassProperties(className);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					textAreaBySource.get(key).setText("");
+					for(String p: classProps){
+						p = p.replace(" ", "");
+						textAreaBySource.get(key).append(p);
+						textAreaBySource.get(key).append("\n");
+					}
 				}
 			}
-
-//			infarList.clearSelection();
-//			infoList.clearSelection();
 		}		
 	}
 
