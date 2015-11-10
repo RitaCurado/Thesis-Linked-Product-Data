@@ -32,7 +32,7 @@ public class SemanticWebEngine {
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
-	Model dbModel;
+	Model dbModel, dbSources, dbMappings;
 	ArrayList<String> sources;
 
 	public SemanticWebEngine() {
@@ -40,21 +40,20 @@ public class SemanticWebEngine {
 		sources = new ArrayList<String>();
 
 		// open TDB dataset
-		String directory = "..\\TDB";
+		String directory;
 		Dataset dataset = null;
 
+		directory = "..\\TDB_sources";
 		dataset = TDBFactory.createDataset(directory);
+		this.dbSources = dataset.getDefaultModel();
 
-		// assume we want the default model, or we could get a named model here
-		this.dbModel = dataset.getDefaultModel();
-
-		if (dbModel.isEmpty()) {
+		if (dbSources.isEmpty()) {
 			System.out.println("Model is empty!!");
 			dataset.begin(ReadWrite.WRITE);
 
 			try {
-				this.infarDC = new InfarmedDataConverter(dbModel);
-				this.infoDC = new InfomedDataConverter(dbModel);
+				this.infarDC = new InfarmedDataConverter(dbSources);
+				this.infoDC = new InfomedDataConverter(dbSources);
 				dataset.commit();
 			}
 
@@ -65,7 +64,7 @@ public class SemanticWebEngine {
 			// run a query
 			String q = "select * where {?s ?p ?o}";
 			Query query = QueryFactory.create(q);
-			QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbSources);
 			ResultSet results = qexec.execSelect();
 			FileOutputStream fos = null;
 			try {
@@ -80,9 +79,37 @@ public class SemanticWebEngine {
 			this.infarDC = new InfarmedDataConverter();
 			this.infoDC = new InfomedDataConverter();
 		}
+		
+		directory = "..\\TDB_mappings";
+		dataset = TDBFactory.createDataset(directory);
+		this.dbMappings = dataset.getDefaultModel();
+		
+		directory = "..\\TDB";
+		dataset = TDBFactory.createDataset(directory);
+		this.dbModel = dataset.getDefaultModel();
 
-//		sources.add("Infarmed");
-//		sources.add("Infomed");
+		dbModel.add(dbSources);
+		dbModel.add(dbMappings);
+		dbModel.commit();
+		
+		// run a query
+				String q;
+				Query query;
+				QueryExecution qexec;
+				ResultSet results;
+				
+				q = "select * where {?s ?p ?o}";
+				query = QueryFactory.create(q);
+				qexec = QueryExecutionFactory.create(query, dbModel);
+				results = qexec.execSelect();
+				FileOutputStream fos = null;
+				try {
+					fos = new FileOutputStream(new File("mappings.txt"));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+				ResultSetFormatter.out(fos, results);
+				qexec.close();
 	}
 	
 	public ArrayList<String> getSources(){
@@ -92,7 +119,7 @@ public class SemanticWebEngine {
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
 		String queryString, result, source;
-		String[] spltResult;
+		String[] spltResult, spltSource;
 		
 		queryString = "SELECT DISTINCT ?s\n"
 				+ "WHERE{"
@@ -110,9 +137,16 @@ public class SemanticWebEngine {
 		spltResult = result.split("\\r?\\n");
 		
 		for(int i=3; i < spltResult.length-1; i++){
-			source = getPropertySource(spltResult[i]);
-			if(!sources.contains(source))
-				sources.add(source);
+			source = spltResult[i];
+			source = source.replace("|", "");
+			source = source.replace(" ", "");
+			source = source.replace("<", "");
+			source = source.replace(">", "");
+			
+			spltSource = source.split("/");
+			
+			if(!sources.contains(spltSource[2]))
+				sources.add(spltSource[2]);
 		}
 		
 		return sources;
@@ -180,6 +214,9 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> classes = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		if(source.contains("+"))
+			source = source.replace("+", "\\\\+");
 
 		String queryString = "SELECT DISTINCT ?class\n"
 				+ "WHERE {"
@@ -217,14 +254,14 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> props = new ArrayList<String>();
 
-		//cl = cl.substring(2, cl.length()-2);
-		//System.out.println("SWE: " + cl);
+		if(cl.contains("+"))
+			cl = cl.replace("+", "\\\\+");
 		
 		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
 				+ "{"
 				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
 				+ "}"
 				+ " UNION "
 				+ "{"
@@ -232,8 +269,9 @@ public class SemanticWebEngine {
 				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
 				+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
 				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> \"" + cl + "\" ."
-				+ "} }";
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
+				+ "} "
+				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
@@ -266,10 +304,15 @@ public class SemanticWebEngine {
 
 		//cl = cl.substring(2, (cl.length()-2));
 		//System.out.println("SWE: " + cl);
+		
+		if(cl.contains("+"))
+			cl = cl.replace("+", "\\\\+");
 
 		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
 				+ "WHERE {"
-				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + cl + "\" .}";
+				//+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + cl + "\" .}";
+				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?cl ."
+				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
@@ -312,7 +355,7 @@ public class SemanticWebEngine {
 		return output;
 	}
 	
-	public String makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
+	public Model makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
 										String sourceName, String className, String[] mappingRules){
 		
 		int propID = 0;
@@ -419,7 +462,14 @@ public class SemanticWebEngine {
 		System.out.println("OPTIONAL: ");
 		System.out.println(optional);
 		
-		return "";
+		Model resultModel = constructModelDB(schema, variables, where, optional);
+		dbMappings.add(resultModel);
+		dbMappings.commit();
+		
+		dbModel.add(dbMappings);
+		dbModel.commit();
+		
+		return resultModel;
 	}
 
 	public String makeQuery(ArrayList<String> sources, HashMap<String, String> searchCriteria,
@@ -598,6 +648,31 @@ public class SemanticWebEngine {
 			}
 		}
 
+		return result;
+	}
+	
+	public Model constructModelDB(String schema, String variables, String where, String optional){
+		String q;
+		Query query;
+		Model result;
+		QueryExecution qexec;
+		
+		q = "CONSTRUCT{"
+				+ schema
+				+ variables
+			+ "}"
+			+ "WHERE{"
+				+ where
+				+ "OPTIONAL{"
+					+ optional
+				+ "}"
+			+ "}";
+		
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, dbModel);
+		result = qexec.execConstruct();		
+		qexec.close();
+		
 		return result;
 	}
 

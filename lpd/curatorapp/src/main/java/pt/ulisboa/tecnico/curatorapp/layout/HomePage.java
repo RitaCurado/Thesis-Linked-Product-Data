@@ -150,7 +150,8 @@ public class HomePage {
 
 	private void createTabbedPane(){
 
-		String tab;
+		String tab, sourceName;
+		String[] sSplit;
 		ArrayList<String> result = null;
 		selectionListener sl = new selectionListener();
 		listsByTab = new HashMap<String, JList<String>>();
@@ -197,7 +198,9 @@ public class HomePage {
 			scroll.setViewportView(tabList);
 			panel.add(scroll);
 			
-			tab = source.substring(0, 1).toUpperCase() + source.substring(1);
+			sSplit = source.split("\\.");
+			sourceName = sSplit[1];
+			tab = sourceName.substring(0, 1).toUpperCase() + sourceName.substring(1);
 			tabbedPane.addTab(tab, panel);
 		}
 
@@ -263,10 +266,10 @@ public class HomePage {
 				}
 			}
 			
-//			for(String source: sources){
-//				list = listsByTab.get(source);
-//				list.clearSelection();
-//			}
+			for(String source: sources){
+				list = listsByTab.get(source);
+				list.clearSelection();
+			}
 
 		}		
 	}

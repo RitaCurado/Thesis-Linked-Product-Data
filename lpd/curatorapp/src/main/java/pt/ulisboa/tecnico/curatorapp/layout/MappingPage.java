@@ -3,6 +3,8 @@ package pt.ulisboa.tecnico.curatorapp.layout;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import com.hp.hpl.jena.rdf.model.Model;
+
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -79,10 +81,16 @@ public class MappingPage {
 		
 		CheckListener cl = new CheckListener();
 		ArrayList<JCheckBox> checkBoxes = new ArrayList<JCheckBox>();
+		
+		String cbName, sName;
+		String[] sSplit;
 
 		for(String source: sources){
 			if(!source.contains("+")){
-				checkBoxes.add(new JCheckBox(source));
+				sSplit = source.split("\\.");
+				sName = sSplit[1];
+				cbName = sName.substring(0, 1).toUpperCase() + sName.substring(1);
+				checkBoxes.add(new JCheckBox(cbName));
 			}
 		}
 		for(JCheckBox cb: checkBoxes){
@@ -226,7 +234,8 @@ public class MappingPage {
 	
 	private void createTabbedPane(){
 
-		String tab;
+		String tab, sourceName;
+		String[] sSplit;
 		ArrayList<String> result = null;
 		
 		HashMap<String, JPanel> classPanelBySource = new HashMap<String, JPanel>();
@@ -305,7 +314,9 @@ public class MappingPage {
 			splitPaneBySource.get(source).add(scrollClassBySource.get(source));
 			splitPaneBySource.get(source).add(scrollPropBySource.get(source));
 			
-			tab = source.substring(0, 1).toUpperCase() + source.substring(1);
+			sSplit = source.split("\\.");
+			sourceName = sSplit[1];
+			tab = sourceName.substring(0, 1).toUpperCase() + sourceName.substring(1);
 			tabPane.addTab(tab, splitPaneBySource.get(source));
 		}
 	}
@@ -327,31 +338,38 @@ public class MappingPage {
 				checkedSources.remove(cb);
 			}
 			
-			for(String source: sources){
-				counter = 0;
-				for(JCheckBox jcb: checkedSources){
-					cbName = jcb.getText().toLowerCase();
-					if(source.contains(cbName))
-						counter++;
+			if(checkedSources.size() == 0)
+				finalSource = "";
+			else{
+				for(String source: sources){
+					counter = 0;
+					for(JCheckBox jcb: checkedSources){
+						cbName = jcb.getText().toLowerCase();
+						if(source.contains(cbName))
+							counter++;
+					}
+					if(counter == checkedSources.size()){
+						finalSource = source;
+						break;
+					}
+					else
+						finalSource = "";
 				}
-				if(counter == checkedSources.size())
-					finalSource = source;
-				else
-					finalSource = "";
+				
+				if(finalSource == ""){
+					finalSource = "http://www.";
+					
+					for(JCheckBox jcb: checkedSources){
+						finalSource += jcb.getText().toLowerCase();
+						finalSource += "+";
+					}
+					finalSource = finalSource.substring(0, finalSource.length()-1);
+					finalSource += ".pt";
+					
+				}
 			}
 			
-			if(finalSource == ""){
-				finalSource = "http://www.";
-				
-				for(JCheckBox jcb: checkedSources){
-					finalSource += jcb.getText().toLowerCase();
-					finalSource += "+";
-				}
-				finalSource = finalSource.substring(0, finalSource.length()-1);
-				finalSource += ".pt";
-				
-				sourceName.setText(finalSource);
-			}
+			sourceName.setText(finalSource);
 		}
 	}
 	
@@ -380,6 +398,7 @@ public class MappingPage {
 						textAreaBySource.get(key).append(p);
 						textAreaBySource.get(key).append("\n");
 					}
+					value.clearSelection();
 				}
 			}
 		}		
@@ -438,7 +457,7 @@ public class MappingPage {
 		public void actionPerformed(ActionEvent e) {
 			
 			int sid = 0;
-			String clName, result;
+			String clName;
 			String source = "";
 			HashMap<String, String> subjectBySource = new HashMap<String, String>();
 			HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>(); 
@@ -461,10 +480,11 @@ public class MappingPage {
 					}
 				}
 				
-				result = swe.makeConstructQuery(subjectBySource, propsBySource, sourceName.getText(), className,
+				Model resultModel = swe.makeConstructQuery(subjectBySource, propsBySource, sourceName.getText(), className,
 													mappRules.getText().split("\\|"));
 				
-				resultPage = new ResultsPage(card, contentPanel, result);
+				
+				resultPage = new ResultsPage(card, contentPanel, resultModel);
 				pageResult = resultPage.getPage();
 				pageResult.setName("pageResult");
 				

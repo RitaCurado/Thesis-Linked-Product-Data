@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.ByteArrayOutputStream;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -16,19 +17,43 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.Model;
+
 public class ResultsPage {
 
 	private JSplitPane resultPage;
 	private CardLayout card;
 	private JPanel contentPanel;
-	private String queryResult;
+	private String q, queryResult;
 	
-	public ResultsPage(CardLayout cl, JPanel content, String result){
+	public ResultsPage(CardLayout cl, JPanel content, Model result){
 		
 		card = cl;
 		contentPanel = content;
-		queryResult = result;
 		resultPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		
+		Query query;
+		QueryExecution qexec;
+		ResultSet results;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+		
+		q = "select * where {?s ?p ?o}";
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, result);
+		results = qexec.execSelect();
+		
+		ResultSetFormatter.out(baos, results, query);
+
+		queryResult = baos.toString();
+		queryResult = queryResult.replace("-", "_");
+
+		qexec.close();
 		
 		this.createPage();
 	}
