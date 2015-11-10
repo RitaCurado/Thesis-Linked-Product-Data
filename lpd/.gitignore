@@ -1,6 +1,7 @@
 /target/
 /TDB/
 /TDB_mappings/
+/output.txt
 
 *target*
 *.jar
@@ -29,4 +30,3 @@ local.properties
 
 # Locally stored "Eclipse launch configurations"
 *.launch
-/output.txt
