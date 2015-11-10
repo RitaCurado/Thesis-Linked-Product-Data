@@ -349,7 +349,7 @@ public class MappingPage {
 							counter++;
 					}
 					if(counter == checkedSources.size()){
-						finalSource = source;
+						finalSource = "http://" + source;
 						break;
 					}
 					else

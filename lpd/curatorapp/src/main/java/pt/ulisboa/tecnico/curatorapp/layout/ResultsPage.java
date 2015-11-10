@@ -30,7 +30,7 @@ public class ResultsPage {
 	private JSplitPane resultPage;
 	private CardLayout card;
 	private JPanel contentPanel;
-	private String q, queryResult;
+	private String queryResult;
 	
 	public ResultsPage(CardLayout cl, JPanel content, Model result){
 		
@@ -38,20 +38,59 @@ public class ResultsPage {
 		contentPanel = content;
 		resultPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
+		String q, className;
+		String[] spltResult;
 		Query query;
 		QueryExecution qexec;
 		ResultSet results;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream ();
 		
-		q = "select * where {?s ?p ?o}";
+		q = "SELECT DISTINCT ?class\n"
+				+ "WHERE {"
+				+ "?class a <http://www.w3.org/2000/01/rdf-schema#Class> .}";
+		
 		query = QueryFactory.create(q);
 		qexec = QueryExecutionFactory.create(query, result);
-		results = qexec.execSelect();
+		results = qexec.execSelect();		
+		ResultSetFormatter.out(baos, results, query);
+		qexec.close();
 		
+		queryResult = baos.toString();
+		
+		spltResult = queryResult.split("\\r?\\n");
+		className = spltResult[3];
+		className = className.replace("|", "");
+		className = className.replace(" ", "");
+		className = className.replace("<", "");
+		className = className.replace(">", "");
+		
+		if(className.contains("+"))
+			className = className.replace("+", "\\\\+");
+		
+		q = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ "{"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
+				+ "}"
+				+ " UNION "
+				+ "{"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
+				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
+				+ "} "
+				+ " FILTER (regex(str(?cl), '" + className + "'))}";
+		
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, result);
+		results = qexec.execSelect();		
 		ResultSetFormatter.out(baos, results, query);
 
 		queryResult = baos.toString();
 		queryResult = queryResult.replace("-", "_");
+		queryResult = queryResult.replace("|", "");
 
 		qexec.close();
 		

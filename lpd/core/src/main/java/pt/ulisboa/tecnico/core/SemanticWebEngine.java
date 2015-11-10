@@ -91,25 +91,7 @@ public class SemanticWebEngine {
 		dbModel.add(dbSources);
 		dbModel.add(dbMappings);
 		dbModel.commit();
-		
-		// run a query
-				String q;
-				Query query;
-				QueryExecution qexec;
-				ResultSet results;
-				
-				q = "select * where {?s ?p ?o}";
-				query = QueryFactory.create(q);
-				qexec = QueryExecutionFactory.create(query, dbModel);
-				results = qexec.execSelect();
-				FileOutputStream fos = null;
-				try {
-					fos = new FileOutputStream(new File("mappings.txt"));
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				ResultSetFormatter.out(fos, results);
-				qexec.close();
+
 	}
 	
 	public ArrayList<String> getSources(){
@@ -402,7 +384,7 @@ public class SemanticWebEngine {
 			}
 			
 			//Conjunction property name. Ex http://www.s1+s2.pt/p1:p2
-			propConj = " <" + sourceName + "/" + conjuction.substring(0, conjuction.length()-2) + ">";
+			propConj = " <" + sourceName + "/" + conjuction.substring(0, conjuction.length()-1) + ">";
 			
 			schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
 			schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
@@ -453,14 +435,14 @@ public class SemanticWebEngine {
 			}
 		}
 		
-		System.out.println("SCHEMA: ");
-		System.out.println(schema);
-		System.out.println("VARIABLES: ");
-		System.out.println(variables);
-		System.out.println("WHERE: ");
-		System.out.println(where);
-		System.out.println("OPTIONAL: ");
-		System.out.println(optional);
+//		System.out.println("SCHEMA: ");
+//		System.out.println(schema);
+//		System.out.println("VARIABLES: ");
+//		System.out.println(variables);
+//		System.out.println("WHERE: ");
+//		System.out.println(where);
+//		System.out.println("OPTIONAL: ");
+//		System.out.println(optional);
 		
 		Model resultModel = constructModelDB(schema, variables, where, optional);
 		dbMappings.add(resultModel);
