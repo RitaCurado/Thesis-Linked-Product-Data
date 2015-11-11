@@ -377,7 +377,7 @@ public class MappingPage {
 
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
-			ArrayList<String> classProps = null;
+			ArrayList<String> classProps = new ArrayList<String>();
 			String className;
 			
 			for(String key: listBySource.keySet()){
@@ -388,7 +388,8 @@ public class MappingPage {
 					className = className.substring(2, className.length()-2);
 					//System.out.println("ClassName: " + className);
 					try {
-						classProps = swe.showClassProperties(className);
+						classProps.addAll(swe.showClassProperties(className));
+						classProps.addAll(swe.showNodeProperties(className));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -460,7 +461,8 @@ public class MappingPage {
 			String clName;
 			String source = "";
 			HashMap<String, String> subjectBySource = new HashMap<String, String>();
-			HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>(); 
+			HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>();
+			HashMap<String, ArrayList<String>> propsNodeBySource = new HashMap<String, ArrayList<String>>();
 			
 			if(className.contentEquals("") || rule.contentEquals("")){
 				JOptionPane.showMessageDialog(frame, 
@@ -475,13 +477,14 @@ public class MappingPage {
 					clName = "http://www." + source + ".pt/Medicine";
 					try {
 						propsBySource.put(source, swe.showClassProperties(clName));
+						propsNodeBySource.put(source, swe.showNodeProperties(clName));
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
 				}
 				
-				Model resultModel = swe.makeConstructQuery(subjectBySource, propsBySource, sourceName.getText(), className,
-													mappRules.getText().split("\\|"));
+				Model resultModel = swe.makeConstructQuery(subjectBySource, propsBySource, propsNodeBySource, sourceName.getText(),
+										className, mappRules.getText().split("\\|"));
 				
 				
 				resultPage = new ResultsPage(card, contentPanel, resultModel);

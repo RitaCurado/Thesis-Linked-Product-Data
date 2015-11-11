@@ -235,7 +235,7 @@ public class HomePage {
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
 			
-			ArrayList<String> classProps = null;
+			ArrayList<String> classProps = new ArrayList<String>();
 			JList <String> list;
 			String classInstances = "";
 			
@@ -248,7 +248,8 @@ public class HomePage {
 			if(className != ""){
 				try {
 					className = className.substring(2, className.length()-2);
-					classProps = swe.showClassProperties(className);
+					classProps.addAll(swe.showClassProperties(className));
+					classProps.addAll(swe.showNodeProperties(className));
 					classInstances = swe.countClassInstances(className);
 					instancesTitle.setText("Number of instances: " + classInstances);
 					propsListModel.removeAllElements();

@@ -223,11 +223,52 @@ public class SemanticWebEngine {
 
 		return classes;
 	}
+	
+	public ArrayList<String> showNodeProperties(String cl){
+
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		String[] spltResult;
+		ArrayList<String> props = new ArrayList<String>();
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		if(cl.contains("+"))
+			cl = cl.replace("+", "\\\\+");
+		
+		String queryString = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
+				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
+				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+		result = result.replace(" ", "");
+
+		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			props.add(spltResult[i]);
+		}
+
+		return props;
+	}
 
 	public ArrayList<String> showClassProperties(String cl) throws Exception {
 
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		//System.out.println("SWE - SHOW CLASS PROPERTIES");
 
 		Query query;
 		QueryExecution qe;
@@ -241,18 +282,8 @@ public class SemanticWebEngine {
 		
 		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
-				+ "{"
 				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
 				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
-				+ "}"
-				+ " UNION "
-				+ "{"
-				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?o ."
-				+ " ?s <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
-				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
-				+ "} "
 				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
@@ -338,7 +369,7 @@ public class SemanticWebEngine {
 	}
 	
 	public Model makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
-										String sourceName, String className, String[] mappingRules){
+			HashMap<String,ArrayList<String>> nodesBySource, String sourceName, String className, String[] mappingRules){
 		
 		int propID = 0;
 		int count = 0;
