@@ -235,7 +235,7 @@ public class HomePage {
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
 			
-			ArrayList<String> classProps = new ArrayList<String>();
+			ArrayList<String> classProps;
 			JList <String> list;
 			String classInstances = "";
 			
@@ -246,10 +246,12 @@ public class HomePage {
 			}
 
 			if(className != ""){
-				try {
+				//try {
 					className = className.substring(2, className.length()-2);
-					classProps.addAll(swe.showClassProperties(className));
-					classProps.addAll(swe.showNodeProperties(className));
+					
+//					classProps.addAll(swe.showClassProperties(className));
+//					classProps.addAll(swe.showNodeProperties(className));
+					classProps = swe.showClassProperties(className);
 					classInstances = swe.countClassInstances(className);
 					instancesTitle.setText("Number of instances: " + classInstances);
 					propsListModel.removeAllElements();
@@ -262,9 +264,9 @@ public class HomePage {
 						propsList.revalidate();
 					}
 
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
 			}
 			
 			for(String source: sources){
@@ -324,13 +326,6 @@ public class HomePage {
 			
 			contentPanel.add(pageRules, "pageRules");
 			card.show(contentPanel, "pageRules");
-
-//			secondPage = new SecondPage(frame, swe, card, contentPanel);
-//			page2 = secondPage.getPage();
-//			page2.setName("page2");
-//
-//			contentPanel.add(page2, "page2");
-//			card.show(contentPanel, "page2");
 		}
 	}
 
