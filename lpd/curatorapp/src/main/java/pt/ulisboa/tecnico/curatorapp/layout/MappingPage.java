@@ -488,7 +488,7 @@ public class MappingPage {
 										sourceName.getText(), className, mappRules.getText().split("\\|"));
 				
 				
-				resultPage = new ResultsPage(card, contentPanel, resultModel);
+				resultPage = new ResultsPage(swe, card, contentPanel, resultModel);
 				pageResult = resultPage.getPage();
 				pageResult.setName("pageResult");
 				

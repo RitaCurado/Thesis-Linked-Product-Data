@@ -241,32 +241,25 @@ public class HomePage {
 			
 			for(String source: sources){
 				list = listsByTab.get(source);
-				if(!list.isSelectionEmpty())
+				if(!list.isSelectionEmpty()){
 					className = list.getSelectedValue();
+					className = className.substring(2, className.length()-2);
+				}
 			}
 
 			if(className != ""){
-				//try {
-					className = className.substring(2, className.length()-2);
-					
-//					classProps.addAll(swe.showClassProperties(className));
-//					classProps.addAll(swe.showNodeProperties(className));
-					classProps = swe.showClassProperties(className);
-					classInstances = swe.countClassInstances(className);
-					instancesTitle.setText("Number of instances: " + classInstances);
-					propsListModel.removeAllElements();
-					propsList.revalidate();
+				classProps = swe.showClassProperties(className);
+				classInstances = swe.countClassInstances(className);
+				instancesTitle.setText("Number of instances: " + classInstances);
+				propsListModel.removeAllElements();
+				propsList.revalidate();
 
-					if(classProps != null){
-						for(String prop: classProps){
-							propsListModel.addElement(prop);
-						}
-						propsList.revalidate();
+				if(classProps != null){
+					for(String prop: classProps){
+						propsListModel.addElement(prop);
 					}
-
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
+					propsList.revalidate();
+				}
 			}
 			
 			for(String source: sources){

@@ -196,6 +196,24 @@ public class SemanticWebEngine {
 
 		return cProp;
 	}
+	
+	public boolean checkPropertyExistance(String property){
+		
+		String query;
+		Query qf;
+		QueryExecution qexec;
+		boolean result;
+		
+		query = "ASK{ ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ "FILTER (regex(str(?s), \"" + property + "\"))}";
+		
+		qf = QueryFactory.create(query);
+		qexec = QueryExecutionFactory.create(qf, dbModel);
+		result = qexec.execAsk();
+		qexec.close();
+		
+		return result;
+	}
 
 	public ArrayList<String> showSourceClasses(String source){
 
@@ -332,16 +350,12 @@ public class SemanticWebEngine {
 		String queryString;
 		String numInstances = "";
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-
-		//cl = cl.substring(2, (cl.length()-2));
-		//System.out.println("SWE: " + cl);
 		
 		if(cl.contains("+"))
 			cl = cl.replace("+", "\\\\+");
 
 		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
 				+ "WHERE {"
-				//+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + cl + "\" .}";
 				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?cl ."
 				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
@@ -389,14 +403,10 @@ public class SemanticWebEngine {
 	public Model makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
 			HashMap<String,ArrayList<String>> nodesBySource, String sourceName, String className, String[] mappingRules){
 		
-//		System.out.println("size props: " + propsBySource.size());
-//		System.out.println("size infar: " + propsBySource.get("infarmed").size());
-//		System.out.println("size info: " + propsBySource.get("infomed").size());
-		
 		int propID = 0;
 		
 		String newClass;
-		String propConj;
+		String propConj = "";
 		String conjuction = "";
 		
 		String source = "";
@@ -406,23 +416,27 @@ public class SemanticWebEngine {
 		String optional = "";
 		
 		HashMap<String, Integer> sourcesIndex = getSourcesIndex(sourceName);
+		ArrayList<String> list;
 		String[] props = new String[sourcesIndex.keySet().size()];
 		String[] ruleProperties;
 		
-		newClass = "<" + sourceName + "/" + className + ">";
+//		--- create new mapping class ---
+		newClass = sourceName + "/" + className;
 		
-		schema += " " + newClass + " <" + RDF.type + "> <" + RDFS.Class + "> .";
-		variables += " ?s1 <" + RDF.type + "> " + newClass + " .";
+		schema += " <" + newClass + "> <" + RDF.type + "> <" + RDFS.Class + "> .";
+		variables += " ?s1 <" + RDF.type + "> \"" + newClass + "\" .";
+
 		
-		//extract info from each rule
+//		--- extract info from each rule ---
 		for(String mapRule: mappingRules){
+			
 			propID++;
-			//extract info from each property inside a rule
-			ruleProperties = mapRule.split("-");
+			ruleProperties = mapRule.split("-"); //extract info from each property inside a rule
+			
 			for(String property: ruleProperties){
 				source = getPropertySource(property);
 				
-				ArrayList<String> list = propsBySource.get(source);
+				list = propsBySource.get(source);
 				list.remove(property);
 				
 				where += writeClauses(subjectBySource.get(source), property, "normalMappingS", -1, propID);
@@ -434,129 +448,89 @@ public class SemanticWebEngine {
 				conjuction += props[index] + ":";
 			}
 			
-			//Conjunction property name. <http://www.s1+s2.pt/className/p1:p2>
-			propConj = newClass;
-			propConj = propConj.replace(">", "");
-			propConj += "/" + conjuction.substring(0, conjuction.length()-1) + ">";
+			//Conjunction property name. <http://www.s1+s2.pt/p1:p2>
+			propConj = "<" + sourceName + "/" + conjuction.substring(0, conjuction.length()-1) + ">";
 			
-			schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
-			schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
+			if(!checkPropertyExistance(propConj)){
+				schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
+			}			
 			
+			schema += " " + propConj + " <" + RDFS.domain + "> \"" + newClass + "\" .";
 			variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);
 			
 			Arrays.fill(props, null);
 		}
 		
-		//Treat properties that don't appear in any mapping rule
-		int index, countSlash;
-		String parent, parentConj, nodeConj;
-		ArrayList<String> properties;
+//		--- Treat properties that don't appear in any mapping rule ---
+		int countSlash;
+		String parent;
+		ArrayList<String> properties, nodes;
 		
 		
 		for(String key: propsBySource.keySet()){
 			
 			properties = propsBySource.get(key);
+			nodes = nodesBySource.get(key);
+			
 			for(String p: properties){
 				
 				propID++;
-				Arrays.fill(props, null);
-				index = sourcesIndex.get(key);
 				
-				if(nodesBySource.get(key).contains(p)){
-					nodeConj = newClass;
-					nodeConj = nodeConj.replace(">", "");
-					nodeConj += getPropertyName(p) + "Node>";
+				countSlash = StringUtils.countMatches(p, "/");
+				
+				if(countSlash > 3){ //Complex properties
+					parent = getComposedProperty(p);
 					
-					schema += " " + nodeConj + " <" + RDF.type + "> <" + RDFS.Resource + "> .";
+					if(nodes.contains(parent)){
+						schema += " " + parent + " <" + RDFS.domain + "> \"" + newClass + "\" .";
+						variables += writeClauses("s1", parent, "normalMappingS", -1, propID);
+						optional += writeClauses(subjectBySource.get(key), parent, "normalMappingS", -1, propID);
+						
+						nodes.remove(parent);
+						propID++;
+					}
 					
-					propConj = nodeConj.replace(getPropertyName(p)+"Node>", "");
-					propConj += createNewMappPropName(props, p, index) + ">";
-					
-					schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
-					schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
-					schema += " " + propConj + " <" + RDFS.range + "> " + nodeConj + " .";
-					
-					variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);				
+					variables += writeClauses("s1", p, "normalMappingS", -1, propID);
+					optional += writeClauses(subjectBySource.get(key), p, "normalMappingC", -1, propID);
+				}
+				else{ //Simple properties
+					schema += " " + p + " <" + RDFS.domain + "> \"" + newClass + "\" .";
+					variables += writeClauses("s1", p, "normalMappingS", -1, propID);
 					optional += writeClauses(subjectBySource.get(key), p, "normalMappingS", -1, propID);
 					
-					nodesBySource.get(key).remove(p);
-				}
-				
-				else{
-					
-					countSlash = StringUtils.countMatches(p, "/");
-					if(countSlash > 3){
-						parent = getComposedProperty(p);
-						
-						if(!nodesBySource.get(key).contains(parent)){
-							
-							nodeConj = newClass;
-							nodeConj = nodeConj.replace(">", "");
-							nodeConj += "/" + getPropertyName(parent) + "Node>";
-							
-							schema += " " + nodeConj + " <" + RDF.type + "> <" + RDFS.Resource + "> .";
-							
-							propConj = nodeConj.replace(getPropertyName(parent) + "Node>", "");
-							propConj += createNewMappPropName(props, parent, index) + ">";
-							
-							schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
-							schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
-							schema += " " + propConj + " <" + RDFS.range + "> " + nodeConj + " .";
-							
-							variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);				
-							optional += writeClauses(subjectBySource.get(key), parent, "normalMappingS", -1, propID);
-							
-							nodesBySource.get(key).remove(parent);
-							propID++;
-						}
-						parentConj = newClass;
-						parentConj = parentConj.replace(">", "");
-						parentConj += "/" + getPropertyName(parent) + "Node>";
-						
-						propConj = parentConj;
-						propConj = propConj.replace(">", "");
-						propConj += "/" + getComplexPropName(p);
-						
-						schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
-						schema += " " + propConj + " <" + RDFS.domain + "> " + parentConj + " .";
-						
-						variables += writeClauses("s1", propConj, "normalMappingC", -1, propID);
-						optional += writeClauses(subjectBySource.get(key), p, "normalMappingC", -1, propID);
-					}
-					
-					else{
-						conjuction = createNewMappPropName(props, p, index);
-						
-						propConj = newClass;
-						propConj = propConj.replace(">", "");
-						propConj += "/" + conjuction + ">";
-						
-						schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
-						schema += " " + propConj + " <" + RDFS.domain + "> " + newClass + " .";
-						
-						variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);				
-						optional += writeClauses(subjectBySource.get(key), p, "normalMappingS", -1, propID);
-						
-					}
+					if(nodes.contains(p))
+						nodes.remove(p);
 				}
 			}
 		}
 		
-		System.out.println("SCHEMA: ");
-		System.out.println(schema);
-		System.out.println("VARIABLES: ");
-		System.out.println(variables);
-		System.out.println("WHERE: ");
-		System.out.println(where);
-		System.out.println("OPTIONAL: ");
-		System.out.println(optional);
+//		System.out.println("SCHEMA: ");
+//		System.out.println(schema);
+//		System.out.println("VARIABLES: ");
+//		System.out.println(variables);
+//		System.out.println("WHERE: ");
+//		System.out.println(where);
+//		System.out.println("OPTIONAL: ");
+//		System.out.println(optional);
 		
 		Model resultModel = constructModelDB(schema, variables, where, optional);
 		dbMappings.add(resultModel);
 		dbMappings.commit();
 		
-		dbModel.add(dbMappings);
+		dbModel.add(resultModel);
 		dbModel.commit();
+		
+//		String q = "select * where {?s ?p ?o}";
+//		Query query = QueryFactory.create(q);
+//		QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+//		ResultSet results = qexec.execSelect();
+//		FileOutputStream fos = null;
+//		try {
+//			fos = new FileOutputStream(new File("mappResult.txt"));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		ResultSetFormatter.out(fos, results);
 		
 		return resultModel;
 	}
@@ -917,79 +891,6 @@ public class SemanticWebEngine {
 			results = qe.execSelect();
 		}
 
-
-//		if(multipleSources){
-//			
-//			key = null;
-//			value = null;
-//			searchWhere = null;
-//			filters = null;
-//			oid = 0;
-//			
-//			for(Map.Entry<String, String> entry : searchCriteria.entrySet()) {
-//				oid++;
-//			    key = entry.getKey();
-//			    value = entry.getValue();
-//			    
-//			    propSource = getPropertySource(key);
-//			    subjectId = subjectBySource.get(propSource);
-//			    
-//			    searchWhere += " ?" + subjectId + " " + key + " ?obj" + oid + " .";
-//			    filters += " FILTER regex (str(?obj" + oid + "), \"" + value + "\")";
-//			}
-//
-//
-//			queryString =
-//					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-//					"PREFIX Infarmed: <http://www.infarmed.pt/>" +
-//					"PREFIX Infomed: <http://www.infomed.pt/>" +
-//					"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
-//					"PREFIX FI: <http://www.infarmed.pt/FI/>" +
-//					"SELECT" + select + "\n" +
-//					"WHERE{"
-//						+ where
-//						+ searchWhere
-//						+ filters
-//						+ "}";
-//		}
-//		else{
-//
-//			key = null;
-//			value = null;
-//			searchWhere = "";
-//			filters = "";
-//			oid = 0;
-//			
-//			for(Map.Entry<String, String> entry : searchCriteria.entrySet()) {
-//				oid++;
-//			    key = entry.getKey();
-//			    value = entry.getValue();
-//			    searchWhere += " ?s " + key + " ?obj" + oid + " .";
-//			    filters += " FILTER regex (str(?obj" + oid + "), \"" + value + "\")";
-//			}
-//			
-//			queryString =
-//					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>" +
-//							"PREFIX Infarmed: <http://www.infarmed.pt/>" +
-//							"PREFIX Infomed: <http://www.infomed.pt/>" +
-//							"PREFIX RCM: <http://www.infarmed.pt/RCM/>" +
-//							"PREFIX FI: <http://www.infarmed.pt/FI/>" +
-//							"SELECT" + select + "\n" +
-//							"WHERE{"
-//							+ where
-//							+ searchWhere
-//							+ filters
-//							+ "}";
-//		}
-		
-		
-		
-		//System.out.println("QUERY: " + queryString);
-
-//		query = QueryFactory.create(queryString);
-//		qe = QueryExecutionFactory.create(query, dbModel);
-//		results = qe.execSelect();
-
 		ResultSetFormatter.out(baos, results, query);
 
 		queryResult = baos.toString();
@@ -1023,6 +924,12 @@ public class SemanticWebEngine {
 
 				//property = classProps[i];
 				column = this.getPropertyName(property);
+				
+				if(column.contains(":")){
+					String[] split = column.split("\\:");
+					column = split[0];
+				}
+				
 				select += " ?" + column;
 
 				count = StringUtils.countMatches(property, "/");
@@ -1033,9 +940,9 @@ public class SemanticWebEngine {
 			}
 
 			queryString = "SELECT " + select + "\n"
-					+ "WHERE {"
-					+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"" + className + "\" ."
-					+ where + "}";
+							+ "WHERE {"
+							+ " ?s a \"" + className + "\" ."
+							+ where + "}";
 
 			query = QueryFactory.create(queryString);
 			qe = QueryExecutionFactory.create(query, dbModel);
@@ -1057,8 +964,12 @@ public class SemanticWebEngine {
 		String column, composedProp = "";
 
 		column = this.getPropertyName(prop);
+		if(column.contains(":")){
+			String[] split = column.split("\\:");
+			column = split[0];
+		}
+		
 		count = StringUtils.countMatches(prop, "/");
-
 		if(count >3)
 			composedProp = this.getComposedProperty(prop);
 

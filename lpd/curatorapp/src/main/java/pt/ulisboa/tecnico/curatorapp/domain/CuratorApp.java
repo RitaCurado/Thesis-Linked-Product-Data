@@ -40,7 +40,7 @@ public class CuratorApp extends JFrame{
     	
     	CuratorApp ui = new CuratorApp();
 		ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ui.setSize(800, 480);
+		ui.setSize(890, 480);
 		ui.setVisible(true);
 		ui.setResizable(true);
     }
