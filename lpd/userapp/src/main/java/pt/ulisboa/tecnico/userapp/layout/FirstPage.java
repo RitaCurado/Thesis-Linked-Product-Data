@@ -164,11 +164,7 @@ public class FirstPage {
 			panel.setPreferredSize(new Dimension(400, 150));
 			
 			list = listModelBySource.get(source);
-			try {
-				result = swe.showSourceClasses(source.toLowerCase());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			result = swe.showSourceClasses(source.toLowerCase());
 
 			if(result != null){
 				for(String s: result){
@@ -187,7 +183,10 @@ public class FirstPage {
 			scroll.setViewportView(tabList);
 			panel.add(scroll);
 			
-			tabbedPane.addTab(source, panel);
+			String[] sSplit = source.split("\\.");
+			String sourceName = sSplit[1];
+			String tab = sourceName.substring(0, 1).toUpperCase() + sourceName.substring(1);
+			tabbedPane.addTab(tab, panel);
 		}
 
 		tabbedPane.addChangeListener(new ChangeListener() {
@@ -215,39 +214,36 @@ public class FirstPage {
 		properties.add(propsPanel);
 		properties.setDividerSize(0);
 	}
-
+	
 	private class selectionListener implements ListSelectionListener{
 
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
 			
-			ArrayList<String> classProps = null;
+			ArrayList<String> classProps;
 			JList <String> list;
 			String classInstances = "";
 			
 			for(String source: sources){
 				list = listsByTab.get(source);
-				if(!list.isSelectionEmpty())
+				if(!list.isSelectionEmpty()){
 					className = list.getSelectedValue();
+					className = className.substring(2, className.length()-2);
+				}
 			}
 
 			if(className != ""){
-				try {
-					classProps = swe.showClassProperties(className);
-					classInstances = swe.countClassInstances(className);
-					instancesTitle.setText("Number of instances: " + classInstances);
-					propsListModel.removeAllElements();
-					propsList.revalidate();
+				classProps = swe.showClassProperties(className);
+				classInstances = swe.countClassInstances(className);
+				instancesTitle.setText("Number of instances: " + classInstances);
+				propsListModel.removeAllElements();
+				propsList.revalidate();
 
-					if(classProps != null){
-						for(String prop: classProps){
-							propsListModel.addElement(prop);
-						}
-						propsList.revalidate();
+				if(classProps != null){
+					for(String prop: classProps){
+						propsListModel.addElement(prop);
 					}
-
-				} catch (Exception e) {
-					e.printStackTrace();
+					propsList.revalidate();
 				}
 			}
 			
@@ -258,22 +254,26 @@ public class FirstPage {
 
 		}		
 	}
-
+	
 	private class propsSelectListener implements ListSelectionListener{
 
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-
-			String prop = propsList.getSelectedValue();
-			if(prop != ""){
-				propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
-				pagePropValues = propsPage.getPage();
-				pagePropValues.setName("pageProps");
-
-				contentPanel.add(pagePropValues, "pageProps");
-				card.show(contentPanel, "pageProps");
+			
+			if(!propsList.isSelectionEmpty()){
+				
+				String prop = propsList.getSelectedValue();
+				if(prop != ""){
+					propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
+					pagePropValues = propsPage.getPage();
+					pagePropValues.setName("pageProps");
+					
+					contentPanel.add(pagePropValues, "pageProps");
+					card.show(contentPanel, "pageProps");
+				}
+				
+				propsList.clearSelection();
 			}
-
 		}
 	}
 

@@ -380,6 +380,10 @@ public class SemanticWebEngine {
 		String output = "";
 		
 		String propName = this.getPropertyName(property);
+		if(propName.contains(":")){
+			String[] split = propName.split("\\:");
+			propName = split[0];
+		}
 		
 		queryString = "SELECT DISTINCT ?" + propName +"\n"
 				+ "WHERE {"

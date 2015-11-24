@@ -175,11 +175,7 @@ public class HomePage {
 			panel.setPreferredSize(new Dimension(400, 150));
 			
 			list = listModelBySource.get(source);
-			try {
-				result = swe.showSourceClasses(source.toLowerCase());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			result = swe.showSourceClasses(source.toLowerCase());
 
 			if(result != null){
 				for(String s: result){
@@ -274,17 +270,21 @@ public class HomePage {
 
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-
-			String prop = propsList.getSelectedValue();
-			if(prop != ""){
-				propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
-				pagePropValues = propsPage.getPage();
-				pagePropValues.setName("pageProps");
-
-				contentPanel.add(pagePropValues, "pageProps");
-				card.show(contentPanel, "pageProps");
+			
+			if(!propsList.isSelectionEmpty()){
+				
+				String prop = propsList.getSelectedValue();
+				if(prop != ""){
+					propsPage = new PropertyValuesPage(swe, card, contentPanel, className, prop);
+					pagePropValues = propsPage.getPage();
+					pagePropValues.setName("pageProps");
+					
+					contentPanel.add(pagePropValues, "pageProps");
+					card.show(contentPanel, "pageProps");
+				}
+				
+				propsList.clearSelection();
 			}
-
 		}
 	}
 
