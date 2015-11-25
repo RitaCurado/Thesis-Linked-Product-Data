@@ -906,10 +906,11 @@ public class SemanticWebEngine {
 	}
 
 	public String selectAllInfo(String className){
-		int count = 0;
+		int count = 0, sid = 0, index;
 		String output = "";
 		ArrayList<String> props = null;
 		String select = "", where = "", column = "";
+		HashMap<String, Integer> sourceID = new HashMap<String, Integer>();
 
 		Query query;
 		QueryExecution qe;
@@ -925,22 +926,35 @@ public class SemanticWebEngine {
 
 		if(props != null){
 			for(String property: props){
+				
+				String s = getPropertySource(property);
+				if(sourceID.containsKey(s)){
+					index = sourceID.get(s);
+				}
+				else{
+					sid++;
+					sourceID.put(s, sid);
+					index = sid;
+				}
 
-				//property = classProps[i];
 				column = this.getPropertyName(property);
 				
 				if(column.contains(":")){
 					String[] split = column.split("\\:");
 					column = split[0];
-				}
-				
-				select += " ?" + column;
-
-				count = StringUtils.countMatches(property, "/");
-				if(count > 3)
-					where += this.writeClauses(null, property, "simpleComp", -1, -1);
-				else
+					select += " ?" + column;
 					where += this.writeClauses(null, property, "simple", -1, -1);
+				}
+				else{
+					select += " ?" + column + index;
+					
+					count = StringUtils.countMatches(property, "/");
+					if(count > 3)
+						where += this.writeClauses(null, property, "simpleNumC", index, -1);
+					else
+						where += this.writeClauses(null, property, "simpleNum", index, -1);
+				}
+
 			}
 
 			queryString = "SELECT " + select + "\n"
@@ -984,6 +998,12 @@ public class SemanticWebEngine {
 
 		case "simpleComp":
 			return " ?s " + composedProp + " [ " + prop + " ?" + column + " ] .";
+			
+		case "simpleNum":
+			return " ?s " + prop + " ?" + column + sid + " .";
+
+		case "simpleNumC":
+			return " ?s " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
 
 		case "mappingOnPropS":
 			return " ?" + subject + " " +  prop + " ?" + column + " .";
