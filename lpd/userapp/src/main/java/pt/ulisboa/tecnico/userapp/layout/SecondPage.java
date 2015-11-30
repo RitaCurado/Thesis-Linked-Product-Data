@@ -40,6 +40,7 @@ public class SecondPage {
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
 //		--------------------
+		sources = new ArrayList<String>();
 		sources.add("- Select an option -");
 		sources.addAll(swe.getSources());
 //		---------------------
@@ -78,7 +79,7 @@ public class SecondPage {
 	private void createPage(){
 
 		criteriaPanel = new JPanel();
-		JPanel upPanel = new JPanel(new GridLayout(7, 1));
+		JPanel upPanel = new JPanel(new GridLayout(5, 1));
 		JPanel downPanel = new JPanel(new GridLayout(1, 6));
 		JPanel sourcePanel = new JPanel(new GridLayout(1, 2));
 		JPanel mappingPanel = new JPanel(new GridLayout(1, 2));
@@ -89,6 +90,7 @@ public class SecondPage {
 		ArrayList<String> mappSources = new ArrayList<String>();
 
 		for(String s: sources){
+			System.out.println(s);
 			if(s.contains("+"))
 				indexes.add(sources.indexOf(s));
 		}
@@ -118,7 +120,7 @@ public class SecondPage {
 //		-------------
 		
 		criteriaPanel.setLayout(new GridLayout(0, 2));
-		criteriaPanel.setPreferredSize(new Dimension(400, 325));
+		criteriaPanel.setPreferredSize(new Dimension(400, 270));
 		criteriaPanel.setBackground(Color.WHITE);
 
 		sourcesList.addActionListener(new sourcesListListener());
@@ -147,10 +149,8 @@ public class SecondPage {
 		mappingPanel.add(new JLabel());
 
 		upPanel.add(title);
-		upPanel.add(new JLabel());
 		upPanel.add(new JLabel("Sources:"));
 		upPanel.add(sourcePanel);
-		upPanel.add(new JLabel());
 		upPanel.add(new JLabel("Mapping Rules:"));
 		upPanel.add(mappingPanel);
 
