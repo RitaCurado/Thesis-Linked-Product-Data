@@ -881,7 +881,7 @@ public class SemanticWebEngine {
 			}
 			if(subs){
 				try {
-					System.out.println("VAL:" + val);
+					//System.out.println("VAL:" + val);
 					infarDC.getInfarBySubstance(dbModel, val);
 					infoDC.getInfoBySubstance(dbModel, val);
 				} catch (Exception e) {

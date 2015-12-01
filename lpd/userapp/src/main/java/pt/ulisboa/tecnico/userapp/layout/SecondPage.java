@@ -90,7 +90,6 @@ public class SecondPage {
 		ArrayList<String> mappSources = new ArrayList<String>();
 
 		for(String s: sources){
-			System.out.println(s);
 			if(s.contains("+"))
 				indexes.add(sources.indexOf(s));
 		}
@@ -103,7 +102,6 @@ public class SecondPage {
 		sourcesArray = sources.toArray(sourcesArray);
 
 		sourcesList = new JComboBox<String>(sourcesArray);
-		sourcesList.setSelectedIndex(0);
 //		-------------
 		ArrayList<String> mappingRules = new ArrayList<String>();
 		mappingRules.add("- Select an option -");
@@ -123,10 +121,10 @@ public class SecondPage {
 		criteriaPanel.setPreferredSize(new Dimension(400, 270));
 		criteriaPanel.setBackground(Color.WHITE);
 
-		sourcesList.addActionListener(new sourcesListListener());
 		sourcesList.setSelectedIndex(0);
-		mappingsList.addActionListener(new mappListListener());
+		sourcesList.addActionListener(new sourcesListListener());
 		mappingsList.setSelectedIndex(0);
+		mappingsList.addActionListener(new mappListListener());
 
 		backButton.setForeground(Color.WHITE);
 		backButton.setFont(new Font("Arial", Font.BOLD, 16));
@@ -190,8 +188,8 @@ public class SecondPage {
 			}
 			else{
 				sourcesList.setEnabled(false);
-				props = swe.showClassProperties(mapping);
-				chosenClass = mapping;
+				chosenClass = mapping.substring(2, mapping.length()-2);
+				props = swe.showClassProperties(chosenClass);
 				
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
@@ -226,7 +224,7 @@ public class SecondPage {
 			JTextField tf;
 			JCheckBox checkB;
 			checkListener cl = new checkListener();
-			ArrayList<String> classes = null, props = null;
+			ArrayList<String> classes, props;
 			
 			if(source.equals("- Select an option -")){
 				mappingsList.setEnabled(true);
@@ -236,8 +234,9 @@ public class SecondPage {
 				mappingsList.setEnabled(false);
 
 				classes = swe.showSourceClasses(source.toLowerCase());
-				props = swe.showClassProperties(classes.get(0));
-				chosenClass = classes.get(0);
+				chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
+				
+				props = swe.showClassProperties(chosenClass);
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
