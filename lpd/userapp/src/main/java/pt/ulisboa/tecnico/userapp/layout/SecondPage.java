@@ -24,7 +24,6 @@ public class SecondPage {
 	private JComboBox<String> sourcesList;
 
 	private String chosenClass;
-	//private ArrayList<String> chosenSources;
 	private ArrayList<JCheckBox> checkBoxes;
 	private ArrayList<String> sources;
 
@@ -295,6 +294,9 @@ public class SecondPage {
 
 	private class nextListener implements ActionListener{
 
+		private ResultsPage resultPage;
+		private JSplitPane pageResult;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
@@ -311,28 +313,24 @@ public class SecondPage {
 							break;
 						}
 					}
+					//properties and respective values
 					searchCriteria.put(jcb.getText(), tf.getText());				
 				}
 
-				//TODO: make the query and produce the results in the resultsPpage
-
+				//Make the query and produce the results in the resultsPpage
+				//list all properties from chosenClass where the properties searchCriteria have the chose values
+				//query input: searchCriteria; chosenClass
+				//query output: string (table with the results)
 				
+				//chosenClass = chosenClass.substring(2, chosenClass.length()-2);
+				String queryResult = swe.makeSelectQuery(searchCriteria, chosenClass);
 				
-				/*
-				 * 
-					if(mapRule.contentEquals(""))
-						queryResult = swe.makeQuery(sources, searchCriteria, properties.split("\\|"), null);
-					else
-						swe.makeQuery(sources, searchCriteria, properties.split("\\|"), mapRule.split("\\|"));
-					
-					resultPage = new ResultsPage(card, contentPanel, queryResult);
-					pageResult = resultPage.getPage();
-					pageResult.setName("pageResult");
-					
-					contentPanel.add(pageResult, "pageResult");
-					card.show(contentPanel, "pageResult");
-				 * 
-				 */
+				resultPage = new ResultsPage(card, contentPanel, queryResult);
+				pageResult = resultPage.getPage();
+				pageResult.setName("pageResult");
+				
+				contentPanel.add(pageResult, "pageResult");
+				card.show(contentPanel, "pageResult");
 				
 			}
 			else{
