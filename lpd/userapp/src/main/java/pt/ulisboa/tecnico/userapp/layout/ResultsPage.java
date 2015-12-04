@@ -28,9 +28,12 @@ public class ResultsPage {
 	
 	private void createPage(){
 		
+		String[] numValues;
+		JLabel numMatches;
 		JTextArea results = new JTextArea();
 		JScrollPane scrollPane = new JScrollPane();
 		JPanel buttonPanel = new JPanel();
+		JSplitPane upPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		JButton backButton = new JButton(" Back");
 		JButton homepage = new JButton(" Homepage");
@@ -38,6 +41,8 @@ public class ResultsPage {
 		GridBagConstraints gbc = new GridBagConstraints();
 		buttonPanel.setLayout(new GridBagLayout());
 		
+		numValues = queryResult.split("\\r?\\n");
+		numMatches = new JLabel("Number of matches: " + (numValues.length - 4));
 		
 		homepage.setIcon(new ImageIcon("..\\src\\main\\resources\\home168.png"));
 		homepage.addActionListener(new homeListener());
@@ -57,9 +62,13 @@ public class ResultsPage {
 		
 		results.setText(queryResult);
 		scrollPane.setViewportView(results);
-		scrollPane.setPreferredSize(new Dimension(400, 390));
+		scrollPane.setPreferredSize(new Dimension(400, 380));
 		
-		resultPage.add(scrollPane);
+		upPane.add(numMatches);
+		upPane.add(scrollPane);
+		upPane.setDividerSize(1);
+		
+		resultPage.add(upPane);
 		resultPage.add(buttonPanel);
 		resultPage.setDividerSize(1);
 	}
