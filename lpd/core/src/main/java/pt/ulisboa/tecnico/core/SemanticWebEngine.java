@@ -143,110 +143,7 @@ public class SemanticWebEngine {
 
 		return source[1];
 	}
-
-	public String getPropertyName(String property){
-
-		int count;
-		String column = "";
-		String[] splt = null;
-
-		count = StringUtils.countMatches(property, "/");
-		splt = property.split("/");
-
-		if(count > 3){
-			column = splt[splt.length-2];
-			column += "_";
-			column += splt[splt.length - 1];
-		}		
-		else{
-			column = splt[splt.length - 1];			
-		}
-
-		column = column.replace(">", "");
-		column = column.replace("(", "");
-		column = column.replace(")", "");
-		
-		if(column.contains(":")){
-			String[] split = column.split("\\:");
-			column = split[0];
-		}
-
-		return column;
-	}
 	
-	public String getComplexPropName(String property){
-		String name = "";
-		String[] splt = null;
-		
-		splt = property.split("/");
-		name = splt[splt.length - 1];
-		
-		return name;
-	}
-
-	public String getComposedProperty(String property){
-
-		String[] splt = null;
-		String cProp = "";
-
-		splt = property.split("/");
-		for(int i = 0; i < splt.length-1; i++){
-			cProp += splt[i];
-			cProp += "/";
-		}
-
-		cProp = cProp.substring(0, cProp.length()-1);
-		cProp += ">";
-
-		return cProp;
-	}
-	
-	public String countClassInstances(String cl){
-		Query query;
-		QueryExecution qe;
-		ResultSet results;
-		String[] result;
-		String queryString;
-		String numInstances = "";
-		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		
-		if(cl.contains("+"))
-			cl = cl.replace("+", "\\\\+");
-
-		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
-				+ "WHERE {"
-				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?cl ."
-				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
-
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, dbModel);
-		results = qe.execSelect();
-		ResultSetFormatter.out(go, results, query);
-
-		result = go.toString().split("\\r?\\n");
-		numInstances = result[3].substring(2, 5);
-
-		return numInstances;
-	}
-	
-	public boolean checkPropertyExistance(String property){
-		
-		String query;
-		Query qf;
-		QueryExecution qexec;
-		boolean result;
-		
-		query = "ASK{ ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ "FILTER (regex(str(?s), \"" + property + "\"))}";
-		
-		qf = QueryFactory.create(query);
-		qexec = QueryExecutionFactory.create(qf, dbModel);
-		result = qexec.execAsk();
-		qexec.close();
-		
-		return result;
-	}
-
 	public ArrayList<String> showSourceClasses(String source){
 
 		Query query;
@@ -284,24 +181,21 @@ public class SemanticWebEngine {
 		return classes;
 	}
 	
-	public ArrayList<String> showNodeProperties(String cl){
-
+	public String countClassInstances(String cl){
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
-		String result;
-		String[] spltResult;
-		ArrayList<String> props = new ArrayList<String>();
+		String[] result;
+		String queryString;
+		String numInstances = "";
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
 		if(cl.contains("+"))
 			cl = cl.replace("+", "\\\\+");
-		
-		String queryString = "SELECT DISTINCT ?property\n"
+
+		queryString = "SELECT (COUNT(DISTINCT ?s) as ?c)\n"
 				+ "WHERE {"
-				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
-				+ " ?property <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
+				+ " ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?cl ."
 				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
@@ -309,19 +203,10 @@ public class SemanticWebEngine {
 		results = qe.execSelect();
 		ResultSetFormatter.out(go, results, query);
 
-		result = go.toString();
-		result = result.replace("-", "_");
-		result = result.replace("|", "");
-		result = result.replace(" ", "");
+		result = go.toString().split("\\r?\\n");
+		numInstances = result[3].substring(2, 5);
 
-		qe.close();
-		
-		spltResult = result.split("\\r?\\n");
-		for(int i=3; i < spltResult.length-1; i++){
-			props.add(spltResult[i]);
-		}
-
-		return props;
+		return numInstances;
 	}
 
 	public ArrayList<String> showClassProperties(String cl){
@@ -352,6 +237,46 @@ public class SemanticWebEngine {
 				+ " ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
 				+ " ?s <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
 				+ "}"
+				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+		result = result.replace(" ", "");
+
+		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			props.add(spltResult[i]);
+		}
+
+		return props;
+	}
+	
+	public ArrayList<String> showNodeProperties(String cl){
+
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		String[] spltResult;
+		ArrayList<String> props = new ArrayList<String>();
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		if(cl.contains("+"))
+			cl = cl.replace("+", "\\\\+");
+		
+		String queryString = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#domain> ?cl ."
+				+ " ?property <http://www.w3.org/2000/01/rdf-schema#range> ?o ."
 				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
@@ -408,6 +333,7 @@ public class SemanticWebEngine {
 		return output;
 	}
 	
+	/* Query methods */
 	public String selectAllInfo(String className){
 		int count = 0, sid = 0, index;
 		String output = "";
@@ -583,33 +509,12 @@ public class SemanticWebEngine {
 			}
 		}
 		
-//		System.out.println("SCHEMA: ");
-//		System.out.println(schema);
-//		System.out.println("VARIABLES: ");
-//		System.out.println(variables);
-//		System.out.println("WHERE: ");
-//		System.out.println(where);
-//		System.out.println("OPTIONAL: ");
-//		System.out.println(optional);
-		
 		Model resultModel = constructModelDB(schema, variables, where, optional);
 		dbMappings.add(resultModel);
 		dbMappings.commit();
 		
 		dbModel.add(resultModel);
 		dbModel.commit();
-		
-//		String q = "select * where {?s ?p ?o}";
-//		Query query = QueryFactory.create(q);
-//		QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
-//		ResultSet results = qexec.execSelect();
-//		FileOutputStream fos = null;
-//		try {
-//			fos = new FileOutputStream(new File("mappResult.txt"));
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		ResultSetFormatter.out(fos, results);
 		
 		return resultModel;
 	}
@@ -622,7 +527,6 @@ public class SemanticWebEngine {
 		index = countSlash = 0;
 		result = select = where = filter = "";
 		
-		System.out.println(chosenClass);
 		ArrayList<String> props = showClassProperties(chosenClass);
 		
 		for(String key: searchCriteria.keySet()){
@@ -662,61 +566,93 @@ public class SemanticWebEngine {
 	}
 	
 	
-	private String selectQueryDB(String select, String where, String filter, String chosenClass){
-		String q, result;
-		Query query;
+	/* Private methods */
+	private String getPropertyName(String property){
+
+		int count;
+		String column = "";
+		String[] splt = null;
+
+		count = StringUtils.countMatches(property, "/");
+		splt = property.split("/");
+
+		if(count > 3){
+			column = splt[splt.length-2];
+			column += "_";
+			column += splt[splt.length - 1];
+		}		
+		else{
+			column = splt[splt.length - 1];			
+		}
+
+		column = column.replace(">", "");
+		column = column.replace("(", "");
+		column = column.replace(")", "");
+		
+		if(column.contains(":")){
+			String[] split = column.split("\\:");
+			column = split[0];
+		}
+
+		return column;
+	}
+	
+	private boolean checkPropertyExistance(String property){
+		
+		String query;
+		Query qf;
 		QueryExecution qexec;
-		ResultSet results;
-		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		boolean result;
 		
-		//chosenClass = chosenClass.substring(2, chosenClass.length()-2);
+		query = "ASK{ ?s a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ "FILTER (regex(str(?s), \"" + property + "\"))}";
 		
-		q = "SELECT" + select + "\n"
-			+ "WHERE {"
-			+ " ?s a \"" + chosenClass + "\" ."
-			+ where
-			+ filter + "}";
-		
-		System.out.println(q);
-		
-		query = QueryFactory.create(q);
-		qexec = QueryExecutionFactory.create(query, dbModel);
-		results = qexec.execSelect();
-		ResultSetFormatter.out(go, results, query);
-
-		result = go.toString();
-		result = result.replace("-", "_");
-
+		qf = QueryFactory.create(query);
+		qexec = QueryExecutionFactory.create(qf, dbModel);
+		result = qexec.execAsk();
 		qexec.close();
 		
 		return result;
 	}
 	
-	private Model constructModelDB(String schema, String variables, String where, String optional){
-		String q;
-		Query query;
-		Model result;
-		QueryExecution qexec;
-		
-		q = "CONSTRUCT{"
-				+ schema
-				+ variables
-			+ "}"
-			+ "WHERE{"
-				+ where
-				+ "OPTIONAL{"
-					+ optional
-				+ "}"
-			+ "}";
-		
-		query = QueryFactory.create(q);
-		qexec = QueryExecutionFactory.create(query, dbModel);
-		result = qexec.execConstruct();		
-		qexec.close();
-		
-		return result;
-	}
+	private String getComposedProperty(String property){
 
+		String[] splt = null;
+		String cProp = "";
+
+		splt = property.split("/");
+		for(int i = 0; i < splt.length-1; i++){
+			cProp += splt[i];
+			cProp += "/";
+		}
+
+		cProp = cProp.substring(0, cProp.length()-1);
+		cProp += ">";
+
+		return cProp;
+	}
+	
+	private HashMap<String, Integer> getSourcesIndex(String sourceConjuc){
+
+		HashMap<String, Integer> sourcesIndex = new HashMap<String, Integer>();
+		String[] splitByPoint;
+		String[] splitByPlus = sourceConjuc.split("\\+");
+
+		for(int i=0; i < splitByPlus.length; i++){
+			if(splitByPlus[i].contains(".")){
+				splitByPoint = splitByPlus[i].split("\\.");
+				if(splitByPoint[0].contains("www"))
+					sourcesIndex.put(splitByPoint[1], i);
+				else
+					sourcesIndex.put(splitByPoint[0], i);
+			}
+			else
+				sourcesIndex.put(splitByPlus[i], i);
+		}
+
+		return sourcesIndex;
+	}
+	
 	private String writeClauses(String subject, String prop, String mode, int sid, int oid){
 
 		int count;
@@ -767,25 +703,59 @@ public class SemanticWebEngine {
 		return "";
 	}
 	
-	private HashMap<String, Integer> getSourcesIndex(String sourceConjuc){
+	private String selectQueryDB(String select, String where, String filter, String chosenClass){
+		String q, result;
+		Query query;
+		QueryExecution qexec;
+		ResultSet results;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
-		HashMap<String, Integer> sourcesIndex = new HashMap<String, Integer>();
-		String[] splitByPoint;
-		String[] splitByPlus = sourceConjuc.split("\\+");
+		q = "SELECT" + select + "\n"
+			+ "WHERE {"
+			+ " ?s a \"" + chosenClass + "\" ."
+			+ where
+			+ filter + "}";
 		
-		for(int i=0; i < splitByPlus.length; i++){
-			if(splitByPlus[i].contains(".")){
-				splitByPoint = splitByPlus[i].split("\\.");
-				if(splitByPoint[0].contains("www"))
-					sourcesIndex.put(splitByPoint[1], i);
-				else
-					sourcesIndex.put(splitByPoint[0], i);
-			}
-			else
-				sourcesIndex.put(splitByPlus[i], i);
-		}
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, dbModel);
+		results = qexec.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+
+		qexec.close();
 		
-		return sourcesIndex;
+		return result;
 	}
+	
+	private Model constructModelDB(String schema, String variables, String where, String optional){
+		String q;
+		Query query;
+		Model result;
+		QueryExecution qexec;
+		
+		q = "CONSTRUCT{"
+				+ schema
+				+ variables
+			+ "}"
+			+ "WHERE{"
+				+ where
+				+ "OPTIONAL{"
+					+ optional
+				+ "}"
+			+ "}";
+		
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, dbModel);
+		result = qexec.execConstruct();		
+		qexec.close();
+		
+		return result;
+	}
+
+	
+	
+	
 	
 }

@@ -13,33 +13,24 @@ public class PropertyValuesPage {
 	private CardLayout card;
 	private JPanel contentPanel;
 	private SemanticWebEngine swe;
-	
-	private String property;
 	private JLabel source;
 	private JLabel classNameLabel;
 	private JLabel propNameLabel;
-	private JLabel numInstances;
-	private JButton backButton;
-	private JTextArea output;
-	private JScrollPane scrollPane;
+	private String property;
 	private JSplitPane pagePropValues;
 	
 	
 	public PropertyValuesPage(SemanticWebEngine swe, CardLayout cl, JPanel content, String className, String prop) {
-		pagePropValues = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		source = new JLabel("Information source: " + swe.getPropertySource(className));
-		classNameLabel = new JLabel("Class name: " + className);
-		propNameLabel = new JLabel("Property name: " + prop);
-		numInstances = new JLabel("Number of distinct values: ");
-		
-		output = new JTextArea();
-		scrollPane = new JScrollPane();
-		backButton = new JButton(" Back");
-		
 		card = cl;
 		contentPanel = content;
 		this.swe = swe;
 		this.property = prop;
+		
+		pagePropValues = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		
+		source = new JLabel("Information source: " + swe.getPropertySource(className));
+		classNameLabel = new JLabel("Class name: " + className);
+		propNameLabel = new JLabel("Property name: " + prop);
 		
 		this.createPage();
 	}
@@ -51,13 +42,21 @@ public class PropertyValuesPage {
 	private void createPage(){
 		String[] numValues;
 		
-		JPanel sourceInfo = new JPanel();
-		JPanel propInfo = new JPanel();
-		JPanel instPanel = new JPanel();
-		JPanel backPanel = new JPanel();
-
-		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JTextArea output = new JTextArea();
+		JButton backButton = new JButton(" Back");
+		JLabel numInstances = new JLabel("Number of distinct values: ");
+		JScrollPane scrollPane = new JScrollPane();
+		
+		JPanel sourceInfo, propInfo, instPanel, backPanel;
+		JSplitPane upPanel, downPanel;
+		
+		sourceInfo = new JPanel();
+		propInfo = new JPanel();
+		instPanel = new JPanel();
+		backPanel = new JPanel();
+		
+		upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		output.setText(swe.showPropertyValues(property));
 		numValues = output.getText().split("\\r?\\n");

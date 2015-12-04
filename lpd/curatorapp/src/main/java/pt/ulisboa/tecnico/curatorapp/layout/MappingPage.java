@@ -14,9 +14,7 @@ import pt.ulisboa.tecnico.core.SemanticWebEngine;
 public class MappingPage {
 
 	private SemanticWebEngine swe;
-	private JSplitPane pageResult;	
-	private ResultsPage resultPage;
-
+	
 	private JSplitPane mappingPage;
 	private CardLayout card;
 	private JPanel contentPanel;
@@ -25,40 +23,39 @@ public class MappingPage {
 	private JTabbedPane tabPane;
 	private JTextField newClassName, mappRules;
 	private JLabel sourceName;
-	private JButton backButton, nextButton, removeButton;
-
+	
 	private ArrayList<String> sources;
 	private ArrayList<JCheckBox> checkedSources;
 	private HashMap<String, JTextArea> textAreaBySource;
 	private HashMap<String, JList<String>> listBySource;
 
-	private String classNameDefault = "Ex: MappingBySomeProperty";
-	private String ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>";
+	private String classNameDefault;
+	private String ruleDefault;
 	private String className;
 	private String rule;
 
 	public MappingPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
-		this.frame = gui;
 		this.swe = swe;
-		this.card = cl;
-		this.contentPanel = content;
-		this.sources = swe.getSources();
-		this.mappingPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
-		this.tabPane = new JTabbedPane();
-		this.sourceName = new JLabel(" ", SwingConstants.LEFT);
-		this.newClassName = new JTextField();
-		this.mappRules = new JTextField();
-		this.nextButton = new JButton(" Create");
-		this.removeButton = new JButton("Remove ");
-		this.backButton = new JButton("Cancel");
+		frame = gui;
+		card = cl;
+		contentPanel = content;
+		sources = swe.getSources();
 		
-		this.checkedSources = new ArrayList<JCheckBox>();
-		this.textAreaBySource = new HashMap<String, JTextArea>();
-		this.listBySource = new HashMap<String, JList<String>>();
+		mappingPage = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		tabPane = new JTabbedPane();
+		sourceName = new JLabel(" ", SwingConstants.LEFT);
+		newClassName = new JTextField();
+		mappRules = new JTextField();
 		
-		this.className = "";
-		this.rule = "";
+		
+		checkedSources = new ArrayList<JCheckBox>();
+		textAreaBySource = new HashMap<String, JTextArea>();
+		listBySource = new HashMap<String, JList<String>>();
+		
+		classNameDefault = "Ex: MappingBySomeProperty";
+		ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>";
+		className = "";
+		rule = "";
 		
 		this.createPage();
 	}
@@ -68,6 +65,11 @@ public class MappingPage {
 	}
 
 	public void createPage(){
+		JButton backButton, nextButton, removeButton;
+		nextButton = new JButton(" Create");
+		removeButton = new JButton("Remove ");
+		backButton = new JButton("Cancel");
+		
 		JPanel infoPanel = new JPanel(new GridBagLayout());
 		JPanel autoPanel = new JPanel(new GridBagLayout());
 		JPanel fillPanel = new JPanel(new GridBagLayout());
@@ -452,6 +454,9 @@ public class MappingPage {
 	}
 
 	private class CreateListener implements ActionListener{
+		
+		private JSplitPane pageResult;
+		private ResultsPage resultPage;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {

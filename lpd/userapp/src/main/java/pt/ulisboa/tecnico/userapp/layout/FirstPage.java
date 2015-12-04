@@ -13,38 +13,17 @@ import pt.ulisboa.tecnico.core.SemanticWebEngine;
 public class FirstPage {
 
 	private SemanticWebEngine swe;
-	private InstancesPage instPage;
-	private SecondPage secondPage;
-	private PropertyValuesPage propsPage;
-
+	
 	private CardLayout card;
 	private String className;
 	private JFrame frame;
 
-	private JSplitPane page1;
-	private JSplitPane pageInstances;
-	private JSplitPane page2;
-	private JSplitPane pagePropValues;
-
-	private JTabbedPane tabbedPane;
-	private JSplitPane sourceInfo;
-	private JSplitPane properties;
-	private JSplitPane upPanel;
-	private JSplitPane downPanel;
-
-	private JPanel instances;
-	private JPanel propsPanel;
-	private JPanel nextPanel;
 	private JPanel contentPanel;
+	private JSplitPane page1;
+	private JSplitPane properties;
 
-	private JLabel infoTitle;
 	private JLabel instancesTitle;
-	private JLabel propertiesTitle;
-
-	private JButton show;
-	private JButton next;
-
-	private JScrollPane propsScrollPane;
+	private JTabbedPane tabbedPane;
 	private JList<String> propsList;
 	
 	private ArrayList<String> sources;
@@ -52,31 +31,19 @@ public class FirstPage {
 	private HashMap<String, JList<String>> listsByTab;
 
 	public FirstPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
-		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
-		instances = new JPanel();
-		propsPanel = new JPanel();
-		nextPanel = new JPanel();
-		tabbedPane = new JTabbedPane();
-		propsScrollPane = new JScrollPane();
-
-		infoTitle = new JLabel("Sources' Classes:");
-		instancesTitle = new JLabel("Number of instances: ");
-		propertiesTitle = new JLabel("Properties:");
-		show = new JButton("Instances ");
-		next = new JButton("Next ");
-		
-		sources = swe.getSources();
-
 		this.swe = swe;
 		card = cl;
 		contentPanel = content;
 		frame = gui;
+
 		className = "";
+
+		page1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		tabbedPane = new JTabbedPane();
+		
+		sources = swe.getSources();
+		instancesTitle = new JLabel("Number of instances: ");
 
 		this.createPage();
 	}
@@ -90,7 +57,19 @@ public class FirstPage {
 	}
 
 	private void createPage(){
+		JPanel instances, nextPanel;
+		JSplitPane sourceInfo, upPanel, downPanel;
+		JLabel infoTitle = new JLabel("Sources' Classes:");
+		JButton show = new JButton("Instances ");
+		JButton next = new JButton("Next ");
+		
+		instances = new JPanel();
+		nextPanel = new JPanel();
+		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT); 
+		downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
+		
 		show.setIcon(new ImageIcon("..\\src\\main\\resources\\listing16px.png"));
 		show.setVerticalTextPosition(SwingConstants.CENTER);
 	    show.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -199,6 +178,10 @@ public class FirstPage {
 	}
 
 	private void createPropsPane(){
+		JPanel propsPanel = new JPanel();
+		JLabel propertiesTitle = new JLabel("Properties:");
+		JScrollPane propsScrollPane = new JScrollPane();
+		
 		propsListModel = new DefaultListModel<String>();
 		propsList = new JList<String>(propsListModel);
 
@@ -257,6 +240,9 @@ public class FirstPage {
 	
 	private class propsSelectListener implements ListSelectionListener{
 
+		private PropertyValuesPage propsPage;
+		private JSplitPane pagePropValues;
+		
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
 			
@@ -278,6 +264,9 @@ public class FirstPage {
 	}
 
 	private class instListener implements ActionListener{
+		
+		private InstancesPage instPage;
+		private JSplitPane pageInstances;
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
@@ -299,6 +288,9 @@ public class FirstPage {
 
 	private class nextListener implements ActionListener{
 
+		private SecondPage secondPage;
+		private JSplitPane page2;
+		
 		@Override
 		public void actionPerformed(ActionEvent event) {
 

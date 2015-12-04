@@ -10,55 +10,32 @@ import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class SecondPage {
 
-	private JSplitPane page2;
-
-	private JLabel title;
-
-	private JTextField drugName;
-	private JTextField activeSubsName;
-
-	private JButton backButton;
-	private JButton nextButton;
-
-	private JComboBox<String> mappingsList;
-	private JComboBox<String> sourcesList;
-
-	private String chosenClass;
-	private ArrayList<JCheckBox> checkBoxes;
-	private ArrayList<String> sources;
-
 	private CardLayout card;
 	private JPanel contentPanel;
 	private JPanel criteriaPanel;
 	private JFrame frame;
 	private SemanticWebEngine swe;
+	
+	private JSplitPane page2;
+	private String chosenClass;
+
+	private JComboBox<String> mappingsList;
+	private JComboBox<String> sourcesList;
+
+	private ArrayList<JCheckBox> checkBoxes;
+	
 
 	public SecondPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel cotent){
-		page2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		title = new JLabel("Search Criteria");
-		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
-//		--------------------
-		sources = new ArrayList<String>();
-		sources.add("- Select an option -");
-		sources.addAll(swe.getSources());
-//		---------------------
-
-		drugName = new JTextField();
-		activeSubsName = new JTextField();
-
-		backButton = new JButton(" Cancel");
-		nextButton = new JButton("Search ");
-
-		checkBoxes = new ArrayList<JCheckBox>();
-
 		this.swe = swe;
 		card = cl;
 		contentPanel = cotent;
 		frame = gui;
+		
+		page2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		drugName.setEnabled(false);
-		activeSubsName.setEnabled(false);
+		checkBoxes = new ArrayList<JCheckBox>();
+
 		this.createPage();
 
 	}
@@ -67,15 +44,13 @@ public class SecondPage {
 		return page2;
 	}
 
-	public String getDrugInfo(){
-		return drugName.getText();
-	}
-
-	public String getActiveSubsName(){
-		return activeSubsName.getText();
-	}
-
 	private void createPage(){
+		
+		JLabel title = new JLabel("Search Criteria");
+		title.setFont(new Font("Arial", Font.BOLD, 15));
+		
+		JButton backButton = new JButton(" Cancel");
+		JButton nextButton = new JButton("Search ");
 
 		criteriaPanel = new JPanel();
 		JPanel upPanel = new JPanel(new GridLayout(5, 1));
@@ -87,6 +62,10 @@ public class SecondPage {
 //		-------------
 		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		ArrayList<String> mappSources = new ArrayList<String>();
+		
+		ArrayList<String> sources = new ArrayList<String>();
+		sources.add("- Select an option -");
+		sources.addAll(swe.getSources());
 
 		for(String s: sources){
 			if(s.contains("+"))

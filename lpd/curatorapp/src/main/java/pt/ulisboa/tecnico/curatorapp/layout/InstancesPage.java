@@ -10,33 +10,28 @@ import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class InstancesPage {
 
-	private JLabel source;
-	private JLabel classNameLabel;
-	private JLabel numInstances;
-	private JButton backButton;
-	private JTextArea output;
-	private JScrollPane scrollPane;
-	private JSplitPane pageInstances;
-	
 	private SemanticWebEngine swe;
 	private CardLayout card;
 	private JPanel contentPanel;
 	private String className;
+	
+	private JLabel source;
+	private JLabel classNameLabel;
+	private JLabel numInstances;
+	private JSplitPane pageInstances;
 
 	public InstancesPage(SemanticWebEngine swe, String className, CardLayout cl, JPanel content){
 
-		pageInstances = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		source = new JLabel("Information source: " + swe.getPropertySource(className));
-		classNameLabel = new JLabel("Class name: " + className);
-		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
-		output = new JTextArea();
-		scrollPane = new JScrollPane();
-		backButton = new JButton(" Back");
-		
 		card = cl;
 		contentPanel = content;
 		this.swe = swe;
 		this.className = className;
+		
+		pageInstances = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		
+		source = new JLabel("Information source: " + swe.getPropertySource(className));
+		classNameLabel = new JLabel("Class name: " + className);
+		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
 
 		this.createPage();
 	}
@@ -46,6 +41,10 @@ public class InstancesPage {
 	}
 
 	private void createPage(){
+		JTextArea output = new JTextArea();
+		JButton backButton = new JButton(" Back");
+		JScrollPane scrollPane = new JScrollPane();
+		
 		JPanel sourceInfo = new JPanel();
 		JPanel instPanel = new JPanel();
 		JPanel backPanel = new JPanel();

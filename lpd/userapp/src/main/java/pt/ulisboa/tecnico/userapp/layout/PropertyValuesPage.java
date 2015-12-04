@@ -17,29 +17,22 @@ public class PropertyValuesPage {
 	private String property;
 	private JLabel source;
 	private JLabel classNameLabel;
-	private JLabel propNameLabel;
-	private JLabel numInstances;
-	private JButton backButton;
-	private JTextArea output;
-	private JScrollPane scrollPane;
+	private JLabel propNameLabel;	
 	private JSplitPane pagePropValues;
 	
 	
 	public PropertyValuesPage(SemanticWebEngine swe, CardLayout cl, JPanel content, String className, String prop) {
-		pagePropValues = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		source = new JLabel("Information source: " + swe.getPropertySource(className));
-		classNameLabel = new JLabel("Class name: " + className);
-		propNameLabel = new JLabel("Property name: " + prop);
-		numInstances = new JLabel("Number of distinct values: ");
-		
-		output = new JTextArea();
-		scrollPane = new JScrollPane();
-		backButton = new JButton(" Back");
 		
 		card = cl;
 		contentPanel = content;
 		this.swe = swe;
 		this.property = prop;
+		
+		pagePropValues = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		
+		source = new JLabel("Information source: " + swe.getPropertySource(className));
+		classNameLabel = new JLabel("Class name: " + className);
+		propNameLabel = new JLabel("Property name: " + prop);
 		
 		this.createPage();
 	}
@@ -51,14 +44,21 @@ public class PropertyValuesPage {
 	private void createPage(){
 		String[] numValues;
 		
+		JButton backButton = new JButton(" Back");
+		JTextArea output = new JTextArea();
+		
+		JLabel numInstances = new JLabel("Number of distinct values: ");
+		
 		JPanel sourceInfo = new JPanel();
 		JPanel propInfo = new JPanel();
 		JPanel instPanel = new JPanel();
 		JPanel backPanel = new JPanel();
 
+		JScrollPane scrollPane = new JScrollPane();
 		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
+		
 		output.setText(swe.showPropertyValues(property));
 		numValues = output.getText().split("\\r?\\n");
 		numInstances.setText("Number of distinct values: " + ((numValues.length)-4));
