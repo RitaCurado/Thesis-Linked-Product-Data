@@ -70,7 +70,7 @@ public class ResultsPage {
 		public void actionPerformed(ActionEvent e) {
 			contentPanel.remove(resultPage);
 			contentPanel.revalidate();
-			card.show(contentPanel, "pageSearch");			
+			card.show(contentPanel, "page2");			
 		}
 	}
 	
