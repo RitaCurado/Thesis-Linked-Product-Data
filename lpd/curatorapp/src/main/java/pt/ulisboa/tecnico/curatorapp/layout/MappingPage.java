@@ -3,7 +3,7 @@ package pt.ulisboa.tecnico.curatorapp.layout;
 import javax.swing.*;
 import javax.swing.event.*;
 
-import com.hp.hpl.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Model;
 
 import java.util.*;
 import java.awt.*;
