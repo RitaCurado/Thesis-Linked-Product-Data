@@ -140,7 +140,7 @@ public class InfarmedDataConverter {
 			p.addProperty(RDFS.domain, rcmR.getURI());
 		}
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 	
 	public void infarmedModel(Model infar, String substancy, String name, String type, String dosage,
@@ -330,7 +330,7 @@ public class InfarmedDataConverter {
 		
 		getInfarmedInfo(page2, webClient, m);
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 	
 	public void getInfarBySubstance(Model m, String substance) throws Exception{
@@ -352,7 +352,7 @@ public class InfarmedDataConverter {
 		
 		getInfarmedInfo(page2, webClient, m);
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 	
 	public void getInfarByCode(Model m, String code) throws Exception{
@@ -369,6 +369,6 @@ public class InfarmedDataConverter {
 		
 		getInfarmedInfo(page2, webClient, m);
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 }

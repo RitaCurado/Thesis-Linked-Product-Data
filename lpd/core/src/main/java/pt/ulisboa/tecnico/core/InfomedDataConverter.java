@@ -114,7 +114,7 @@ public class InfomedDataConverter {
 			p.addProperty(RDFS.domain, medicine.getURI());
 		}
 		
-		webClient.closeAllWindows();
+		webClient.close();
 		return model;
 	}
 	
@@ -200,7 +200,7 @@ public class InfomedDataConverter {
 		
 		getInfomedInfo(m, pageResult);
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 	
 	public void getInfoBySubstance(Model m, String substance) throws Exception{
@@ -222,7 +222,7 @@ public class InfomedDataConverter {
 		
 		getInfomedInfo(m, pageResult);
 		
-		webClient.closeAllWindows();
+		webClient.close();
 	}
 
 }
