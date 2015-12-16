@@ -2,6 +2,8 @@ package pt.ulisboa.tecnico.core;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -19,6 +21,25 @@ import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 public class InfomedDataConverter {
 	
 	private int drugID;
+	private String[] substances = {
+								"ácido acetilsalicílico", "amoxicilina", "Ibuprofeno",
+								"Paracetamol", "Iodopovidona", "Levotiroxina sódica",
+								"Perindopril", "Atorvastatina", "Fluvastatina",
+								"Pravastatina", "midodrina", "captopril", "Furosemida", 
+								"Espironolactona", "Digoxina", "Carbonato de cálcio",
+								"cloreto de magnésio", "metformina", "Nitrofurantoína",
+								"Glibenclamida", "Glipizida", "Glimepirida", "Pioglitazona",
+								"Acarbose", "ciclosporina", "metotrexato", "Prednisona",
+								"Metilprednisolona", "Leflunomida", "Azatioprina",
+								"Cloreto de sódio", "ETINILESTRADIOL GESTODENO",
+								"SACCHAROMYCES BOULARDII", "Bromexina", "dextrometorfano",
+								"Metoprolol", "Nateglinida", "Sitagliptina"
+								};
+
+	public List<String> getSubstances(){
+		List<String> stringList = new ArrayList<String>(Arrays.asList(this.substances));
+		return stringList;
+	}
 	
 	public InfomedDataConverter(){
 		

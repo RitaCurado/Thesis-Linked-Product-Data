@@ -92,7 +92,6 @@ public class SecondPage {
 		mappsArray = mappingRules.toArray(mappsArray);
 		
 		mappingsList = new JComboBox<String>(mappsArray);
-		mappingsList.setSelectedIndex(0);
 //		-------------
 		
 		criteriaPanel.setLayout(new GridLayout(0, 2));

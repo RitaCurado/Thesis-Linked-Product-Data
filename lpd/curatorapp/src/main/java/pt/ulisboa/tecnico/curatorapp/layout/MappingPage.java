@@ -122,11 +122,16 @@ public class MappingPage {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		autoPanel.add(new JLabel(" "), gbc);
+		autoPanel.add(new JButton("Consult DB"), gbc);
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 1;
+		autoPanel.add(new JLabel(" "), gbc);
+		
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridx = 0;
+		gbc.gridy = 2;
 		gbc.weightx = 3;
 		autoPanel.add(label, gbc);		
 		
@@ -190,7 +195,7 @@ public class MappingPage {
 //	-----------------------------------------------------
 		
 
-		fillPanel.setPreferredSize(new Dimension(400, 190));
+		fillPanel.setPreferredSize(new Dimension(400, 170));
 		
 		middlePanel.add(autoPanel);
 		middlePanel.add(fillPanel);
@@ -489,7 +494,7 @@ public class MappingPage {
 					}
 				}
 				
-				Model resultModel = swe.makeConstructQuery(subjectBySource, propsBySource, nodesBySource,
+				Model resultModel = swe.mappingConstructQuery(subjectBySource, propsBySource, nodesBySource,
 										sourceName.getText(), className, mappRules.getText().split("\\|"));
 				
 				

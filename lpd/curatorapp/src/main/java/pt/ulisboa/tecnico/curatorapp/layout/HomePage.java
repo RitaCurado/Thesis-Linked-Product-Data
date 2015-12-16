@@ -293,18 +293,28 @@ public class HomePage {
 
 	private class nextListener implements ActionListener{
 
-		private MappingPage mappingPage;
-		private JSplitPane pageRules;
+//		private MappingPage mappingPage;
+//		private JSplitPane pageRules;
+		
+		private AggregationPage aggPage;
+		private JSplitPane pageAgg;
 		
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			
-			mappingPage = new MappingPage(frame, swe, card, contentPanel);
-			pageRules = mappingPage.getPage();
-			pageRules.setName("pageRules");
+//			mappingPage = new MappingPage(frame, swe, card, contentPanel);
+//			pageRules = mappingPage.getPage();
+//			pageRules.setName("pageRules");
+//			
+//			contentPanel.add(pageRules, "pageRules");
+//			card.show(contentPanel, "pageRules");
 			
-			contentPanel.add(pageRules, "pageRules");
-			card.show(contentPanel, "pageRules");
+			aggPage = new AggregationPage(frame, swe, card, contentPanel);
+			pageAgg = aggPage.getPage();
+			pageAgg.setName("pageAggregation");
+			
+			contentPanel.add(pageAgg, "pageAggregation");
+			card.show(contentPanel, "pageAggregation");
 		}
 	}
 

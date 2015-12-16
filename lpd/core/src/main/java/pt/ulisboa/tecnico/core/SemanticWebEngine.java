@@ -21,6 +21,7 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -31,8 +32,10 @@ public class SemanticWebEngine {
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
-	Model dbModel, dbSources, dbMappings;
+	Model dbModel, dbSourcesOriginal, dbFilters, dbMappings;
 	ArrayList<String> sources;
+	
+	QueryExecution qe;
 
 	public SemanticWebEngine() {
 		
@@ -42,17 +45,17 @@ public class SemanticWebEngine {
 		String directory;
 		Dataset dataset = null;
 
-		directory = "..\\TDB_sources";
+		directory = "..\\TDB_sources_original";
 		dataset = TDBFactory.createDataset(directory);
-		this.dbSources = dataset.getDefaultModel();
+		this.dbSourcesOriginal = dataset.getDefaultModel();
 
-		if (dbSources.isEmpty()) {
+		if (dbSourcesOriginal.isEmpty()) {
 			System.out.println("Model is empty!!");
 			dataset.begin(ReadWrite.WRITE);
 
 			try {
-				this.infarDC = new InfarmedDataConverter(dbSources);
-				this.infoDC = new InfomedDataConverter(dbSources);
+				this.infarDC = new InfarmedDataConverter(dbSourcesOriginal);
+				this.infoDC = new InfomedDataConverter(dbSourcesOriginal);
 				dataset.commit();
 			}
 
@@ -63,7 +66,7 @@ public class SemanticWebEngine {
 			// run a query
 			String q = "select * where {?s ?p ?o}";
 			Query query = QueryFactory.create(q);
-			QueryExecution qexec = QueryExecutionFactory.create(query, dbSources);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbSourcesOriginal);
 			ResultSet results = qexec.execSelect();
 			FileOutputStream fos = null;
 			try {
@@ -79,6 +82,10 @@ public class SemanticWebEngine {
 			this.infoDC = new InfomedDataConverter();
 		}
 		
+		directory = "..\\TDB_filters";
+		dataset = TDBFactory.createDataset(directory);
+		this.dbFilters = dataset.getDefaultModel();
+
 		directory = "..\\TDB_mappings";
 		dataset = TDBFactory.createDataset(directory);
 		this.dbMappings = dataset.getDefaultModel();
@@ -86,12 +93,17 @@ public class SemanticWebEngine {
 		directory = "..\\TDB";
 		dataset = TDBFactory.createDataset(directory);
 		this.dbModel = dataset.getDefaultModel();
+		
 
-		dbModel.add(dbSources);
+
+		dbModel.add(dbSourcesOriginal);
+		//dbModel.add(dbFilters);
 		dbModel.add(dbMappings);
 		dbModel.commit();
 
 	}
+	
+	
 	
 	public ArrayList<String> getSources(){
 		Query query;
@@ -333,6 +345,41 @@ public class SemanticWebEngine {
 		return output;
 	}
 	
+	public ArrayList<String> showAggregationRules(){
+		
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		String[] spltResult;
+		ArrayList<String> rules = new ArrayList<String>();
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+
+		String queryString = "SELECT DISTINCT ?rule\n"
+				+ "WHERE {"
+				+ "?rule a ?class ."
+				+ "?class a <http://www.w3.org/2000/01/rdf-schema#Class> .}";
+				//+ "FILTER (regex(str(?class), '" + source + "')) }";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbFilters);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+
+		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			rules.add(spltResult[i]);
+		}
+
+		return rules;
+	}
+	
 	/* Query methods */
 	public String selectAllInfo(String className){
 		int count = 0, sid = 0, index;
@@ -404,8 +451,28 @@ public class SemanticWebEngine {
 
 		return output;
 	}
+	
+	public void createAggregationRule(String source, String ruleName, String criteria){
+				
+		String baseURI = "http://" + source;
+		Resource mainClass, criteriaProp, newRule;
 		
-	public Model makeConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
+		if(!checkPropertyExistance(baseURI + "/criteria", dbFilters)){
+			mainClass = dbFilters.createResource(baseURI + "/AggregationRule");
+			mainClass.addProperty(RDF.type, RDFS.Class);
+			
+			criteriaProp = dbFilters.createResource(baseURI + "/criteria");
+			criteriaProp.addProperty(RDF.type, RDF.Property);
+			criteriaProp.addProperty(RDFS.domain, mainClass.getURI());
+		}
+		
+		newRule = dbFilters.createResource(baseURI + "/" + ruleName);
+		newRule.addProperty(RDF.type, baseURI + "/AggregationRule");
+		newRule.addProperty(dbFilters.getProperty(baseURI + "/criteria"), criteria);
+		
+	}
+		
+	public Model mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
 			HashMap<String,ArrayList<String>> nodesBySource, String sourceName, String className, String[] mappingRules){
 		
 		int propID = 0;
@@ -456,7 +523,7 @@ public class SemanticWebEngine {
 			//Conjunction property name. <http://www.s1+s2.pt/p1:p2>
 			propConj = "<" + sourceName + "/" + conjuction.substring(0, conjuction.length()-1) + ">";
 			
-			if(!checkPropertyExistance(propConj)){
+			if(!checkPropertyExistance(propConj, dbModel)){
 				schema += " " + propConj + " <" + RDF.type + "> <" + RDF.Property + "> .";
 			}			
 			
@@ -597,7 +664,7 @@ public class SemanticWebEngine {
 		return column;
 	}
 	
-	private boolean checkPropertyExistance(String property){
+	private boolean checkPropertyExistance(String property, Model model){
 		
 		String query;
 		Query qf;
@@ -608,7 +675,7 @@ public class SemanticWebEngine {
 				+ "FILTER (regex(str(?s), \"" + property + "\"))}";
 		
 		qf = QueryFactory.create(query);
-		qexec = QueryExecutionFactory.create(qf, dbModel);
+		qexec = QueryExecutionFactory.create(qf, model);
 		result = qexec.execAsk();
 		qexec.close();
 		
