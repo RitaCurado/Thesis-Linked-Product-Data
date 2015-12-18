@@ -1,6 +1,7 @@
 /target/
 /TDB/
 /TDB_mappings/
+/TDB_filters/
 /output.txt
 
 *target*
