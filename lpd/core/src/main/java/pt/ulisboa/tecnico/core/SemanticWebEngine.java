@@ -355,11 +355,10 @@ public class SemanticWebEngine {
 		ArrayList<String> rules = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
-		String queryString = "SELECT DISTINCT ?rule\n"
+		String queryString = "SELECT ?rule\n"
 				+ "WHERE {"
-				+ "?rule a ?class ."
-				+ "?class a <http://www.w3.org/2000/01/rdf-schema#Class> .}";
-				//+ "FILTER (regex(str(?class), '" + source + "')) }";
+				+ " ?rule <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class ."
+				+ "FILTER (regex(str(?class), \"AggregationRule\")) }";
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbFilters);
@@ -378,6 +377,38 @@ public class SemanticWebEngine {
 		}
 
 		return rules;
+	}
+	
+	public String showAggregationCriteria(String rule){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString, result;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		rule = rule.replace("<", "");
+		rule = rule.replace(">", "");
+		rule = rule.replace(" ", "");
+		
+		queryString = "SELECT ?Aggregation_Criteria\n"
+				+ "WHERE {"
+				+ " ?s ?p ?Aggregation_Criteria ."
+				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " FILTER (regex(str(?s), '" + rule + "')) }";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbFilters);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+		result = result.replace("|", "");
+		result = result.replace(", ", ",\n ");
+
+		qe.close();
+		
+		return result;
 	}
 	
 	/* Query methods */
@@ -458,6 +489,7 @@ public class SemanticWebEngine {
 		Resource mainClass, criteriaProp, newRule;
 		
 		if(!checkPropertyExistance(baseURI + "/criteria", dbFilters)){
+			System.out.println("nao existe nada ainda");
 			mainClass = dbFilters.createResource(baseURI + "/AggregationRule");
 			mainClass.addProperty(RDF.type, RDFS.Class);
 			
@@ -470,6 +502,20 @@ public class SemanticWebEngine {
 		newRule.addProperty(RDF.type, baseURI + "/AggregationRule");
 		newRule.addProperty(dbFilters.getProperty(baseURI + "/criteria"), criteria);
 		
+		dbFilters.commit();
+		
+		// run a query
+					String q = "select * where {?s ?p ?o}";
+					Query query = QueryFactory.create(q);
+					QueryExecution qexec = QueryExecutionFactory.create(query, dbFilters);
+					ResultSet results = qexec.execSelect();
+					FileOutputStream fos = null;
+					try {
+						fos = new FileOutputStream(new File("aggs.txt"));
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+					ResultSetFormatter.out(fos, results);
 	}
 		
 	public Model mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,

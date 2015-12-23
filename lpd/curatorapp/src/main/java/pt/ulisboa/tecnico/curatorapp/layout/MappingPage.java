@@ -505,28 +505,6 @@ public class MappingPage {
 				contentPanel.add(pageResult, "pageResult");
 				card.show(contentPanel, "pageResult");
 			}
-			
-			
-			
-//			String queryResult = "";
-//			
-//			if(properties.contentEquals("")){
-//				JOptionPane.showMessageDialog(frame, "Properties List should not be empty.", "Attention!", JOptionPane.WARNING_MESSAGE);
-//			}
-//			else{
-//				
-//				if(mapRule.contentEquals(""))
-//					queryResult = swe.makeQuery(sources, searchCriteria, properties.split("\\|"), null);
-//				else
-//					swe.makeQuery(sources, searchCriteria, properties.split("\\|"), mapRule.split("\\|"));
-//				
-//				resultPage = new ResultsPage(card, contentPanel, queryResult);
-//				pageResult = resultPage.getPage();
-//				pageResult.setName("pageResult");
-//				
-//				contentPanel.add(pageResult, "pageResult");
-//				card.show(contentPanel, "pageResult");
-//			}
 		}
 	}
 	
