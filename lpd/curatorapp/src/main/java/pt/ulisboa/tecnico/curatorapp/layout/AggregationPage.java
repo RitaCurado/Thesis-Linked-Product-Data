@@ -37,8 +37,7 @@ public class AggregationPage {
 	private JSplitPane pageAggregation;
 	private JPanel criteriaPanel;
 
-	private JComboBox<String> aggregationsList;
-	private JComboBox<String> sourcesList;
+	private JComboBox<String> aggregationsList, sourcesList;
 	private JTextField ruleName;
 	private JButton removeButton, createButton;
 
@@ -92,7 +91,7 @@ public class AggregationPage {
 		
 		ArrayList<String> aggregationRules = new ArrayList<String>();
 		aggregationRules.add("- Select an option -");
-		aggregationRules.addAll(swe.showAggregationRules());
+		aggregationRules.addAll(swe.showAggregationRules(""));
 		
 		String[] filtersArray = new String[aggregationRules.size()];
 		filtersArray = aggregationRules.toArray(filtersArray);		
@@ -288,18 +287,28 @@ public class AggregationPage {
 	
 	private class NextListener implements ActionListener{
 
-		private MappingPage mappingPage;
-		private JSplitPane pageRules;
+//		private MappingPage mappingPage;
+//		private JSplitPane pageRules;
+		
+		private ChooseAggRulePage aggRulePage;
+		private JSplitPane pageAggRules;
 		
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			
-			mappingPage = new MappingPage(frame, swe, card, contentPanel);
-			pageRules = mappingPage.getPage();
-			pageRules.setName("pageRules");
+			aggRulePage = new ChooseAggRulePage(frame, swe, card, contentPanel);
+			pageAggRules = aggRulePage.getPage();
+			pageAggRules.setName("pageAggRules");
 			
-			contentPanel.add(pageRules, "pageRules");
-			card.show(contentPanel, "pageRules");
+			contentPanel.add(pageAggRules, "pageAggRules");
+			card.show(contentPanel, "pageAggRules");
+			
+//			mappingPage = new MappingPage(frame, swe, card, contentPanel);
+//			pageRules = mappingPage.getPage();
+//			pageRules.setName("pageRules");
+//			
+//			contentPanel.add(pageRules, "pageRules");
+//			card.show(contentPanel, "pageRules");
 		}
 	}
 	
@@ -338,7 +347,7 @@ public class AggregationPage {
 					aggregationsList.removeItemAt(i);
 				}
 				
-				ArrayList<String> aggregationRules = swe.showAggregationRules();
+				ArrayList<String> aggregationRules = swe.showAggregationRules("");
 				
 				for(String agg: aggregationRules){
 					aggregationsList.addItem(agg);

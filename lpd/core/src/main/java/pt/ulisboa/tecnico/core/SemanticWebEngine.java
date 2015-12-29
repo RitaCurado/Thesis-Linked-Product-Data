@@ -345,20 +345,30 @@ public class SemanticWebEngine {
 		return output;
 	}
 	
-	public ArrayList<String> showAggregationRules(){
+	public ArrayList<String> showAggregationRules(String source){
 		
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
-		String result;
+		String result, queryString = "";
 		String[] spltResult;
 		ArrayList<String> rules = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
-
-		String queryString = "SELECT ?rule\n"
-				+ "WHERE {"
-				+ " ?rule <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class ."
-				+ "FILTER (regex(str(?class), \"AggregationRule\")) }";
+		
+		if(source.equals("")){
+			
+			queryString = "SELECT ?rule\n"
+						+ "WHERE {"
+						+ " ?rule <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class ."
+						+ "FILTER (regex(str(?class), \"AggregationRule\")) }";
+		}
+		else{
+			queryString = "SELECT ?rule\n"
+						+ "WHERE {"
+						+ " ?rule <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class ."
+						+ "FILTER (regex(str(?rule), \"" + source + "\") && (regex(str(?class), \"AggregationRule\"))) }";
+		}
+		
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbFilters);
