@@ -215,6 +215,7 @@ public class AggregationPage {
 				removeButton.setEnabled(true);
 				
 				result = swe.showAggregationCriteria(rule);
+				result = result.replace(",", ",\n ");
 				
 				ta.setText(result);
 				criteriaPanel.add(ta);
@@ -334,40 +335,46 @@ public class AggregationPage {
 				String rulename = ruleName.getText();
 				String criteria = "";
 				
-				for(JCheckBox cb: checkBoxes){
-					if(!criteria.equals(""))
-						criteria += ", ";
+				if(!rulename.equals("")){
+				
+					for(JCheckBox cb: checkBoxes){
+						if(!criteria.equals(""))
+							criteria += ",";
+						
+						criteria += cb.getText();
+					}
 					
-					criteria += cb.getText();
+					swe.createAggregationRule(source, rulename, criteria);
+					
+					for(int i=aggregationsList.getItemCount()-1; i>0; i--){
+						aggregationsList.removeItemAt(i);
+					}
+					
+					ArrayList<String> aggregationRules = swe.showAggregationRules("");
+					
+					for(String agg: aggregationRules){
+						aggregationsList.addItem(agg);
+					}
+					
+					aggregationsList.setSelectedIndex(0);
+					aggregationsList.revalidate();
+					
+					ruleName.setText("");
+					
+					checkBoxes.clear();
+					
+					JOptionPane.showMessageDialog(frame, "The rule was successfully created.", "Information",
+							JOptionPane.INFORMATION_MESSAGE);
+					
+					sourcesList.setSelectedIndex(0);
+					aggregationsList.setEnabled(true);
+					
+					criteriaPanel.removeAll();
+					criteriaPanel.repaint();
 				}
-				
-				swe.createAggregationRule(source, rulename, criteria);
-				
-				for(int i=aggregationsList.getItemCount()-1; i>0; i--){
-					aggregationsList.removeItemAt(i);
-				}
-				
-				ArrayList<String> aggregationRules = swe.showAggregationRules("");
-				
-				for(String agg: aggregationRules){
-					aggregationsList.addItem(agg);
-				}
-				
-				aggregationsList.setSelectedIndex(0);
-				aggregationsList.revalidate();
-				
-				ruleName.setText("");
-				
-				checkBoxes.clear();
-				
-				JOptionPane.showMessageDialog(frame, "The rule was successfully created.", "Information",
-						JOptionPane.INFORMATION_MESSAGE);
-				
-				sourcesList.setSelectedIndex(0);
-				aggregationsList.setEnabled(true);
-				
-				criteriaPanel.removeAll();
-				criteriaPanel.repaint();
+				else
+					JOptionPane.showMessageDialog(frame, "You have to give a name for the new rule.",
+							"Attention!", JOptionPane.WARNING_MESSAGE);
 				
 			}
 			else {

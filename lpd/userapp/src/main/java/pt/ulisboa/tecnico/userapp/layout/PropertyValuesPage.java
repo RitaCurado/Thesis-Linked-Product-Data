@@ -59,7 +59,7 @@ public class PropertyValuesPage {
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
 		
-		output.setText(swe.showPropertyValues(property));
+		output.setText(swe.showPropertyValues(property, null));
 		numValues = output.getText().split("\\r?\\n");
 		numInstances.setText("Number of distinct values: " + ((numValues.length)-4));
 		

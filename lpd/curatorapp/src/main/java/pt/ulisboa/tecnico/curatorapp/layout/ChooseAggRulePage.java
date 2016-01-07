@@ -13,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
@@ -249,6 +251,20 @@ public class ChooseAggRulePage {
 						"Attention!", JOptionPane.WARNING_MESSAGE);
 			}
 			else{
+				
+				Enumeration<String> enumerate = rulesModel.elements();
+				HashMap<String, String> rulesBySource = new HashMap<String, String>();
+				String rule, source;
+				
+				while(enumerate.hasMoreElements()){
+					//TODO
+					rule = enumerate.nextElement();
+					rule = rule.substring(2, rule.length()-2);
+					
+					source = swe.getPropertySource(rule);
+					rulesBySource.put(source, rule);
+				}
+				
 				mappingPage = new MappingPage(frame, swe, card, contentPanel);
 				pageRules = mappingPage.getPage();
 				pageRules.setName("pageRules");

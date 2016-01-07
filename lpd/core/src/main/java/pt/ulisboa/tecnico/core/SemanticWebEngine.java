@@ -17,11 +17,14 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -311,7 +314,7 @@ public class SemanticWebEngine {
 		return props;
 	}
 
-	public String showPropertyValues(String property){
+	public String showPropertyValues(String property, String db){
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
 		Query query;
@@ -319,6 +322,12 @@ public class SemanticWebEngine {
 		ResultSet results;
 		String queryString;
 		String output = "";
+		Model modelDB;
+		
+		if(db.equals("Filters"))
+			modelDB = dbFilters;
+		else
+			modelDB = dbModel;
 		
 		String propName = this.getPropertyName(property);
 		if(propName.contains(":")){
@@ -332,7 +341,7 @@ public class SemanticWebEngine {
 				+ "}";
 		
 		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, dbModel);
+		qe = QueryExecutionFactory.create(query, modelDB);
 		results = qe.execSelect();
 		ResultSetFormatter.out(go, results, query);
 
@@ -414,7 +423,6 @@ public class SemanticWebEngine {
 		result = go.toString();
 		result = result.replace("-", "_");
 		result = result.replace("|", "");
-		result = result.replace(", ", ",\n ");
 
 		qe.close();
 		
@@ -877,8 +885,142 @@ public class SemanticWebEngine {
 		return result;
 	}
 
+//	---- Filtering Data ----
 	
+	public void filterData(HashMap<String, String> rulesBySource){
+		
+		// 1. for each source
+		// 2. get criteria properties
+		// 3. make query to get ResultSet from duplicates
+		// 4. filterDB functions to remove all subjects of resultSet from DB
+		
+		String value, criteria, className;
+		String[] spltCriteria, criteriaProps;
+		ResultSet resultSet;
+		
+		for(String key: rulesBySource.keySet()){
+			value = rulesBySource.get(key);
+			
+			if(value.contains("/None"))
+				continue;
+			else{
+				className = "http://" + key + "/Medicine";
+
+				criteria = showAggregationCriteria(value);
+				spltCriteria = criteria.split("\\r?\\n");
+				criteria = spltCriteria[3];
+				criteria = criteria.replace("\"", "");
+				
+				criteriaProps = criteria.split(",");
+				
+				resultSet = makeFilteringQuery(className, criteriaProps);
+				filterDB(resultSet);
+			}
+		}
+	}
 	
+	private ResultSet makeFilteringQuery(String className, String[] props){
+		Query query;
+		//QueryExecution qe;
+		ResultSet results;
+		String queryString, propName;
+		
+		queryString = "SELECT ?s ?s1\n"
+				+ "WHERE { "
+					+ "?s a \"" + className + "\" . "
+					+ "?s1 a \"" + className + "\" . ";
+		
+		for(int i=0; i<props.length; i++){
+			propName = getPropertyName(props[i]);
+			queryString += "?s " + props[i] + " ?" + propName + " . ";
+			queryString += "?s1 " + props[i] + " ?" + propName + " . ";
+		}
+		
+		queryString += "FILTER (?s != ?s1) }";
+
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbModel);
+		results = qe.execSelect();
+		//qe.close();
+		
+//		try {
+//			String fname = "result_" + subst + ".txt";
+//			ResultSetFormatter.out(new FileOutputStream(new File(fname)), results, query);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		qe.close();
+		
+		return results;
+	}
 	
-	
+	private void filterDB(ResultSet results){
+		QuerySolution qs;
+		String uri, name;
+		
+		StmtIterator iter;
+		Statement stmt;
+		
+		ArrayList<Statement> listStmts = new ArrayList<Statement>();
+		ArrayList<String> alreadyAdded = new ArrayList<String>();
+		ArrayList<String> subjects = new ArrayList<String>();
+		ArrayList<String> listNodes = new ArrayList<String>();
+		
+		
+//		try {
+//			String fname = "result_" + subst + ".txt";
+//			ResultSetFormatter.out(new FileOutputStream(new File(fname)), results, query);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		qe.close();
+		
+		while(results.hasNext()){
+			qs = results.next();
+			uri = qs.get("s").toString();
+			name = StringUtils.substringBefore(uri, "_");
+//			System.out.println("URI: " + uri + " NAME: " + name);
+			
+			if(!alreadyAdded.contains(name)){
+//				System.out.println(uri + "does not exists");
+				alreadyAdded.add(name);
+				alreadyAdded.add(uri);
+			}
+			else{
+				if(!alreadyAdded.contains(uri) && !subjects.contains(uri)){
+//					System.out.println(uri + "exists -> add to subjects");
+					subjects.add(uri);
+				}
+			}
+		}
+		
+		
+		System.out.println("Subjects List:");
+		for(String s: subjects)
+			System.out.println(s);
+		
+		for(String subj: subjects){
+			iter = dbModel.listStatements();
+			while(iter.hasNext()){
+				stmt = iter.next();
+				if(stmt.getSubject().getURI()!= null && stmt.getSubject().getURI().equals(subj)){
+					listStmts.add(stmt);
+					if(stmt.getObject().isAnon())
+						listNodes.add(stmt.getObject().toString());
+				}
+			}
+		}
+		
+		for(String node: listNodes){
+			iter = dbModel.listStatements();
+			while(iter.hasNext()){
+				stmt = iter.next();
+				if(stmt.getSubject().toString().equals(node))
+					listStmts.add(stmt);
+			}
+		}
+		
+		dbModel.remove(listStmts);
+		dbModel.commit();
+	}
 }
