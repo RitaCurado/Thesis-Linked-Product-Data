@@ -915,6 +915,7 @@ public class SemanticWebEngine {
 				
 				resultSet = makeFilteringQuery(className, criteriaProps);
 				filterDB(resultSet);
+				qe.close();
 			}
 		}
 	}
