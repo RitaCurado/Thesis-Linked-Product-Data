@@ -1,4 +1,8 @@
 /mappings.txt
+/aggs.txt
+/afterDelete.txt
+/beforeDelete.txt
+/result_query.txt
 
 *target*
 *.jar
