@@ -41,10 +41,9 @@ public class ChooseAggRulePage {
 	private SemanticWebEngine swe;
 	
 	private JSplitPane pageChoose;
+	private JPanel radioPanel;
 	
 	private JComboBox<String> sourcesList;
-	
-	private JPanel radioPanel;
 	private JList<String> chosenRulesList;
 	private DefaultListModel<String> rulesModel;
 	
