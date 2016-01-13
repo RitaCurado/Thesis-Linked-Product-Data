@@ -137,7 +137,7 @@ public class AggregationPage {
 		removeButton.setFont(new Font("Arial", Font.BOLD, 15));
 		removeButton.setBackground(new Color(226, 006, 021));
 		removeButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
-	    //removeButton.addActionListener(l);
+	    removeButton.addActionListener(new RemoveListener());
 		
 		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
@@ -320,6 +320,37 @@ public class AggregationPage {
 			contentPanel.remove(pageAggregation);
 			contentPanel.revalidate();
 			card.show(contentPanel, "page1");
+		}
+	}
+	
+	private class RemoveListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String rule = aggregationsList.getSelectedItem().toString();
+			
+			if(rule.equals("- Select an option -")){
+				JOptionPane.showMessageDialog(frame, "You have to select a rule to be removed.",
+						"Attention!", JOptionPane.WARNING_MESSAGE);
+			}
+			else{
+				swe.deleteAggregationRule(rule);
+				aggregationsList.removeItem(rule);
+				aggregationsList.revalidate();
+				
+				aggregationsList.setSelectedIndex(0);
+				
+				checkBoxes.clear();
+				
+				JOptionPane.showMessageDialog(frame, "The rule was successfully removed.", "Information",
+						JOptionPane.INFORMATION_MESSAGE);
+				
+				sourcesList.setSelectedIndex(0);
+				aggregationsList.setEnabled(true);
+				
+				criteriaPanel.removeAll();
+				criteriaPanel.repaint();
+			}
 		}
 	}
 	

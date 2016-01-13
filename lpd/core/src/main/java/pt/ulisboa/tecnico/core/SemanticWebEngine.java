@@ -26,6 +26,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 
@@ -535,6 +536,26 @@ public class SemanticWebEngine {
 					}
 					ResultSetFormatter.out(fos, results);
 	}
+	
+	public void deleteAggregationRule(String rule){
+		String update;
+		
+		rule = rule.replace("<", "");
+		rule = rule.replace(">", "");
+		rule = rule.replace(" ", "");
+		
+		update = "DELETE {?s ?p ?o}\n"
+				+ "WHERE { ?s ?p ?o . "
+					+ "FILTER (regex(str(?s), '" + rule + "'))}";
+		
+		System.out.println("Update: " + update);
+		
+		UpdateAction.parseExecute(update, dbFilters);
+		UpdateAction.parseExecute(update, dbModel);
+		
+		dbFilters.commit();
+		dbModel.commit();
+	}
 		
 	public Model mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String, ArrayList<String>> propsBySource,
 			HashMap<String,ArrayList<String>> nodesBySource, String sourceName, String className, String[] mappingRules){
@@ -898,14 +919,23 @@ public class SemanticWebEngine {
 		String[] spltCriteria, criteriaProps;
 		ResultSet resultSet;
 		
+//		String queryString = "select * where {?s ?p ?o}";
+//		Query query = QueryFactory.create(queryString);
+//		QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+//		ResultSet results = qexec.execSelect();
+//		try {
+//			ResultSetFormatter.out(new FileOutputStream(new File("beforeDelete.txt")), results, query);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		qexec.close();
+		
 		for(String key: rulesBySource.keySet()){
 			value = rulesBySource.get(key);
 			
-			if(value.contains("/None"))
-				continue;
-			else{
-				className = "http://" + key + "/Medicine";
-
+			if(!value.contains("/None")){
+				className = "http://www." + key + ".pt/Medicine";
+	
 				criteria = showAggregationCriteria(value);
 				spltCriteria = criteria.split("\\r?\\n");
 				criteria = spltCriteria[3];
@@ -918,11 +948,21 @@ public class SemanticWebEngine {
 				qe.close();
 			}
 		}
+		
+//		queryString = "select * where {?s ?p ?o}";
+//		query = QueryFactory.create(queryString);
+//		qexec = QueryExecutionFactory.create(query, dbModel);
+//		results = qexec.execSelect();
+//		try {
+//			ResultSetFormatter.out(new FileOutputStream(new File("afterDelete.txt")), results, query);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		qexec.close();
 	}
 	
 	private ResultSet makeFilteringQuery(String className, String[] props){
 		Query query;
-		//QueryExecution qe;
 		ResultSet results;
 		String queryString, propName;
 		
@@ -938,69 +978,56 @@ public class SemanticWebEngine {
 		}
 		
 		queryString += "FILTER (?s != ?s1) }";
+		
+//		System.out.println("Query: " + queryString);
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
 		results = qe.execSelect();
-		//qe.close();
 		
 //		try {
-//			String fname = "result_" + subst + ".txt";
-//			ResultSetFormatter.out(new FileOutputStream(new File(fname)), results, query);
+//			ResultSetFormatter.out(new FileOutputStream(new File("result_query.txt")), results, query);
 //		} catch (FileNotFoundException e) {
 //			e.printStackTrace();
 //		}
-//		qe.close();
 		
 		return results;
 	}
 	
 	private void filterDB(ResultSet results){
 		QuerySolution qs;
-		String uri, name;
+		String s, s1;
 		
 		StmtIterator iter;
 		Statement stmt;
 		
+		ArrayList<String> toKeep = new ArrayList<String>();
+		ArrayList<String> toDelete = new ArrayList<String>();
+		
 		ArrayList<Statement> listStmts = new ArrayList<Statement>();
-		ArrayList<String> alreadyAdded = new ArrayList<String>();
-		ArrayList<String> subjects = new ArrayList<String>();
 		ArrayList<String> listNodes = new ArrayList<String>();
 		
 		
-//		try {
-//			String fname = "result_" + subst + ".txt";
-//			ResultSetFormatter.out(new FileOutputStream(new File(fname)), results, query);
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		qe.close();
-		
 		while(results.hasNext()){
 			qs = results.next();
-			uri = qs.get("s").toString();
-			name = StringUtils.substringBefore(uri, "_");
-//			System.out.println("URI: " + uri + " NAME: " + name);
 			
-			if(!alreadyAdded.contains(name)){
-//				System.out.println(uri + "does not exists");
-				alreadyAdded.add(name);
-				alreadyAdded.add(uri);
+			s = qs.get("s").toString();
+			s1 = qs.get("s1").toString();
+			
+			if(!toKeep.contains(s) && !toDelete.contains(s)){
+				toKeep.add(s);
+				toDelete.add(s1);
 			}
-			else{
-				if(!alreadyAdded.contains(uri) && !subjects.contains(uri)){
-//					System.out.println(uri + "exists -> add to subjects");
-					subjects.add(uri);
-				}
-			}
+			if(toKeep.contains(s))
+				toDelete.add(s1);
 		}
 		
 		
-		System.out.println("Subjects List:");
-		for(String s: subjects)
-			System.out.println(s);
+//		System.out.println("To delete:");
+//		for(String d: toDelete)
+//			System.out.println(d);
 		
-		for(String subj: subjects){
+		for(String subj: toDelete){
 			iter = dbModel.listStatements();
 			while(iter.hasNext()){
 				stmt = iter.next();

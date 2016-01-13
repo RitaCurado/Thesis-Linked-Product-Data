@@ -257,13 +257,14 @@ public class ChooseAggRulePage {
 				String rule, source;
 				
 				while(enumerate.hasMoreElements()){
-					//TODO
 					rule = enumerate.nextElement();
-					rule = rule.substring(2, rule.length()-2);
+					rule = rule.replace(" ", "");
 					
 					source = swe.getPropertySource(rule);
 					rulesBySource.put(source, rule);
 				}
+				
+				swe.filterData(rulesBySource);
 				
 				mappingPage = new MappingPage(frame, swe, card, contentPanel);
 				pageRules = mappingPage.getPage();
