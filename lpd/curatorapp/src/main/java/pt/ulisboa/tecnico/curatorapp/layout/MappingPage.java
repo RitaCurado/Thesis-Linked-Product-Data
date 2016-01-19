@@ -119,10 +119,13 @@ public class MappingPage {
 		JLabel label = new JLabel("Mapping Rules");
 		label.setFont(new Font("Arial", Font.BOLD, 16));
 		
+		JButton consultButton = new JButton("Consult DB");
+		consultButton.addActionListener(new ConsultListener());
+		
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		autoPanel.add(new JButton("Consult DB"), gbc);
+		autoPanel.add(consultButton, gbc);
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
@@ -517,6 +520,22 @@ public class MappingPage {
 				JOptionPane.showMessageDialog(frame, 
 						"The \"Class Name\" field should not be empty.", "Attention!", JOptionPane.WARNING_MESSAGE);
 			}
+		}
+	}
+	
+	private class ConsultListener implements ActionListener{
+		
+		private JSplitPane pageConsult;
+		private ConsultDB consultPage;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			consultPage = new ConsultDB(swe, card, contentPanel);
+			pageConsult = consultPage.getPage();
+			pageConsult.setName("pageConsult");
+			
+			contentPanel.add(pageConsult, "pageConsult");
+			card.show(contentPanel, "pageConsult");
 		}
 	}
 }
