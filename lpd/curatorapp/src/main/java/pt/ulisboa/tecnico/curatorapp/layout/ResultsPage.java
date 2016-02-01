@@ -69,7 +69,7 @@ public class ResultsPage {
 		className = className.replace("<", "");
 		className = className.replace(">", "");
 		
-		ArrayList<String> classProperties = swe.showClassProperties(className);
+		ArrayList<String> classProperties = swe.showClassProperties(className, "");
 
 		queryResult = baos.toString();
 		queryResult = queryResult.replace("-", "");

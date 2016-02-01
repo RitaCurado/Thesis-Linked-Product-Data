@@ -250,7 +250,7 @@ public class AggregationPage {
 				createButton.setEnabled(true);
 
 				classes = swe.showSourceClasses(source.toLowerCase());
-				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2));
+				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), "");
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
