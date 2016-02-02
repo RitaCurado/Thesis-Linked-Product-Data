@@ -452,32 +452,19 @@ public class MappingPage {
 	}
 	
 	private class NextListener implements ActionListener{
-
-//		private MappingPage mappingPage;
-//		private JSplitPane pageRules;
 		
-		//TODO
-		//create a chooseMapPage
-		
-		private ChooseAggRulePage aggRulePage;
-		private JSplitPane pageAggRules;
+		private ChooseMapRulePage mapRulePage;
+		private JSplitPane pageMapRules;
 		
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			
-			aggRulePage = new ChooseAggRulePage(frame, swe, card, contentPanel);
-			pageAggRules = aggRulePage.getPage();
-			pageAggRules.setName("pageAggRules");
+			mapRulePage = new ChooseMapRulePage(frame, swe, card, contentPanel);
+			pageMapRules = mapRulePage.getPage();
+			pageMapRules.setName("pageAggRules");
 			
-			contentPanel.add(pageAggRules, "pageAggRules");
-			card.show(contentPanel, "pageAggRules");
-			
-//			mappingPage = new MappingPage(frame, swe, card, contentPanel);
-//			pageRules = mappingPage.getPage();
-//			pageRules.setName("pageRules");
-//			
-//			contentPanel.add(pageRules, "pageRules");
-//			card.show(contentPanel, "pageRules");
+			contentPanel.add(pageMapRules, "pageMapRules");
+			card.show(contentPanel, "pageMapRules");
 		}
 	}
 	
@@ -485,9 +472,10 @@ public class MappingPage {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
+			
 			contentPanel.remove(pageMapping);
 			contentPanel.revalidate();
-			card.show(contentPanel, "pageAggRules");
+			card.show(contentPanel, "pageAggResults");
 		}
 	}
 	

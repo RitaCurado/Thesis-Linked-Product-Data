@@ -89,19 +89,10 @@ public class ChooseAggRulePage {
 		JLabel subtitle = new JLabel("Choose one rule per source");
 		subtitle.setFont(new Font("Arial", Font.PLAIN, 13));
 		
-		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		ArrayList<String> sources = new ArrayList<String>();
 		
 		sources.add("- Select an option -");
 		sources.addAll(swe.getSources());
-
-		for(String s: sources){
-			if(s.contains("+"))
-				indexes.add(sources.indexOf(s));
-		}
-		for(int i: indexes){
-			sources.remove(i);
-		}
 		
 		String[] sourcesArray = new String[sources.size()];
 		sourcesArray = sources.toArray(sourcesArray);
@@ -238,9 +229,9 @@ public class ChooseAggRulePage {
 	}
 	
 	private class OkListener implements ActionListener{
-
-		private MappingPage mappingPage;
-		private JSplitPane pageRules;
+		
+		private ShowAggResultsPage aggResultsPage;
+		private JSplitPane pageAggResults;
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -265,14 +256,13 @@ public class ChooseAggRulePage {
 				
 				swe.filterData(rulesBySource);
 				
-				mappingPage = new MappingPage(frame, swe, card, contentPanel);
-				pageRules = mappingPage.getPage();
-				pageRules.setName("pageRules");
+				aggResultsPage = new ShowAggResultsPage(swe, frame, card, contentPanel);
+				pageAggResults = aggResultsPage.getPage();
+				pageAggResults.setName("pageAggResults");
 				
-				contentPanel.add(pageRules, "pageRules");
-				card.show(contentPanel, "pageRules");
+				contentPanel.add(pageAggResults, "pageAggResults");
+				card.show(contentPanel, "pageAggResults");
 			}
-			
 		}
 	}
 	

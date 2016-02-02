@@ -102,6 +102,12 @@ public class SemanticWebEngine {
 
 	}
 	
+	public void resetDB(){
+		dbModel.removeAll();
+		dbModel.add(dbSourcesOriginal);
+		dbModel.commit();
+	}
+	
 	
 	/* ---- Classes ---- */
 	
