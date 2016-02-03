@@ -525,7 +525,7 @@ public class MappingPage {
 			
 			if(ruleName.getText().contentEquals(ruleNameDefault) || rules.getText().contentEquals(ruleDefault)){
 				JOptionPane.showMessageDialog(frame, 
-						"The \"Class Name\" and \"Rules\" fields should not be empty.", "Attention!", JOptionPane.WARNING_MESSAGE);
+						"The \"Rule Name\" and \"Rules\" fields should not be empty.", "Attention!", JOptionPane.WARNING_MESSAGE);
 			}
 			if(checkBoxes.isEmpty()){
 				JOptionPane.showMessageDialog(frame, 

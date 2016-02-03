@@ -31,7 +31,7 @@ public class InstancesPage {
 		
 		source = new JLabel("Information source: " + swe.getPropertySource(className));
 		classNameLabel = new JLabel("Class name: " + className);
-		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
+		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, ""));
 
 		this.createPage();
 	}
@@ -52,7 +52,7 @@ public class InstancesPage {
 		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		output.setText(swe.selectAllInfo(className));
+		output.setText(swe.selectAllInfo(className, ""));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());
 

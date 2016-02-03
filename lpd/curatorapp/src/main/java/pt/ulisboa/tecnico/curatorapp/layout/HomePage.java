@@ -222,7 +222,7 @@ public class HomePage {
 
 			if(className != ""){
 				classProps = swe.showClassProperties(className, "");
-				classInstances = swe.countClassInstances(className);
+				classInstances = swe.countClassInstances(className, "");
 				instancesTitle.setText("Number of instances: " + classInstances);
 				propsListModel.removeAllElements();
 				propsList.revalidate();

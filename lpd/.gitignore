@@ -1,6 +1,7 @@
 /target/
 
 /TDB/
+/TDB_test/
 /TDB_mappings/
 /TDB_filters/
 /TDB_sources_original/tdb.lock

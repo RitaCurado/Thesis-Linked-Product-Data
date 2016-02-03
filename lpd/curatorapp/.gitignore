@@ -3,6 +3,8 @@
 /afterDelete.txt
 /beforeDelete.txt
 /result_query.txt
+/beforeConstruct.txt
+/constructRes.txt
 
 *target*
 *.jar
