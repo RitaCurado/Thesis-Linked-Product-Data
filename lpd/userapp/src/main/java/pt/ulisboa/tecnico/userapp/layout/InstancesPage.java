@@ -36,10 +36,11 @@ public class InstancesPage {
 	private void createPage(){
 		JLabel source = new JLabel("Information source: " + swe.getPropertySource(className));
 		JLabel classNameLabel = new JLabel("Class name: " + className);
-		JLabel numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className));
+		JLabel numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, ""));
 		
 		JButton backButton = new JButton(" Back");
 		JTextArea output = new JTextArea();
+		output.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
 		JPanel sourceInfo = new JPanel();
 		JPanel instPanel = new JPanel();
@@ -49,7 +50,7 @@ public class InstancesPage {
 		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		output.setText(swe.selectAllInfo(className));
+		output.setText(swe.selectAllInfo(className, ""));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());
 

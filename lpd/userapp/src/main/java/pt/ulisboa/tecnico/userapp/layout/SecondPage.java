@@ -166,7 +166,7 @@ public class SecondPage {
 			else{
 				sourcesList.setEnabled(false);
 				chosenClass = mapping.substring(2, mapping.length()-2);
-				props = swe.showClassProperties(chosenClass);
+				props = swe.showClassProperties(chosenClass, "");
 				
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
@@ -213,7 +213,7 @@ public class SecondPage {
 				classes = swe.showSourceClasses(source.toLowerCase());
 				chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
 				
-				props = swe.showClassProperties(chosenClass);
+				props = swe.showClassProperties(chosenClass, "");
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();

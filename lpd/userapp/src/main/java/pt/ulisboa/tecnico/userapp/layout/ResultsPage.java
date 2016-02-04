@@ -41,6 +41,8 @@ public class ResultsPage {
 		GridBagConstraints gbc = new GridBagConstraints();
 		buttonPanel.setLayout(new GridBagLayout());
 		
+		results.setFont(new Font("Courier New", Font.PLAIN, 13));
+		
 		numValues = queryResult.split("\\r?\\n");
 		numMatches = new JLabel("Number of matches: " + (numValues.length - 4));
 		

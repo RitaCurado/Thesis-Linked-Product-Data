@@ -46,6 +46,7 @@ public class PropertyValuesPage {
 		
 		JButton backButton = new JButton(" Back");
 		JTextArea output = new JTextArea();
+		output.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
 		JLabel numInstances = new JLabel("Number of distinct values: ");
 		

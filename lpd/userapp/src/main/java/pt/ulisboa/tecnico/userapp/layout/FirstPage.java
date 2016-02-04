@@ -62,6 +62,7 @@ public class FirstPage {
 		JLabel infoTitle = new JLabel("Sources' Classes:");
 		JButton show = new JButton("Instances ");
 		JButton next = new JButton("Next ");
+		JButton back = new JButton(" Back");
 		
 		instances = new JPanel();
 		nextPanel = new JPanel();
@@ -73,12 +74,15 @@ public class FirstPage {
 		show.setIcon(new ImageIcon("..\\src\\main\\resources\\listing16px.png"));
 		show.setVerticalTextPosition(SwingConstants.CENTER);
 	    show.setHorizontalTextPosition(SwingConstants.LEFT);
-		show.addActionListener(new instListener());
+		show.addActionListener(new InstListener());
 		
 		next.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		next.setVerticalTextPosition(SwingConstants.CENTER);
 	    next.setHorizontalTextPosition(SwingConstants.LEFT);
-		next.addActionListener(new nextListener());
+		next.addActionListener(new NextListener());
+		
+		back.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
+		back.addActionListener(new BackListener());
 
 		this.createTabbedPane();
 
@@ -98,7 +102,7 @@ public class FirstPage {
 		this.createPropsPane();
 
 		nextPanel.setLayout(new GridLayout(1, 6));
-		nextPanel.add(new JLabel());
+		nextPanel.add(back);
 		nextPanel.add(new JLabel());
 		nextPanel.add(new JLabel());
 		nextPanel.add(new JLabel());
@@ -121,7 +125,7 @@ public class FirstPage {
 	private void createTabbedPane(){
 
 		ArrayList<String> result = null;
-		selectionListener sl = new selectionListener();
+		SelectionListener sl = new SelectionListener();
 		listsByTab = new HashMap<String, JList<String>>();
 		
 		HashMap<String, JPanel> panelBySource = new HashMap<String, JPanel>();
@@ -185,7 +189,7 @@ public class FirstPage {
 		propsListModel = new DefaultListModel<String>();
 		propsList = new JList<String>(propsListModel);
 
-		propsList.addListSelectionListener(new propsSelectListener());
+		propsList.addListSelectionListener(new PropsSelectListener());
 
 		propsPanel.setLayout(new BorderLayout());
 		propsPanel.setPreferredSize(new Dimension(400, 150));
@@ -198,7 +202,7 @@ public class FirstPage {
 		properties.setDividerSize(0);
 	}
 	
-	private class selectionListener implements ListSelectionListener{
+	private class SelectionListener implements ListSelectionListener{
 
 		@Override
 		public void valueChanged(ListSelectionEvent arg0) {
@@ -216,8 +220,8 @@ public class FirstPage {
 			}
 
 			if(className != ""){
-				classProps = swe.showClassProperties(className);
-				classInstances = swe.countClassInstances(className);
+				classProps = swe.showClassProperties(className, "");
+				classInstances = swe.countClassInstances(className, "");
 				instancesTitle.setText("Number of instances: " + classInstances);
 				propsListModel.removeAllElements();
 				propsList.revalidate();
@@ -238,7 +242,7 @@ public class FirstPage {
 		}		
 	}
 	
-	private class propsSelectListener implements ListSelectionListener{
+	private class PropsSelectListener implements ListSelectionListener{
 
 		private PropertyValuesPage propsPage;
 		private JSplitPane pagePropValues;
@@ -263,7 +267,7 @@ public class FirstPage {
 		}
 	}
 
-	private class instListener implements ActionListener{
+	private class InstListener implements ActionListener{
 		
 		private InstancesPage instPage;
 		private JSplitPane pageInstances;
@@ -286,7 +290,7 @@ public class FirstPage {
 		}
 	}
 
-	private class nextListener implements ActionListener{
+	private class NextListener implements ActionListener{
 
 		private SecondPage secondPage;
 		private JSplitPane page2;
@@ -303,4 +307,15 @@ public class FirstPage {
 		}
 	}
 
+	private class BackListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			contentPanel.remove(page1);
+			contentPanel.revalidate();
+			card.show(contentPanel, "pageInfo");
+		}
+	}
+	
 }

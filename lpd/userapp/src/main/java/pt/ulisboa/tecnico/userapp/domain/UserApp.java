@@ -5,7 +5,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
-import pt.ulisboa.tecnico.userapp.layout.FirstPage;
+import pt.ulisboa.tecnico.userapp.layout.InfoPage;
 
 
 public class UserApp extends JFrame{
@@ -15,25 +15,25 @@ public class UserApp extends JFrame{
 	private CardLayout cl;
 	private JPanel contentPanel;
 	
-	private JSplitPane page1;
-	private FirstPage firstPage;	
+	private JSplitPane pageInfo;
+	private InfoPage infoPage;	
 	private SemanticWebEngine swe;
 	
 	public UserApp(){
 		super("Advanced Search App");
-		swe = new SemanticWebEngine();
+		swe = new SemanticWebEngine("user");
 		cl = new CardLayout();
 		contentPanel = new JPanel();
 
-		firstPage = new FirstPage(this, swe, cl, contentPanel);
-		page1 = firstPage.getPage();
-		page1.setName("page1");
+		infoPage = new InfoPage(this, swe, cl, contentPanel);
+		pageInfo = infoPage.getPage();
+		pageInfo.setName("pageInfo");
 
 		contentPanel.setLayout(cl);
-		contentPanel.add(page1, "page1");
+		contentPanel.add(pageInfo, "pageInfo");
 
 		this.setContentPane(contentPanel);
-		cl.show(contentPanel, "page1");
+		cl.show(contentPanel, "pageInfo");
 	}
 
 	public static void main(String[] args){
