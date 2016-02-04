@@ -50,6 +50,8 @@ public class PropertyValuesPage {
 		JPanel sourceInfo, propInfo, instPanel, backPanel;
 		JSplitPane upPanel, downPanel;
 		
+		output.setFont(new Font("Courier New", Font.PLAIN, 13));
+		
 		sourceInfo = new JPanel();
 		propInfo = new JPanel();
 		instPanel = new JPanel();

@@ -217,6 +217,7 @@ public class AggregationPage {
 				result = swe.showAggregationCriteria(rule);
 				result = result.replace(",", ",\n ");
 				
+				ta.setFont(new Font("Courier New", Font.PLAIN, 13));
 				ta.setText(result);
 				criteriaPanel.add(ta);
 			}

@@ -52,6 +52,7 @@ public class InstancesPage {
 		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
+		output.setFont(new Font("Courier New", Font.PLAIN, 13));
 		output.setText(swe.selectAllInfo(className, ""));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new backListener());

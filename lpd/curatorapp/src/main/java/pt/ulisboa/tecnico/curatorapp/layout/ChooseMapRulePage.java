@@ -45,8 +45,9 @@ public class ChooseMapRulePage {
 		pageChoose = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		numInstances = new JLabel("Number of mapped instances: ");
-		result = new JTextArea();
 		radioGroup = new ButtonGroup();
+		result = new JTextArea();
+		result.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
 		this.createPage();
 	}

@@ -244,7 +244,7 @@ public class ChooseAggRulePage {
 				
 				Enumeration<String> enumerate = rulesModel.elements();
 				HashMap<String, String> rulesBySource = new HashMap<String, String>();
-				String rule, source;
+				String rule, source, chosenRules = "";
 				
 				while(enumerate.hasMoreElements()){
 					rule = enumerate.nextElement();
@@ -252,7 +252,12 @@ public class ChooseAggRulePage {
 					
 					source = swe.getPropertySource(rule);
 					rulesBySource.put(source, rule);
+					
+					chosenRules += source + "-" + rule + "|";
 				}
+				
+				chosenRules = chosenRules.substring(0, chosenRules.length()-1);
+				swe.registChosenRules(chosenRules);
 				
 				swe.filterData(rulesBySource);
 				

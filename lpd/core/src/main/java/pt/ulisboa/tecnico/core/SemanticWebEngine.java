@@ -42,6 +42,29 @@ public class SemanticWebEngine {
 	QueryExecution qe;
 
 	/* ---- Constructor ---- */
+	public SemanticWebEngine(String s){
+		
+		String directory;
+		Dataset dataset;
+		
+		if(s.contentEquals("user")){
+			
+			sources = new ArrayList<String>();
+			
+			directory = "..\\TDB_filters";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbFilters = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_mappings";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbMappings = dataset.getDefaultModel();
+
+			directory = "..\\TDB";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbModel = dataset.getDefaultModel();
+		}
+	}
+	
 	public SemanticWebEngine() {
 		
 		sources = new ArrayList<String>();
@@ -908,7 +931,6 @@ public class SemanticWebEngine {
 		File srcDir, destDir;
 		Dataset dataset;
 		
-		//TODO
 		switch (mode) {
 			case "test":
 				
@@ -954,7 +976,7 @@ public class SemanticWebEngine {
 	}
 	
 	public ArrayList<String> queryTestMapping(String ruleName){
-		//TODO
+
 		String queryResult;
 		String instances;
 		ArrayList<String> results = new ArrayList<String>();
@@ -1154,6 +1176,51 @@ public class SemanticWebEngine {
 				e.printStackTrace();
 			}
 			ResultSetFormatter.out(fos, results);
+	}
+	
+	public void registChosenRules(String chosenRules){
+		
+		if(checkPropertyExistance("http://filters/chosenRules", dbFilters)){
+			deleteAggregationRule("http://filters");
+		}
+		
+		Resource chooseProp = dbFilters.createResource("http://filters/chosenRules");
+		chooseProp.addProperty(RDF.type, RDF.Property);
+		
+		Resource res = dbFilters.createResource("http://filters");
+		res.addProperty(dbFilters.getProperty("http://filters/chosenRules"), chosenRules);
+		
+		dbFilters.commit();
+	}
+	
+	public String showChosenRules(){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString, queryResult, result;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		String[] spltResult;
+		
+		queryString = "SELECT ?Chosen_Rules\n"
+				+ "WHERE {"
+				+ " ?s ?p ?Chosen_Rules ."
+				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " FILTER (regex(str(?s), 'http://filters') && regex(str(?p), 'http://filters/chosenRules')) }";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbFilters);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		queryResult = go.toString();
+		
+		spltResult = queryResult.split("\\r?\\n");
+		result = spltResult[3];
+
+		qe.close();
+		
+		return result;
 	}
 	
 	public void deleteAggregationRule(String rule){

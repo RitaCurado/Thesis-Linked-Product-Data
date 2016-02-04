@@ -42,8 +42,9 @@ public class ShowAggResultsPage {
 		
 		pageAggResult = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		output = new JTextArea();
 		numInstances = new JLabel("Number of instances: ");
+		output = new JTextArea();
+		output.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
 		this.createPage();
 	}

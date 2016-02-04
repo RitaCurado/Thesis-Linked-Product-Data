@@ -62,9 +62,10 @@ public class MappingPage {
 		sourceName = new JLabel(" ", SwingConstants.LEFT);
 		ruleName = new JTextField("");
 		rules = new JTextField("");
-		showInfo = new JTextArea();
 		removeButton = new JButton(" Remove");
 		createButton = new JButton("Create ");
+		showInfo = new JTextArea();
+		showInfo.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
 		sources = swe.getSources();
 		checkBoxes = new ArrayList<JCheckBox>();
