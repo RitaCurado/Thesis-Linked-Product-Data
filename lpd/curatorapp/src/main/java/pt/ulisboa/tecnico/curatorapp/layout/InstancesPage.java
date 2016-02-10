@@ -29,7 +29,7 @@ public class InstancesPage {
 		
 		pageInstances = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		source = new JLabel("Information source: " + swe.getPropertySource(className));
+		source = new JLabel("Information source: " + swe.getPropertySource(className, false));
 		classNameLabel = new JLabel("Class name: " + className);
 		numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, ""));
 

@@ -67,6 +67,7 @@ public class SemanticWebEngine {
 		}
 		
 		sources = getSources();
+		defineSourceID();
 	}
 	
 	public SemanticWebEngine() {
@@ -131,7 +132,7 @@ public class SemanticWebEngine {
 		dbModel.commit();
 		
 		sources = getSources();
-
+		defineSourceID();
 	}
 	
 	public void resetDB(){
@@ -375,15 +376,19 @@ public class SemanticWebEngine {
 	
 	/* ---- Properties ---- */
 	
-	public String getPropertySource(String property){
+	public String getPropertySource(String property, boolean justName){
 
 		String splitProp[] = null;
 		String source[] = null;
 
 		splitProp = property.split("/");
-		source = splitProp[2].split("\\.");
+		
+		if(justName){
+			source = splitProp[2].split("\\.");
+			return source[1];
+		}
 
-		return source[1];
+		return splitProp[2];
 	}
 	
 	public String showPropertyValues(String property, String db){
@@ -557,7 +562,7 @@ public class SemanticWebEngine {
 		if(props != null){
 			for(String property: props){
 				
-				String s = getPropertySource(property);
+				String s = getPropertySource(property, false);
 				sid = sourceID.get(s);
 
 				count = StringUtils.countMatches(property, ":");
@@ -1000,7 +1005,7 @@ public class SemanticWebEngine {
 		
 		return results;
 	}
-	
+
 	public HashMap<String,String> mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String,
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
@@ -1042,7 +1047,7 @@ public class SemanticWebEngine {
 			
 			for(String property: ruleProperties){
 				
-				source = getPropertySource(property);
+				source = getPropertySource(property, false);
 				
 				list = propsBySource.get(source);
 				list.remove(property);
@@ -1355,7 +1360,7 @@ public class SemanticWebEngine {
 			value = rulesBySource.get(key);
 			
 			if(!value.contains("/None")){
-				className = "http://www." + key + ".pt/Medicine";
+				className = "http://" + key + "/Medicine";
 	
 				criteria = showAggregationCriteria(value);
 				spltCriteria = criteria.split("\\r?\\n");

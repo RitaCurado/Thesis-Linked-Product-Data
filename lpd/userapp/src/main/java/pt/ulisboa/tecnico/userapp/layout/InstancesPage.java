@@ -34,7 +34,7 @@ public class InstancesPage {
 	}
 
 	private void createPage(){
-		JLabel source = new JLabel("Information source: " + swe.getPropertySource(className));
+		JLabel source = new JLabel("Information source: " + swe.getPropertySource(className, false));
 		JLabel classNameLabel = new JLabel("Class name: " + className);
 		JLabel numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, ""));
 		

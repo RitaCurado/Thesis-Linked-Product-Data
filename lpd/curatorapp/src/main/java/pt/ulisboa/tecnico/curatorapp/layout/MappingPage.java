@@ -511,7 +511,6 @@ public class MappingPage {
 			int sid = 0;
 			String clName;
 			String source = "";
-			String[] splitDot;
 			HashMap<String, String> subjectBySource = new HashMap<String, String>();
 			HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>();
 			HashMap<String, ArrayList<String>> nodesBySource = new HashMap<String, ArrayList<String>>();
@@ -529,11 +528,11 @@ public class MappingPage {
 				for(JCheckBox cb: checkBoxes){
 					sid++;
 					
-					splitDot = cb.getText().split("\\.");
-					source = splitDot[1];
+					//splitDot = cb.getText().split("\\.");
+					source = cb.getText();
 					
 					subjectBySource.put(source, "s" + sid);
-					clName = "http://www." + source + ".pt/Medicine";
+					clName = "http://" + source + "/Medicine";
 
 					try {
 						propsBySource.put(source, swe.showClassProperties(clName, ""));
@@ -542,9 +541,7 @@ public class MappingPage {
 						e1.printStackTrace();
 					}
 				}
-				//TODO
-				//ver o que se passa
-				
+
 				HashMap<String, String> queryParts = swe.mappingConstructQuery(subjectBySource, propsBySource,
 						nodesBySource, sourceName.getText(), newRuleName, newRule.split("&"));
 				

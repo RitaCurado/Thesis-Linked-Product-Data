@@ -28,7 +28,7 @@ public class PropertyValuesPage {
 		
 		pagePropValues = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		source = new JLabel("Information source: " + swe.getPropertySource(className));
+		source = new JLabel("Information source: " + swe.getPropertySource(className, false));
 		classNameLabel = new JLabel("Class name: " + className);
 		propNameLabel = new JLabel("Property name: " + prop);
 		

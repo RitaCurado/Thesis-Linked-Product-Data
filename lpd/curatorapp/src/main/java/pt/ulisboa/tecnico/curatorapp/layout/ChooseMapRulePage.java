@@ -138,9 +138,6 @@ public class ChooseMapRulePage {
 	}
 	
 	private class OkListener implements ActionListener{
-		
-		//TODO
-		//Nao está a funcionar!!!
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
