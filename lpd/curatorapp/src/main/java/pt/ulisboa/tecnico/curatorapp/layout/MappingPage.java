@@ -70,7 +70,7 @@ public class MappingPage {
 		sources = swe.getSources();
 		checkBoxes = new ArrayList<JCheckBox>();
 		ruleNameDefault = "Ex: MappingBySomeProperty";
-		ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>|<www.s1.com/p4>-<www.s2.com/p1>";
+		ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>&<www.s1.com/p4>-<www.s2.com/p1>";
 
 		this.createPage();
 	}
@@ -126,16 +126,7 @@ public class MappingPage {
 		
 		//----//
 		
-		ArrayList<Integer> indexes = new ArrayList<Integer>();
 		CheckListener cl = new CheckListener();
-		
-		for(String s: sources){
-			if(s.contains("+"))
-				indexes.add(sources.indexOf(s));
-		}
-		for(int i: indexes){
-			sources.remove(i);
-		}
 		
 		for(String source: sources){
 			JCheckBox cb = new JCheckBox(source);
@@ -318,6 +309,7 @@ public class MappingPage {
 			else{
 				sourcesList.setEnabled(false);
 				result = swe.showMappingCriteria(rule);
+				result = result.replace(",", ",\n ");
 				showInfo.setText(result);
 			}
 		}
@@ -550,9 +542,11 @@ public class MappingPage {
 						e1.printStackTrace();
 					}
 				}
+				//TODO
+				//ver o que se passa
 				
 				HashMap<String, String> queryParts = swe.mappingConstructQuery(subjectBySource, propsBySource,
-						nodesBySource, sourceName.getText(), newRuleName, newRule.split("\\|"));
+						nodesBySource, sourceName.getText(), newRuleName, newRule.split("&"));
 				
 				swe.createMappingRule(sourceName.getText(), ruleName.getText(), queryParts);
 				

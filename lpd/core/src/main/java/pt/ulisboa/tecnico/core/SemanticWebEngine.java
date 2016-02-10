@@ -38,6 +38,7 @@ public class SemanticWebEngine {
 
 	Model dbModel, dbSourcesOriginal, dbFilters, dbMappings, dbTestMapping;
 	ArrayList<String> sources;
+	HashMap<String, Integer> sourceID;
 	
 	QueryExecution qe;
 
@@ -50,6 +51,7 @@ public class SemanticWebEngine {
 		if(s.contentEquals("user")){
 			
 			sources = new ArrayList<String>();
+			sourceID = new HashMap<String, Integer>();
 			
 			directory = "..\\TDB_filters";
 			dataset = TDBFactory.createDataset(directory);
@@ -63,11 +65,14 @@ public class SemanticWebEngine {
 			dataset = TDBFactory.createDataset(directory);
 			this.dbModel = dataset.getDefaultModel();
 		}
+		
+		sources = getSources();
 	}
 	
 	public SemanticWebEngine() {
 		
 		sources = new ArrayList<String>();
+		sourceID = new HashMap<String, Integer>();
 
 		// open TDB dataset
 		String directory;
@@ -124,6 +129,8 @@ public class SemanticWebEngine {
 
 		dbModel.add(dbSourcesOriginal);
 		dbModel.commit();
+		
+		sources = getSources();
 
 	}
 	
@@ -133,8 +140,22 @@ public class SemanticWebEngine {
 		dbModel.commit();
 	}
 	
+	public void defineSourceID(){
+		
+		int id = 0;
+		
+		for(String source: sources){
+			id++;
+			sourceID.put(source, id);
+		}
+	}
+	
 	
 	/* ---- Classes ---- */
+	
+	public HashMap<String, Integer> getSourcesId(){
+		return sourceID;
+	}
 	
 	public ArrayList<String> getSources(){
 		Query query;
@@ -496,11 +517,10 @@ public class SemanticWebEngine {
 	/* ---- Query methods ---- */
 
 	public String selectAllInfo(String className, String db){
-		int count = 0, sid = 0, index;
+		int count = 0, sid;
 		String output = "";
 		ArrayList<String> props = null;
-		String select = "", where = "", column = "";
-		HashMap<String, Integer> sourceID = new HashMap<String, Integer>();
+		String select = "", beginSelect = "", where = "", column = "";
 		
 		Model model = dbModel;
 		Query query;
@@ -538,40 +558,33 @@ public class SemanticWebEngine {
 			for(String property: props){
 				
 				String s = getPropertySource(property);
-				if(sourceID.containsKey(s)){
-					index = sourceID.get(s);
-				}
-				else{
-					sid++;
-					sourceID.put(s, sid);
-					index = sid;
-				}
+				sid = sourceID.get(s);
 
+				count = StringUtils.countMatches(property, ":");
 				column = this.getPropertyName(property);
 				
-				if(column.contains(":")){
-					String[] split = column.split("\\:");
-					column = split[0];
-					select += " ?" + column;
+				if(count > 1){
+					beginSelect += " ?" + column;
 					where += this.writeClauses(null, property, "simple", -1, -1);
 				}
 				else{
-					select += " ?" + column + index;
+					select += " ?" + sid + column;
 					
 					count = StringUtils.countMatches(property, "/");
 					if(count > 3)
-						where += this.writeClauses(null, property, "simpleNumC", index, -1);
+						where += this.writeClauses(null, property, "simpleNumC", sid, -1);
 					else
-						where += this.writeClauses(null, property, "simpleNum", index, -1);
+						where += this.writeClauses(null, property, "simpleNum", sid, -1);
 				}
 
 			}
+			
+			select = beginSelect + select;
 			
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
 					+ " ?s a \"" + className + "\" ."
 					+ where + "}";
-			
 
 			query = QueryFactory.create(queryString);
 			qe = QueryExecutionFactory.create(query, model);
@@ -616,7 +629,7 @@ public class SemanticWebEngine {
 		for(String p: props){
 			index++;
 			
-			column = getPropertyName(p) + index;
+			column = index + getPropertyName(p);
 			select += " ?" + column;
 			
 			countSlash = StringUtils.countMatches(p, "/");
@@ -732,10 +745,10 @@ public class SemanticWebEngine {
 			return " ?s " + composedProp + " [ " + prop + " ?" + column + " ] .";
 			
 		case "simpleNum":
-			return " ?s " + prop + " ?" + column + sid + " .";
+			return " ?s " + prop + " ?" + sid + column + " .";
 
 		case "simpleNumC":
-			return " ?s " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
+			return " ?s " + composedProp + " [ " + prop + " ?" + sid + column + " ] .";
 
 		case "mappingOnPropS":
 			return " ?" + subject + " " +  prop + " ?" + column + " .";
@@ -750,10 +763,10 @@ public class SemanticWebEngine {
 			return " ?" + subject + " " + composedProp + " [ " + prop + " ?o" + oid + " ] .";
 
 		case "remainPropsS":
-			return " ?" + subject + " " +  prop + " ?" + column + sid + " .";
+			return " ?" + subject + " " +  prop + " ?" + sid + column + " .";
 
 		case "remainPropsC":
-			return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + column + sid + " ] .";
+			return " ?" + subject + " " + composedProp + " [ " + prop + " ?" + sid + column + " ] .";
 
 		default:
 			break;
@@ -822,15 +835,14 @@ public class SemanticWebEngine {
 		rule = rule.replace(">", "");
 		rule = rule.replace(" ", "");
 		
-		update = "DELETE {?s ?p ?o}\n"
-				+ "WHERE { ?s ?p ?o . "
-					+ "FILTER (regex(str(?s), '" + rule + "'))}";
+		update = "DELETE "
+				+ "WHERE { "
+					+ "<" + rule + "> ?p ?o }";
 		
 		UpdateAction.parseExecute(update, dbMappings);
-		UpdateAction.parseExecute(update, dbModel);
 		
 		dbMappings.commit();
-		dbModel.commit();
+		
 	}
 	
 	public ArrayList<String> showMappingRules(String source){
@@ -890,8 +902,7 @@ public class SemanticWebEngine {
 		
 		queryString = "SELECT ?p ?o\n"
 					+ "WHERE {"
-						+ " ?s ?p ?o ."
-						+ " FILTER (regex(str(?s), \"" +  rule +  "\"))}";
+						+ "<" + rule + "> ?p ?o . }";
 		
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbMappings);
@@ -993,6 +1004,7 @@ public class SemanticWebEngine {
 	public HashMap<String,String> mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String,
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
+
 		
 		int propID = 0;
 		
@@ -1023,12 +1035,13 @@ public class SemanticWebEngine {
 //		--- extract info from each rule ---
 		for(String mapRule: mappingRules){
 			
-			rule += mapRule + "\n";
+			rule += mapRule + ",";
 			
 			propID++;
 			ruleProperties = mapRule.split("-"); //extract info from each property inside a rule
 			
 			for(String property: ruleProperties){
+				
 				source = getPropertySource(property);
 				
 				list = propsBySource.get(source);
@@ -1054,6 +1067,7 @@ public class SemanticWebEngine {
 			variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);
 			
 			Arrays.fill(props, null);
+			conjuction = "";
 		}
 		
 //		--- Treat properties that don't appear in any mapping rule ---
@@ -1099,6 +1113,8 @@ public class SemanticWebEngine {
 			}
 		}
 		
+		rule = rule.substring(0, rule.length()-1); 
+		
 		result.put("schema", schema);
 		result.put("variables", variables);
 		result.put("where", where);
@@ -1122,8 +1138,8 @@ public class SemanticWebEngine {
 		
 		queryString = "SELECT ?Mapping_Criteria\n"
 				+ "WHERE {"
-				+ " ?s ?p ?Mapping_Criteria ."
-				+ " FILTER ( regex(str(?s), '" + rule + "') && regex(str(?p), '/rule') ) }";
+				+ "<" + rule + "> ?p ?Mapping_Criteria ."
+				+ " FILTER (regex(str(?p), '/rule')) }";
 		
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbMappings);
@@ -1230,15 +1246,13 @@ public class SemanticWebEngine {
 		rule = rule.replace(">", "");
 		rule = rule.replace(" ", "");
 		
-		update = "DELETE {?s ?p ?o}\n"
-				+ "WHERE { ?s ?p ?o . "
-					+ "FILTER (regex(str(?s), '" + rule + "'))}";
+		update = "DELETE "
+				+ "WHERE { "
+					+ "<" + rule + "> ?p ?o }";
 		
 		UpdateAction.parseExecute(update, dbFilters);
-		UpdateAction.parseExecute(update, dbModel);
 		
 		dbFilters.commit();
-		dbModel.commit();
 	}
 	
 	public String showAggregationCriteria(String rule){
@@ -1254,9 +1268,8 @@ public class SemanticWebEngine {
 		
 		queryString = "SELECT ?Aggregation_Criteria\n"
 				+ "WHERE {"
-				+ " ?s ?p ?Aggregation_Criteria ."
-				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
-				+ " FILTER (regex(str(?s), '" + rule + "')) }";
+				+ "<" + rule + "> ?p ?Aggregation_Criteria ."
+				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> }";
 		
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbFilters);
