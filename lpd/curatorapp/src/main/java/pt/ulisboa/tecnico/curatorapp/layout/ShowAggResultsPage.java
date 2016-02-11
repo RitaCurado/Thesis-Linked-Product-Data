@@ -3,16 +3,20 @@ package pt.ulisboa.tecnico.curatorapp.layout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -61,10 +65,14 @@ public class ShowAggResultsPage {
 		JPanel sourcesPanel = new JPanel(new GridLayout(1, 4));
 		JPanel buttonPanel = new JPanel(new GridLayout(1, 6));
 		
+		JPanel numInstLabel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		
 		JScrollPane scrollPane = new JScrollPane();
 		
 		JLabel resultTitle = new JLabel("Filtering results");
 		JLabel sourceTitle = new JLabel("Sources: ");
+		JButton labelButton = new JButton("Label");
 		JButton nextButton = new JButton("Next ");
 		JButton backButton = new JButton(" Back");
 		
@@ -86,9 +94,22 @@ public class ShowAggResultsPage {
 		sourcesPanel.add(new JLabel(""));
 		sourcesPanel.add(new JLabel(""));
 		
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		labelButton.addActionListener(new LabelListener());
+		
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 3;
+		numInstLabel.add(numInstances, gbc);
+		
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.weightx = 1;
+		numInstLabel.add(labelButton, gbc);
+		
 		titlePanel.add(resultTitle);
 		titlePanel.add(sourcesPanel);
-		titlePanel.add(numInstances);
+		titlePanel.add(numInstLabel);
 		
 		//-----//
 		
@@ -135,6 +156,24 @@ public class ShowAggResultsPage {
 			
 			numInstances.setText("Number of instances: " + numInst);
 			output.setText(result);
+		}
+	}
+	
+	private class LabelListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String label;
+			HashMap<String, Integer> sid = swe.getSourcesId();
+			
+			label = "Column number - property source \n\n";
+			
+			for(String key: sid.keySet()){
+				label += sid.get(key) + " -\t" + key + "\n";
+			}
+			
+			JOptionPane.showMessageDialog(frame, label);
+			
 		}
 	}
 	

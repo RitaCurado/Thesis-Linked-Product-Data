@@ -278,7 +278,7 @@ public class HomePage {
 
 			if(className != ""){
 
-				instPage = new InstancesPage(swe, className, card, contentPanel);
+				instPage = new InstancesPage(swe, frame, className, card, contentPanel);
 				pageInstances = instPage.getPage();
 				pageInstances.setName("pageInst");
 

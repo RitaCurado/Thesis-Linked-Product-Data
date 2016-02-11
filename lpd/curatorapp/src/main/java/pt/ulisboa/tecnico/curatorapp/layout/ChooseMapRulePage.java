@@ -4,16 +4,20 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -67,10 +71,14 @@ public class ChooseMapRulePage {
 		JPanel radioPanel = new JPanel(new GridLayout(0, 1));
 		JPanel buttonPanel = new JPanel(new GridLayout(1, 6));
 		
+		JPanel numInstLabel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		
 		JSplitPane choosePanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		JSplitPane results = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		JButton okButton = new JButton(" OK");
+		JButton labelButton = new JButton("Label");
 		JButton backButton = new JButton(" Back");
 		JButton finishButton = new JButton("Finish ");
 		
@@ -98,10 +106,24 @@ public class ChooseMapRulePage {
 		choosePanel.add(okButton);
 		choosePanel.setDividerSize(1);
 		
+		
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		labelButton.addActionListener(new LabelListener());
+		
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.weightx = 6;
+		numInstLabel.add(numInstances, gbc);
+		
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.weightx = 0.8;
+		numInstLabel.add(labelButton, gbc);
+		
 		upPanel.setPreferredSize(new Dimension(400, 150));
 		upPanel.add(title);
 		upPanel.add(choosePanel);
-		upPanel.add(numInstances);
+		upPanel.add(numInstLabel);
 		
 		//----//
 		
@@ -153,6 +175,24 @@ public class ChooseMapRulePage {
 			
 			result.setText(mappingResult.get(0));
 			numInstances.setText("Number of mapped instances: " + mappingResult.get(1));	
+		}
+	}
+	
+	private class LabelListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String label;
+			HashMap<String, Integer> sid = swe.getSourcesId();
+			
+			label = "Column number - property source \n\n";
+			
+			for(String key: sid.keySet()){
+				label += sid.get(key) + " -\t" + key + "\n";
+			}
+			
+			JOptionPane.showMessageDialog(frame, label);
+			
 		}
 	}
 	
