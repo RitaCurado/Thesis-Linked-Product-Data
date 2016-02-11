@@ -174,7 +174,9 @@ public class ChooseMapRulePage {
 			mappingResult = swe.queryTestMapping(rb);
 			
 			result.setText(mappingResult.get(0));
-			numInstances.setText("Number of mapped instances: " + mappingResult.get(1));	
+			numInstances.setText("Number of mapped instances: " + mappingResult.get(1));
+			
+			swe.setNumMappings(Integer.parseInt(mappingResult.get(1)));
 		}
 	}
 	

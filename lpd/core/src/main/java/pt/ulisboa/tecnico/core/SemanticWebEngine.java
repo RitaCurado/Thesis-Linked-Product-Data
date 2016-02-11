@@ -54,6 +54,8 @@ public class SemanticWebEngine {
 			
 			sources = new ArrayList<String>();
 			sourceID = new HashMap<String, Integer>();
+			initialInsts = new HashMap<String, Integer>();
+			instsAfterAggs = new HashMap<String, Integer>();
 			
 			directory = "..\\TDB_filters";
 			dataset = TDBFactory.createDataset(directory);
@@ -70,12 +72,15 @@ public class SemanticWebEngine {
 		
 		sources = getSources();
 		defineSourceID();
+		defineInitialInsts();
 	}
 	
 	public SemanticWebEngine() {
 		
 		sources = new ArrayList<String>();
 		sourceID = new HashMap<String, Integer>();
+		initialInsts = new HashMap<String, Integer>();
+		instsAfterAggs = new HashMap<String, Integer>();
 
 		// open TDB dataset
 		String directory;
@@ -135,6 +140,7 @@ public class SemanticWebEngine {
 		
 		sources = getSources();
 		defineSourceID();
+		defineInitialInsts();
 	}
 	
 	public void resetDB(){
@@ -150,6 +156,12 @@ public class SemanticWebEngine {
 		for(String source: sources){
 			id++;
 			sourceID.put(source, id);
+		}
+	}
+	
+	public void defineInitialInsts(){
+		for(String source: sources){
+			initialInsts.put(source, Integer.parseInt(this.countClassInstances(source + "/Medicine", "")));
 		}
 	}
 	
@@ -597,7 +609,6 @@ public class SemanticWebEngine {
 			for(String property: props){
 				
 				String s = getPropertySource(property, false);
-				sid = sourceID.get(s);
 
 				count = StringUtils.countMatches(property, ":");
 				column = this.getPropertyName(property);
@@ -607,6 +618,8 @@ public class SemanticWebEngine {
 					where += this.writeClauses(null, property, "simple", -1, -1);
 				}
 				else{
+					sid = sourceID.get(s);
+
 					select += " ?" + sid + column;
 					
 					count = StringUtils.countMatches(property, "/");

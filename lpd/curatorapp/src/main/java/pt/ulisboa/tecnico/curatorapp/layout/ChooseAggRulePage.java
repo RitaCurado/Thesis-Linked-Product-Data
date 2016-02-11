@@ -232,9 +232,14 @@ public class ChooseAggRulePage {
 		
 		private ShowAggResultsPage aggResultsPage;
 		private JSplitPane pageAggResults;
+		private ArrayList<String> sources;
+		private HashMap<String, Integer> numInstsUpdate;
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			
+			sources = swe.getSources();
+			numInstsUpdate = new HashMap<String, Integer>();
 			
 			if(rulesModel.isEmpty()){
 				JOptionPane.showMessageDialog(frame, "You have to select an aggregation rule per source.",
@@ -260,6 +265,12 @@ public class ChooseAggRulePage {
 				swe.registChosenRules(chosenRules);
 				
 				swe.filterData(rulesBySource);
+				
+				for(String src: sources){
+					numInstsUpdate.put(src, Integer.parseInt(swe.countClassInstances(src + "/Medicine", "")));
+				}
+				
+				swe.setInstsAfterAggs(numInstsUpdate);
 				
 				aggResultsPage = new ShowAggResultsPage(swe, frame, card, contentPanel);
 				pageAggResults = aggResultsPage.getPage();
