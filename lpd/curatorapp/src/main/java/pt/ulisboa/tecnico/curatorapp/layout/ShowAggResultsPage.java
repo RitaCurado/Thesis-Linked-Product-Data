@@ -169,7 +169,7 @@ public class ShowAggResultsPage {
 			label = "Column number - property source \n\n";
 			
 			for(String key: sid.keySet()){
-				label += sid.get(key) + " -\t" + key + "\n";
+				label += sid.get(key) + " -  " + key + "\n";
 			}
 			
 			JOptionPane.showMessageDialog(frame, label);
