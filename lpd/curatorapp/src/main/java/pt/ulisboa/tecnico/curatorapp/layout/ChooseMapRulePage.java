@@ -209,9 +209,17 @@ public class ChooseMapRulePage {
 	
 	private class FinishListener implements ActionListener{
 
+		private SummaryPage summPage;
+		private JSplitPane pageSumm;
+		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			frame.dispose();
+			summPage = new SummaryPage(frame, swe, card, contentPanel);
+			pageSumm = summPage.getPage();
+			pageSumm.setName("pageSumm");
+			
+			contentPanel.add(pageSumm, "pageSumm");
+			card.show(contentPanel, "pageSumm");
 		}
 	}
 

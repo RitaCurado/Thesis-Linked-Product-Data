@@ -36,11 +36,13 @@ public class SemanticWebEngine {
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
-	Model dbModel, dbSourcesOriginal, dbFilters, dbMappings, dbTestMapping;
-	ArrayList<String> sources;
-	HashMap<String, Integer> sourceID;
-	
-	QueryExecution qe;
+	private Model dbModel, dbSourcesOriginal, dbFilters, dbMappings, dbTestMapping;
+	private int numMatches;	
+	private ArrayList<String> sources;
+	private HashMap<String, Integer> sourceID;
+	private HashMap<String, Integer> initialInsts;
+	private HashMap<String, Integer> instsAfterAggs;
+	private QueryExecution qe;
 
 	/* ---- Constructor ---- */
 	public SemanticWebEngine(String s){
@@ -149,6 +151,38 @@ public class SemanticWebEngine {
 			id++;
 			sourceID.put(source, id);
 		}
+	}
+	
+	public void setInstsAfterAggs(HashMap<String, Integer> values){
+		instsAfterAggs = values;
+	}
+	
+	public void setNumMappings(int i){
+		numMatches = i;
+	}
+	
+	public HashMap<String, Integer> getInitialInsts(){
+		return initialInsts;
+	}
+	
+	public HashMap<String, Integer> getInstsAfterAggs(){
+		return instsAfterAggs;
+	}
+	
+	public int getNumMatches(){
+		return numMatches;
+	}
+	
+	public int getResultInstNum(){
+		int result = 0;
+		
+		for(String source: instsAfterAggs.keySet()){
+			result += instsAfterAggs.get(source);
+		}
+		
+		result -= numMatches;
+		
+		return result;
 	}
 	
 	
