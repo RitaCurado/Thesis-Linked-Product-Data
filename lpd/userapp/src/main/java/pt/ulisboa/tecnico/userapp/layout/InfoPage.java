@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -80,6 +81,8 @@ public class InfoPage {
 		JTextArea filterArea = new JTextArea();
 		JButton nextButton = new JButton("Next ");
 		
+		ButtonGroup bg = new ButtonGroup();
+		
 		ArrayList<String> mappingRules;
 		RadioListener rl = new RadioListener();
 		String chosenRules, text = "", queryCrit, criteria;
@@ -137,6 +140,7 @@ public class InfoPage {
 			rb.setBackground(Color.WHITE);
 			rb.addActionListener(rl);
 			
+			bg.add(rb);
 			radioPanel.add(rb);
 		}
 		

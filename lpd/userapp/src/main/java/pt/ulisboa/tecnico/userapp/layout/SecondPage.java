@@ -253,7 +253,7 @@ public class SecondPage {
 		public void actionPerformed(ActionEvent event) {
 			contentPanel.remove(page2);
 			contentPanel.revalidate();
-			card.show(contentPanel, "page1");
+			card.show(contentPanel, "pageChoose");
 		}
 	}
 

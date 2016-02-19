@@ -292,18 +292,18 @@ public class FirstPage {
 
 	private class NextListener implements ActionListener{
 
-		private SecondPage secondPage;
-		private JSplitPane page2;
+		private ChooseMapRulePage choosePage;
+		private JSplitPane pageChoose;
 		
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			secondPage = new SecondPage(frame, swe, card, contentPanel);
-			page2 = secondPage.getPage();
-			page2.setName("page2");
+			choosePage = new ChooseMapRulePage(frame, swe, card, contentPanel);
+			pageChoose = choosePage.getPage();
+			pageChoose.setName("pageChoose");
 
-			contentPanel.add(page2, "page2");
-			card.show(contentPanel, "page2");
+			contentPanel.add(pageChoose, "pageChoose");
+			card.show(contentPanel, "pageChoose");
 		}
 	}
 
