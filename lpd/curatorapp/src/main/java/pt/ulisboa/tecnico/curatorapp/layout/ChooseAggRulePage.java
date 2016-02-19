@@ -255,7 +255,9 @@ public class ChooseAggRulePage {
 					rule = enumerate.nextElement();
 					rule = rule.replace(" ", "");
 					
-					source = swe.getPropertySource(rule, true);
+					
+					source = swe.getPropertySource(rule, false);
+					//System.out.println("Source: " + source + " Agg rule: " + rule);
 					rulesBySource.put(source, rule);
 					
 					chosenRules += source + "-" + rule + "|";

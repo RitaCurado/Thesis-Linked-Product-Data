@@ -130,7 +130,7 @@ public class InfoPage {
 		
 		mappingRules = swe.showMappingRules("");
 		radioPanel.setBackground(Color.WHITE);
-		radioPanel.setPreferredSize(new Dimension(430, 200));
+		radioPanel.setPreferredSize(new Dimension(400, 200));
 		
 		for(String rule: mappingRules){
 			JRadioButton rb = new JRadioButton(rule);
@@ -192,6 +192,8 @@ public class InfoPage {
 			
 			rule = rule.substring(2, rule.length()-2);
 			criteria = swe.showMappingCriteria(rule);
+			
+			criteria = criteria.replace(",", ",\n ");
 			
 			mapCriteria.setText(criteria);
 		}

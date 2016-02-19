@@ -35,8 +35,10 @@ public class ChooseMapRulePage {
 	private SemanticWebEngine swe;
 	
 	private JSplitPane pageChoose;
+	private String chosenRule;
 	
 	private JLabel numInstances;
+	private JLabel numMatches;
 	private JTextArea result;
 	private ButtonGroup radioGroup;
 
@@ -46,9 +48,13 @@ public class ChooseMapRulePage {
 		card = cl;
 		contentPanel = content;
 		
+		chosenRule = "";
+		
 		pageChoose = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		numInstances = new JLabel("Number of mapped instances: ");
+		numInstances = new JLabel("Resulting number of instances: ");
+		numMatches = new JLabel("Number of mapped instances: ");
+		
 		radioGroup = new ButtonGroup();
 		result = new JTextArea();
 		result.setFont(new Font("Courier New", Font.PLAIN, 13));
@@ -86,6 +92,7 @@ public class ChooseMapRulePage {
 		radioPanel.setBackground(Color.WHITE);
 		
 		for(String rule: mappingRules){
+			rule = rule.replace(" ", "");
 			JRadioButton rb = new JRadioButton(rule);
 			rb.setActionCommand(rule);
 			rb.setBackground(Color.WHITE);
@@ -112,10 +119,15 @@ public class ChooseMapRulePage {
 		
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		gbc.weightx = 6;
+		gbc.weightx = 3;
 		numInstLabel.add(numInstances, gbc);
-		
+
 		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.weightx = 3;
+		numInstLabel.add(numMatches, gbc);
+		
+		gbc.gridx = 2;
 		gbc.gridy = 0;
 		gbc.weightx = 0.8;
 		numInstLabel.add(labelButton, gbc);
@@ -164,19 +176,22 @@ public class ChooseMapRulePage {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
+			int instances;
 			ArrayList<String> mappingResult;
 			
 			String rb = radioGroup.getSelection().getActionCommand();
-			rb = rb.substring(2, rb.length()-2);
+			rb = rb.substring(1, rb.length()-1);
 			
-			swe.chooseMappingRule(rb, "test");
+			chosenRule = rb;
+			instances = swe.chooseMappingRule(rb, "test");
 			
 			mappingResult = swe.queryTestMapping(rb);
 			
 			result.setText(mappingResult.get(0));
-			numInstances.setText("Number of mapped instances: " + mappingResult.get(1));
+			numInstances.setText("Resulting number of instances: " + mappingResult.get(1));
+			numMatches.setText("Number of mapped instances: " + instances);
 			
-			swe.setNumMappings(Integer.parseInt(mappingResult.get(1)));
+			swe.setNumMappings(instances);
 		}
 	}
 	
@@ -216,7 +231,8 @@ public class ChooseMapRulePage {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			summPage = new SummaryPage(frame, swe, card, contentPanel);
+			
+			summPage = new SummaryPage(frame, swe, card, contentPanel, chosenRule);
 			pageSumm = summPage.getPage();
 			pageSumm.setName("pageSumm");
 			

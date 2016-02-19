@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,12 +15,14 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
@@ -30,14 +33,22 @@ public class SummaryPage {
 	private JFrame frame;
 	private SemanticWebEngine swe;
 	
+	private JComboBox<String> sourcesList;
+	private JTextArea showInfo;
+	private JLabel numInstances;
+	private String chosenRule;
+	
 	private JSplitPane pageSummary;
 
-	public SummaryPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
+	public SummaryPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content, String rule){
 		this.swe = swe;
 		frame = gui;
-//		card = cl;
-//		contentPanel = content;
+		chosenRule = rule;
 		
+		showInfo = new JTextArea();
+		showInfo.setFont(new Font("Courier New", Font.PLAIN, 13));
+		
+		numInstances = new JLabel("Number of instances: ");
 		pageSummary = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		this.createPage();
@@ -53,10 +64,21 @@ public class SummaryPage {
 		Map.Entry mapping;
 		Iterator entriesIterator;
 		
+		String mappRuleSource, equation;
+		
+		JSplitPane upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JSplitPane infoPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JSplitPane tablesPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JSplitPane instancesPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		JSplitPane leftPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		JSplitPane rightPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		
+		JPanel sourcesPanel = new JPanel(new GridLayout(2, 3));
+		JScrollPane scrolInfo;
+		
 		JTable initValuesTable, valuesAggsTable;
 		JScrollPane initialScroll, aggScroll;
-				
-		JPanel topPanel = new JPanel(new GridLayout(0, 1));
+		
 		JPanel matchesPanel = new JPanel(new GridLayout(2, 1));
 		JPanel finalInstPanel = new JPanel(new GridLayout(2, 1));
 		JPanel buttonPanel = new JPanel(new GridLayout(1, 7));
@@ -66,9 +88,11 @@ public class SummaryPage {
 		
 		JLabel initInsts, aggsInsts, numMatches, numFinal;
 		JLabel title = new JLabel("Summary");
+		JLabel sourcesLabel = new JLabel("Sources:");
 		JButton okButton = new JButton("Ok");
 		okButton.addActionListener(new OkListener());
 		
+		ArrayList<String> sources = new ArrayList<String>();
 		HashMap<String, Integer> initialValues = swe.getInitialInsts();
 		HashMap<String, Integer> valuesAfterFilter = swe.getInstsAfterAggs();
 		
@@ -93,6 +117,8 @@ public class SummaryPage {
 		
 		initInsts = new JLabel("Initial number of instances:");
 		initInsts.setFont(new Font("Arial", Font.BOLD, 13));
+		
+		//initialInstsPanel.setPreferredSize(new Dimension(300, 150));
 		
 		initialInstsPanel.setBackground(Color.WHITE);
 		initialInstsPanel.add(initInsts);
@@ -121,6 +147,15 @@ public class SummaryPage {
 		afterAggInstsPanel.add(aggsInsts);
 		afterAggInstsPanel.add(aggScroll);
 		afterAggInstsPanel.setDividerSize(1);
+		
+		tablesPanel.setPreferredSize(new Dimension(400, 180));
+		tablesPanel.setResizeWeight(0.5);
+		initialInstsPanel.setBorder(BorderFactory.createMatteBorder(2, 0, 5, 0, Color.WHITE));
+		afterAggInstsPanel.setBorder(BorderFactory.createMatteBorder(5, 0, 2, 0, Color.WHITE));
+		
+		tablesPanel.add(initialInstsPanel);
+		tablesPanel.add(afterAggInstsPanel);
+		tablesPanel.setDividerSize(1);
 //		--------------
 		
 		
@@ -132,25 +167,76 @@ public class SummaryPage {
 		
 		//----//
 		
-		numFinal = new JLabel("   " + swe.getResultInstNum());
+		equation = "  (";
+		
+		for(int i=0; i < afterAggsArray.length; i++){
+			equation += afterAggsArray[i][1] + " + ";
+		}
+		
+		equation = equation.substring(0, equation.length()-2);
+		equation += ") - " + swe.getNumMatches() + " = ";
+		
+		numFinal = new JLabel(equation + swe.getResultInstNum());
 		numFinal.setFont(new Font("Arial", Font.PLAIN, 13));
 		
 		
-		finalInstPanel.add(new JLabel("Final number of instances:"));
+		finalInstPanel.add(new JLabel("Total number of instances:"));
 		finalInstPanel.add(numFinal);
 		
-		//----//
-
-		title.setFont(new Font("Arial", Font.BOLD, 15));
-		initialInstsPanel.setBorder(BorderFactory.createMatteBorder(2, 0, 5, 0, Color.WHITE));
-		afterAggInstsPanel.setBorder(BorderFactory.createMatteBorder(5, 0, 2, 0, Color.WHITE));
+		leftPanel.setPreferredSize(new Dimension(250, 100));
+		leftPanel.setResizeWeight(0.5);
+		leftPanel.add(matchesPanel);
+		leftPanel.add(finalInstPanel);
+		leftPanel.setDividerSize(1);
 		
-		topPanel.setPreferredSize(new Dimension(400, 395));
-		topPanel.add(title);		
-		topPanel.add(initialInstsPanel);
-		topPanel.add(afterAggInstsPanel);
-		topPanel.add(matchesPanel);
-		topPanel.add(finalInstPanel);
+		//----//
+		
+		sources.add(0, "- Select an option -");
+		sources.addAll(swe.getSources());
+		
+		if(!chosenRule.isEmpty()){
+			mappRuleSource = swe.getPropertySource(chosenRule, false);
+			sources.add(mappRuleSource);
+		}
+		
+		String[] sourcesArray = new String[sources.size()];
+		sourcesArray = sources.toArray(sourcesArray);
+		sourcesList = new JComboBox<String>(sourcesArray);
+		sourcesList.setSelectedIndex(0);
+		sourcesList.addActionListener(new SourcesListListener());
+		
+		sourcesPanel.add(sourcesLabel);
+		sourcesPanel.add(sourcesList);
+		sourcesPanel.add(new JLabel(""));
+		sourcesPanel.add(numInstances);
+		sourcesPanel.add(new JLabel(""));
+		sourcesPanel.add(new JLabel(""));
+		
+		scrolInfo = new JScrollPane(showInfo);
+		
+		rightPanel.add(sourcesPanel);
+		rightPanel.add(scrolInfo);
+		rightPanel.setDividerSize(1);
+		
+		
+		instancesPanel.add(leftPanel);
+		instancesPanel.add(rightPanel);
+		instancesPanel.setDividerSize(1);
+		
+		//----//
+		
+		infoPanel.add(tablesPanel);
+		infoPanel.add(instancesPanel);
+		infoPanel.setDividerSize(1);
+		
+		//----//
+		
+		title.setFont(new Font("Arial", Font.BOLD, 15));
+		upPanel.setPreferredSize(new Dimension(400, 399));
+		
+		upPanel.add(title);
+		upPanel.add(infoPanel);
+		upPanel.setDividerSize(2);
 		
 		//----//
 		
@@ -162,9 +248,45 @@ public class SummaryPage {
 		buttonPanel.add(new JLabel(""));
 		buttonPanel.add(new JLabel(""));
 		
-		pageSummary.add(topPanel);
+		pageSummary.add(upPanel);
 		pageSummary.add(buttonPanel);
 		pageSummary.setDividerSize(1);
+	}
+	
+	private class SourcesListListener implements ActionListener{
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public void actionPerformed(ActionEvent e) {
+			JComboBox<String> cb = (JComboBox<String>) e.getSource();
+			String source = (String) cb.getSelectedItem();
+			
+			String db = "";
+			String result = "";
+			String className = "";
+			String instances = "0";
+			
+			if(swe.testDBexists())
+				db = "test";
+
+			showInfo.removeAll();
+			
+			if(!source.equals("- Select an option -")){
+				
+				if(!source.contains("_")){
+					className = "http://" + source + "/Medicine";
+					result = swe.selectAllInfo(className, db);
+					instances = swe.countClassInstances(className, db);
+				}
+				else if(!db.contentEquals("")){
+					result = swe.selectAllInfo(chosenRule, db);
+					instances = swe.countClassInstances(chosenRule, db);
+				}
+				
+				numInstances.setText("Number of instances: " + instances);
+				showInfo.setText(result);
+			}
+		}
 	}
 	
 	private class OkListener implements ActionListener{

@@ -49,10 +49,11 @@ public class SecondPage {
 		JLabel title = new JLabel("Search Criteria");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
-		JButton backButton = new JButton(" Cancel");
-		JButton nextButton = new JButton("Search ");
+		JButton cancelButton = new JButton(" Cancel");
+		JButton searchButton = new JButton("Search ");
 
-		criteriaPanel = new JPanel();
+		JScrollPane criteriaScroll;
+		criteriaPanel = new JPanel(new GridLayout(0, 2));
 		JPanel upPanel = new JPanel(new GridLayout(5, 1));
 		JPanel downPanel = new JPanel(new GridLayout(1, 6));
 		JPanel sourcePanel = new JPanel(new GridLayout(1, 2));
@@ -60,21 +61,10 @@ public class SecondPage {
 		JSplitPane downPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 //		-------------
-		ArrayList<Integer> indexes = new ArrayList<Integer>();
-		ArrayList<String> mappSources = new ArrayList<String>();
 		
 		ArrayList<String> sources = new ArrayList<String>();
 		sources.add("- Select an option -");
 		sources.addAll(swe.getSources());
-
-		for(String s: sources){
-			if(s.contains("+"))
-				indexes.add(sources.indexOf(s));
-		}
-		for(int i: indexes){
-			mappSources.add(sources.get(i));
-			sources.remove(i);
-		}
 		
 		String[] sourcesArray = new String[sources.size()];
 		sourcesArray = sources.toArray(sourcesArray);
@@ -83,10 +73,7 @@ public class SecondPage {
 //		-------------
 		ArrayList<String> mappingRules = new ArrayList<String>();
 		mappingRules.add("- Select an option -");
-		
-		for(String mappS: mappSources){
-			mappingRules.addAll(swe.showSourceClasses(mappS));
-		}
+		mappingRules.addAll(swe.showMappingRules(""));
 		
 		String[] mappsArray = new String[mappingRules.size()];
 		mappsArray = mappingRules.toArray(mappsArray);
@@ -94,28 +81,28 @@ public class SecondPage {
 		mappingsList = new JComboBox<String>(mappsArray);
 //		-------------
 		
-		criteriaPanel.setLayout(new GridLayout(0, 2));
-		criteriaPanel.setPreferredSize(new Dimension(400, 270));
 		criteriaPanel.setBackground(Color.WHITE);
+		criteriaScroll = new JScrollPane(criteriaPanel);
+		criteriaScroll.setPreferredSize(new Dimension(400, 270));
 
 		sourcesList.setSelectedIndex(0);
-		sourcesList.addActionListener(new sourcesListListener());
+		sourcesList.addActionListener(new SourcesListListener());
 		mappingsList.setSelectedIndex(0);
-		mappingsList.addActionListener(new mappListListener());
+		mappingsList.addActionListener(new MappListListener());
 
-		backButton.setForeground(Color.WHITE);
-		backButton.setFont(new Font("Arial", Font.BOLD, 16));
-		backButton.setBackground(new Color(226, 006, 021));
-		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
-		backButton.addActionListener(new backListener());
+		cancelButton.setForeground(Color.WHITE);
+		cancelButton.setFont(new Font("Arial", Font.BOLD, 16));
+		cancelButton.setBackground(new Color(226, 006, 021));
+		cancelButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
+		cancelButton.addActionListener(new CancelListener());
 		
-		nextButton.setForeground(Color.WHITE);
-		nextButton.setFont(new Font("Arial", Font.BOLD, 16));
-		nextButton.setBackground(new Color(005, 220, 105));
-		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search100.png"));
-		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
-	    nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
-		nextButton.addActionListener(new nextListener());
+		searchButton.setForeground(Color.WHITE);
+		searchButton.setFont(new Font("Arial", Font.BOLD, 16));
+		searchButton.setBackground(new Color(005, 220, 105));
+		searchButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search100.png"));
+		searchButton.setVerticalTextPosition(SwingConstants.CENTER);
+	    searchButton.setHorizontalTextPosition(SwingConstants.LEFT);
+		searchButton.addActionListener(new SearchListener());
 //		--------------
 
 		sourcePanel.add(sourcesList);
@@ -131,12 +118,12 @@ public class SecondPage {
 
 		downPanel.add(new JLabel());
 		downPanel.add(new JLabel());
-		downPanel.add(backButton);
-		downPanel.add(nextButton);
+		downPanel.add(cancelButton);
+		downPanel.add(searchButton);
 		downPanel.add(new JLabel());
 		downPanel.add(new JLabel());
 
-		downPane.add(criteriaPanel);
+		downPane.add(criteriaScroll);
 		downPane.add(downPanel);
 		downPane.setDividerSize(1);
 
@@ -145,7 +132,7 @@ public class SecondPage {
 		page2.setDividerSize(0);
 	}
 	
-	private class mappListListener implements ActionListener{
+	private class MappListListener implements ActionListener{
 
 		@Override
 		@SuppressWarnings("unchecked")
@@ -166,7 +153,7 @@ public class SecondPage {
 			else{
 				sourcesList.setEnabled(false);
 				chosenClass = mapping.substring(2, mapping.length()-2);
-				props = swe.showClassProperties(chosenClass, "");
+				props = swe.showClassProperties(chosenClass, "test");
 				
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
@@ -190,7 +177,7 @@ public class SecondPage {
 		}
 	}
 	
-	private class sourcesListListener implements ActionListener{
+	private class SourcesListListener implements ActionListener{
 		
 		@Override
 		@SuppressWarnings("unchecked")
@@ -260,7 +247,7 @@ public class SecondPage {
 		}
 	}
 
-	private class backListener implements ActionListener{
+	private class CancelListener implements ActionListener{
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
@@ -270,7 +257,7 @@ public class SecondPage {
 		}
 	}
 
-	private class nextListener implements ActionListener{
+	private class SearchListener implements ActionListener{
 
 		private ResultsPage resultPage;
 		private JSplitPane pageResult;

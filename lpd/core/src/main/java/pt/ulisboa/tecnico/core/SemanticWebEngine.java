@@ -68,6 +68,10 @@ public class SemanticWebEngine {
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbModel = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_test";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbTestMapping = dataset.getDefaultModel();
 		}
 		
 		sources = getSources();
@@ -138,9 +142,12 @@ public class SemanticWebEngine {
 		dbModel.add(dbSourcesOriginal);
 		dbModel.commit();
 		
+		//renameProblematicURIs();
+		
 		sources = getSources();
 		defineSourceID();
 		defineInitialInsts();
+		
 	}
 	
 	public void resetDB(){
@@ -195,6 +202,13 @@ public class SemanticWebEngine {
 		result -= numMatches;
 		
 		return result;
+	}
+	
+	public boolean testDBexists(){
+		if(dbTestMapping != null)
+			return true;
+		else
+			return false;
 	}
 	
 	
@@ -313,6 +327,8 @@ public class SemanticWebEngine {
 		result = go.toString().split("\\r?\\n");
 		numInstances = result[3].substring(2, 5);
 
+		numInstances = numInstances.replace(" ", "");
+		
 		return numInstances;
 	}
 
@@ -608,12 +624,15 @@ public class SemanticWebEngine {
 		if(props != null){
 			for(String property: props){
 				
+				if(property.contains("/match"))
+					continue;
+				
 				String s = getPropertySource(property, false);
 
 				count = StringUtils.countMatches(property, ":");
 				column = this.getPropertyName(property);
 				
-				if(count > 1){
+				if(count > 1 || property.contains("match")){
 					beginSelect += " ?" + column;
 					where += this.writeClauses(null, property, "simple", -1, -1);
 				}
@@ -744,16 +763,18 @@ public class SemanticWebEngine {
 //		
 //		qexec.close();
 		
-		q = "CONSTRUCT{"
+		q = "CONSTRUCT{\n"
 				+ schema
 				+ variables
 			+ "}"
-			+ "WHERE{"
+			+ "WHERE{\n"
 				+ where
-				+ "OPTIONAL{"
+				+ "OPTIONAL{\n"
 					+ optional
 				+ "}"
 			+ "}";
+		
+		//System.out.println(q);
 		
 		query = QueryFactory.create(q);
 		qexec = QueryExecutionFactory.create(query, model);
@@ -880,7 +901,7 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(fos, results);
 	}
 	
-	public void deleteMappingRule (String rule){
+	public void deleteMappingRule(String rule){
 		String update;
 		
 		rule = rule.replace("<", "");
@@ -894,7 +915,157 @@ public class SemanticWebEngine {
 		UpdateAction.parseExecute(update, dbMappings);
 		
 		dbMappings.commit();
+	}
+	
+	public int updateMappingDB(String rule, String mode){
 		
+		Model model = dbTestMapping;
+		String subj;
+		Query query;
+		QueryExecution qe, qexec;
+		QuerySolution qs;
+		ResultSet results, subResult;
+		//String[] subjects;
+		String queryString;
+		//ByteArrayOutputStream os1 = new ByteArrayOutputStream();
+		
+//		StmtIterator iter;
+//		Statement stmt;
+//		String sub, pred, 
+		String obj, delete;
+		String type = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
+		
+		ArrayList<String> deleteTypes = new ArrayList<String>();
+		ArrayList<String> deleteMatch = new ArrayList<String>();
+		
+		int numMatches = 0;
+		
+//		ArrayList<Statement> toDelete = new ArrayList<Statement>();
+		
+		switch (mode) {
+			case "test":
+				model = dbTestMapping;
+				break;
+			case "real":
+				model = dbModel;
+				break;
+			default:
+				break;
+		}
+		
+		// run a query
+			String q = "select * where {?s ?p ?o}";
+			query = QueryFactory.create(q);
+			qe = QueryExecutionFactory.create(query, model);
+			results = qe.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File("beforeUpdate.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, results);
+			qe.close();
+		
+		queryString = "SELECT ?s\n"
+					+ "WHERE { ?s " + type + " '" + rule + "' . }";
+
+		query = QueryFactory.create(queryString);
+		qexec = QueryExecutionFactory.create(query, model);
+		subResult = qexec.execSelect();
+		//ResultSetFormatter.out(os1, results, query);
+		//qe.close();
+
+		//subjects = os1.toString().split("\\r?\\n");
+		
+		while(subResult.hasNext()){
+			qs = subResult.next();
+			subj = qs.get("s").toString();
+				
+			queryString = "SELECT ?o\n"
+					+ "WHERE { <" + subj + "> " + type + " ?o . }";
+
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, model);
+			results = qe.execSelect();
+			
+			while(results.hasNext()){
+				qs = results.next();
+				obj = qs.get("o").toString();
+				
+				if(!obj.contentEquals(rule)){
+					delete = "<" + subj + "> " + type + " '" + obj + "' . ";
+					deleteTypes.add(delete);
+				}
+			}
+			qe.close();
+			//UpdateAction.parseExecute(delete, model);
+			//model.commit();
+			
+			//----// remove matched instances
+			
+			queryString = "SELECT ?o\n"
+					+ "WHERE { <" + subj + "> ?p ?o . "
+							+ "FILTER (regex(str(?p), '/match'))}";
+			
+			//System.out.println("Query: " + queryString);
+
+			query = QueryFactory.create(queryString);
+			qe = QueryExecutionFactory.create(query, model);
+			results = qe.execSelect();
+			
+			while(results.hasNext()){
+				qs = results.next();
+				obj = qs.get("o").toString();
+				
+			//	System.out.println("obj: " + obj);
+				numMatches++;
+				
+				delete = "<" + obj + "> ?p ?o . ";
+				deleteMatch.add(delete);
+			}
+			qe.close();
+			//UpdateAction.parseExecute(delete, model);
+			//model.commit();
+			
+		}
+		qexec.close();
+		
+		//System.out.println("DELETE!!!!");
+		
+		
+		delete = "DELETE DATA { ";
+		for(String s: deleteTypes){
+			delete += s;
+		}
+		delete += "}";
+		//System.out.println(delete);
+		UpdateAction.parseExecute(delete, model);
+		
+		for(String s: deleteMatch){
+			delete = "DELETE WHERE { " + s + "}";
+			//System.out.println(delete);
+			UpdateAction.parseExecute(delete, model);
+		}
+		
+		
+		model.commit();
+		
+		
+		// run a query
+			q = "select * where {?s ?p ?o}";
+			query = QueryFactory.create(q);
+			qe = QueryExecutionFactory.create(query, model);
+			results = qe.execSelect();
+			fos = null;
+			try {
+				fos = new FileOutputStream(new File("updateResult.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, results);
+			
+		return numMatches;
 	}
 	
 	public ArrayList<String> showMappingRules(String source){
@@ -941,13 +1112,15 @@ public class SemanticWebEngine {
 		return rules;
 	}
 	
-	public void chooseMappingRule(String rule, String mode){
-		
+	public int chooseMappingRule(String rule, String mode){
+
 		Query query;
 		QuerySolution qs;
 		QueryExecution qe;
 		ResultSet results;
 		Model resultModel;
+		
+		int numMatches = 0;
 		
 		String directory, queryString, p, o;
 		String schema = "", variables = "", where = "", optional = "";
@@ -1023,6 +1196,8 @@ public class SemanticWebEngine {
 					dbTestMapping.add(resultModel);
 					dbTestMapping.commit();
 					
+					numMatches = updateMappingDB(rule, "test");
+					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -1036,6 +1211,8 @@ public class SemanticWebEngine {
 			default:
 				break;
 		}
+		
+		return numMatches;
 	}
 	
 	public ArrayList<String> queryTestMapping(String ruleName){
@@ -1057,10 +1234,11 @@ public class SemanticWebEngine {
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
 
-		
 		int propID = 0;
+		int numSources;
 		
 		String newClass;
+		String matchProp;
 		String propConj = "";
 		String conjuction = "";
 		
@@ -1076,6 +1254,8 @@ public class SemanticWebEngine {
 		HashMap<String, String> result = new HashMap<String, String>();
 		String[] props = new String[sourcesIndex.keySet().size()];
 		String[] ruleProperties;
+		
+		numSources = sourcesIndex.keySet().size() - 1;
 		
 //		--- create new mapping class ---
 		newClass = sourceName + "/" + className;
@@ -1101,7 +1281,7 @@ public class SemanticWebEngine {
 				
 				where += writeClauses(subjectBySource.get(source), property, "normalMappingS", -1, propID);
 
-				props[sourcesIndex.get(source)] = getPropertyName(property);
+				props[sourcesIndex.get(getPropertySource(property, true))] = getPropertyName(property);
 			}
 			
 			for(int index=0; index < props.length; index++){
@@ -1163,6 +1343,16 @@ public class SemanticWebEngine {
 						nodes.remove(p);
 				}
 			}
+		}
+		
+		for(int i = 1; i <= numSources; i++){
+			
+			matchProp = sourceName + "/match" + i;
+			
+			schema += " <" + matchProp + "> <" + RDF.type + "> <" + RDF.Property + "> .";
+			schema += " <" + matchProp + "> <" + RDFS.domain + "> '" + newClass + "' .";
+			
+			variables += " ?s1" + " <" +  matchProp + "> ?s" + (i+1) + " .";
 		}
 		
 		rule = rule.substring(0, rule.length()-1); 
@@ -1451,6 +1641,8 @@ public class SemanticWebEngine {
 		}
 		
 		queryString += "FILTER (?s != ?s1) }";
+		
+		//System.out.println("Query: " + queryString);
 
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbModel);
@@ -1461,7 +1653,7 @@ public class SemanticWebEngine {
 	
 	private void filterDB(ResultSet results){
 		QuerySolution qs;
-		String s, s1;
+		String s, s1, node, delete;
 		
 		StmtIterator iter;
 		Statement stmt;
@@ -1470,7 +1662,20 @@ public class SemanticWebEngine {
 		ArrayList<String> toDelete = new ArrayList<String>();
 		
 		ArrayList<Statement> listStmts = new ArrayList<Statement>();
-		ArrayList<String> listNodes = new ArrayList<String>();
+		
+		// run a query
+			String q = "select * where {?s ?p ?o}";
+			Query query = QueryFactory.create(q);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+			ResultSet result = qexec.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File("beforeFilter.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, result);
+			qexec.close();
 		
 		
 		while(results.hasNext()){
@@ -1479,36 +1684,124 @@ public class SemanticWebEngine {
 			s = qs.get("s").toString();
 			s1 = qs.get("s1").toString();
 			
+			
 			if(!toKeep.contains(s) && !toDelete.contains(s)){
 				toKeep.add(s);
 				toDelete.add(s1);
 			}
-			if(toKeep.contains(s))
+			if(toKeep.contains(s)){
 				toDelete.add(s1);
+			}
 		}
 		
 		for(String subj: toDelete){
-			iter = dbModel.listStatements();
-			while(iter.hasNext()){
-				stmt = iter.next();
-				if(stmt.getSubject().getURI()!= null && stmt.getSubject().getURI().equals(subj)){
-					listStmts.add(stmt);
-					if(stmt.getObject().isAnon())
-						listNodes.add(stmt.getObject().toString());
+			
+			q = "SELECT ?o\n"
+				+ "WHERE {"
+					+ "<" + subj + "> ?p ?o . "
+					+ "FILTER ( isBlank(?o))}";
+		
+			query = QueryFactory.create(q);
+			qexec = QueryExecutionFactory.create(query, dbModel);
+			result = qexec.execSelect();
+			
+			while(result.hasNext()){
+				qs = result.next();
+				node = qs.get("o").toString();
+				
+				iter = dbModel.listStatements();
+				while(iter.hasNext()){
+					stmt = iter.next();
+					if(stmt.getSubject().toString().equals(node))
+						listStmts.add(stmt);
 				}
+				
+				
 			}
+			qexec.close();
+			dbModel.remove(listStmts);
+			dbModel.commit();
+			
+			delete = "DELETE "
+					+ "WHERE { "
+					+ "<" + subj + "> ?p ?o }";
+			
+			UpdateAction.parseExecute(delete, dbModel);
+			
+			dbModel.commit();
+			
 		}
 		
-		for(String node: listNodes){
-			iter = dbModel.listStatements();
-			while(iter.hasNext()){
-				stmt = iter.next();
-				if(stmt.getSubject().toString().equals(node))
-					listStmts.add(stmt);
+		// run a query
+			q = "select * where {?s ?p ?o}";
+			query = QueryFactory.create(q);
+			qexec = QueryExecutionFactory.create(query, dbModel);
+			result = qexec.execSelect();
+			fos = null;
+			try {
+				fos = new FileOutputStream(new File("afterFilter.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
 			}
-		}
-		
-		dbModel.remove(listStmts);
-		dbModel.commit();
+			ResultSetFormatter.out(fos, result);
 	}
+	
+	
+	/*
+	private void renameProblematicURIs(){
+		StmtIterator iter;
+		Statement stmt;
+		String oldURI, newURI;
+		//Resource newResource;
+		
+		ArrayList<Resource> toUpdate = new ArrayList<Resource>();
+		
+		// run a query
+			String q = "select * where {?s ?p ?o}";
+			Query query = QueryFactory.create(q);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbModel);
+			ResultSet result = qexec.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File("beforeUpdatedURIs.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, result);
+			qexec.close();
+		
+		iter = dbModel.listStatements();
+		
+		while(iter.hasNext()){
+			stmt = iter.next();
+			
+			oldURI = stmt.getSubject().getURI();
+			
+			if(oldURI != null && oldURI.contains(" ")){
+				toUpdate.add(dbModel.getResource(oldURI));
+			}
+		}
+		
+		for(Resource r: toUpdate){
+			newURI = r.getURI().replace(" ", "_");
+			ResourceUtils.renameResource(r, newURI);
+		}
+		
+		dbModel.commit();
+		
+		// run a query
+			q = "select * where {?s ?p ?o}";
+			query = QueryFactory.create(q);
+			qexec = QueryExecutionFactory.create(query, dbModel);
+			result = qexec.execSelect();
+			fos = null;
+			try {
+				fos = new FileOutputStream(new File("updatedURIs.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, result);
+			qexec.close();
+	}
+	*/
 }
