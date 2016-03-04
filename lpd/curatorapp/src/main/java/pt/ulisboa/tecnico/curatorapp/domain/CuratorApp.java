@@ -21,7 +21,7 @@ public class CuratorApp extends JFrame{
 	
 	public CuratorApp(){
 		super("Advanced Search App - Data Curator");
-		swe = new SemanticWebEngine();
+		swe = new SemanticWebEngine("curator");
 		cl = new CardLayout();
 		contentPanel = new JPanel();
 		

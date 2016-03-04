@@ -172,7 +172,7 @@ public class ChooseMapRulePage {
 	}
 	
 	private class OkListener implements ActionListener{
-
+//TODO
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
