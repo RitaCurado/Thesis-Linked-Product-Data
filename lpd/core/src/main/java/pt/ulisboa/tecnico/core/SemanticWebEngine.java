@@ -20,9 +20,11 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -200,7 +202,7 @@ public class SemanticWebEngine {
 		Query query;
 		String queryString;
 		QueryExecution qexec;
-		ResultSet results;
+		//ResultSet results;
 		
 		for(String source: sources){
 			dbsWithoutMappings.put(source, ModelFactory.createDefaultModel());
@@ -1226,21 +1228,32 @@ public class SemanticWebEngine {
 			}
 		}
 		
-		
+		ArrayList<Statement> stmts = getSchema(dbInitialModel, rule);
 		resultModel = constructModelDB(schema, variables, where, optional, dbInitialModel);
 
 		newMappingsURIs(rule, resultModel);
-		addSchemaToModel(resultModel);
-		
 		dbMappingSet = resultModel;
 		
 		// run a query
-//					String q = "select * where {?s ?p ?o}";
-//					query = QueryFactory.create(q);
-//					qe = QueryExecutionFactory.create(query, dbMappingSet);
-//					ResultSet res = qe.execSelect();
-//					ResultSetFormatter.out(System.out, res);
-//					qe.close();
+		String q = "select * where {?s ?p ?o}";
+		query = QueryFactory.create(q);
+		qe = QueryExecutionFactory.create(query, dbMappingSet);
+		ResultSet res = qe.execSelect();
+		//ResultSetFormatter.out(System.out, res);
+		qe.close();
+		
+		//resultModel.add(stmts);
+		
+		dbMappingSet.add(stmts);
+		//dbMappingSet.commit();
+		
+		// run a query
+					q = "select * where {?s ?p ?o}";
+					query = QueryFactory.create(q);
+					qe = QueryExecutionFactory.create(query, dbMappingSet);
+					res = qe.execSelect();
+					//ResultSetFormatter.out(System.out, res);
+					qe.close();
 		
 		//numMatches = updateMappingDB(rule, "test");//TODO ?????
 
@@ -1263,11 +1276,38 @@ public class SemanticWebEngine {
 		
 		return results;
 	}
+	
+	private String getParentNode(String parent){
+		String name;
+		String[] split;
+		String result = parent;
+		
+		result = result.substring(1, result.length()-1);
+		split = result.split("/");
+		
+		result = "";		
+		for(int i=0; i < split.length-1; i++){
+			result += split[i];
+			result += "/";
+		}
+		
+		name = split[split.length-1];
+		result += name.charAt(0);
+		
+		name = name.substring(1);
+		name = name.toLowerCase();
+		
+		result += name;
+		result += "Node";
+		
+		return result;
+	}
 
 	public HashMap<String,String> mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String,
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
 
+		int bid = 0;
 		int propID = 0;
 		int numSources;
 		
@@ -1285,6 +1325,7 @@ public class SemanticWebEngine {
 		
 		ArrayList<String> list;
 		HashMap<String, Integer> sourcesIndex = getSourcesIndex(sourceName);
+		HashMap<String, Integer> bnodeByParent = new HashMap<String, Integer>();
 		HashMap<String, String> result = new HashMap<String, String>();
 		String[] props = new String[sourcesIndex.keySet().size()];
 		String[] ruleProperties;
@@ -1293,11 +1334,8 @@ public class SemanticWebEngine {
 		
 //		--- create new mapping class ---
 		newClass = sourceName + "/" + className;
-		//newRscr = sourceName + "/" + mappRscrID++;
 		
 		schema += " <" + newClass + "> <" + RDF.type + "> <" + RDFS.Class + "> .";
-		//schema += " <" + newRscr + "> <" + RDF.type + "> '" + newClass + "' .";
-		
 		variables += " ?s1 <" + RDF.type + "> '" + newClass + "' .";
 
 		
@@ -1333,7 +1371,6 @@ public class SemanticWebEngine {
 			}			
 			
 			schema += " " + propConj + " <" + RDFS.domain + "> '" + newClass + "' .";
-//			variables += writeClauses(newRscr, propConj, "explicitMappingS", -1, propID);
 			variables += writeClauses("s1", propConj, "normalMappingS", -1, propID);
 			
 			Arrays.fill(props, null);
@@ -1342,7 +1379,7 @@ public class SemanticWebEngine {
 		
 //		--- Treat properties that don't appear in any mapping rule ---
 		int countSlash;
-		String parent;
+		String parent, parentNode;
 		ArrayList<String> properties, nodes;
 		
 		
@@ -1361,33 +1398,43 @@ public class SemanticWebEngine {
 					parent = getComposedProperty(p);
 					
 					if(nodes.contains(parent)){
+						bid++;
+						parentNode = getParentNode(parent);
+						
 						schema += " " + parent + " <" + RDFS.domain + "> '" + newClass + "' .";
-//						variables += writeClauses(newRscr, parent, "explicitMappingS", -1, propID);
-//						where += writeClauses(subjectBySource.get(key), parent, "normalMappingS", -1, propID);
+						schema += " _:b" + bid + " <" + RDF.type + "> '" + parentNode + "' .";
 						
-						variables += writeClauses("s1", parent, "normalMappingS", -1, propID);
-						optional += writeClauses(subjectBySource.get(key), parent, "normalMappingS", -1, propID);
+						variables += " ?s1 " + parent + " _:b" + bid + " .";
+						optional += " ?" + subjectBySource.get(key) + " " + parent + " _:b" + bid + " .";
 						
+						bnodeByParent.put(parent, bid);
 						nodes.remove(parent);
-						propID++;
 					}
 					
-//					variables += writeClauses(newRscr, p, "explicitMappingS", -1, propID);
-//					where += writeClauses(subjectBySource.get(key), p, "normalMappingC", -1, propID);
-					
-					variables += writeClauses("s1", p, "normalMappingS", -1, propID);
+					variables += " _:b" + bnodeByParent.get(getComposedProperty(p)) + " " + p + " ?o" + propID + " .";
 					optional += writeClauses(subjectBySource.get(key), p, "normalMappingC", -1, propID);
+					
 				}
 				else{ //Simple properties
 					schema += " " + p + " <" + RDFS.domain + "> '" + newClass + "' .";
-//					variables += writeClauses(newRscr, p, "explicitMappingS", -1, propID);
-//					where += writeClauses(subjectBySource.get(key), p, "normalMappingS", -1, propID);
 					
-					variables += writeClauses("s1", p, "normalMappingS", -1, propID);
-					optional += writeClauses(subjectBySource.get(key), p, "normalMappingS", -1, propID);
-					
-					if(nodes.contains(p))
+					if(nodes.contains(p)){
+						bid++;
+						parentNode = getParentNode(p);
+						
+						schema += " _:b" + bid + " <" + RDF.type + "> '" + parentNode + "' .";
+						
+						variables += " ?s1 " + p + " _:b" + bid + " .";
+						optional += " ?" + subjectBySource.get(key) + " " + p + " _:b" + bid + " .";
+						
+						bnodeByParent.put(p, bid);
 						nodes.remove(p);
+					}
+					else{
+					
+						variables += writeClauses("s1", p, "normalMappingS", -1, propID);
+						optional += writeClauses(subjectBySource.get(key), p, "normalMappingS", -1, propID);
+					}
 				}
 			}
 		}
@@ -1403,8 +1450,6 @@ public class SemanticWebEngine {
 		variables += " ?s1" + " <" +  firstMatchProp + "> ?s1 .";
 
 		for(int i = 1; i < numSources; i++){
-			
-			//variables += " <" + newRscr + "> <" + matchProp + "> ?s" + i + " .";
 			
 			variables += " ?s1" + " <" +  matchProp + "> ?s" + (i+1) + " .";
 		}
@@ -1881,30 +1926,51 @@ public class SemanticWebEngine {
 		// ------------
 	}
 	
-	private void addSchemaToModel(Model model){
-		
-		String queryString;
+	
+	private ArrayList<Statement> getSchema(Model model, String rule){
+		Statement s;
 		Query query;
 		QuerySolution qs;
-		QueryExecution qexec;
 		ResultSet result;
+		String queryString;
+		QueryExecution qexec;
 		
+		String[] criteria = showMappingCriteria(rule).split("\\r?\\n");
+		ArrayList<String> criteriaList = new ArrayList<String>();
 		ArrayList<Statement> schema = new ArrayList<Statement>();
 		
-		queryString = "SELECT DISTINCT ?s "
-					+ "WHERE {?s <" + RDFS.domain + "> ?o }";
+		
+		//exclude rule criteria properties
+		for(int i=3; i < criteria.length-1; i++){
+			criteriaList.add(criteria[i]);
+		}
+		
+		
+		queryString = "SELECT ?s ?p ?o "
+				+ "WHERE {"
+				+ "?s ?p ?o "
+				+ "FILTER ( (regex(str(?p), '" + RDF.type + "') || regex(str(?p), '" + RDFS.domain + "') || regex(str(?p), '" + RDFS.range + "'))"
+						+ "&& !(regex(str (?o), 'Medicine')) && !isBlank(?s) ) "
+				+ "}";
 		query = QueryFactory.create(queryString);
 		qexec = QueryExecutionFactory.create(query, model);
 		result = qexec.execSelect();
+		//ResultSetFormatter.out(System.out, result);
 		
 		while(result.hasNext()){
 			qs = result.next();
-			schema.add(ResourceFactory.createStatement(qs.getResource("s"), RDF.type, RDF.Property));
+			
+			Resource r = model.getResource(qs.get("s").toString());
+			Property p = model.getProperty(qs.get("p").toString());
+			RDFNode o = qs.get("o");
+			
+			if(!criteriaList.contains(r.getURI())){
+				s = ResourceFactory.createStatement(r, p, o);
+				schema.add(s);
+			}
 		}
-		qexec.close();
 		
-		model.add(schema);
-		
+		return schema;
 	}
 	
 }
