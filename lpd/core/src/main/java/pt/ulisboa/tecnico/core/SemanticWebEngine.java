@@ -20,7 +20,6 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFormatter;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -30,7 +29,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.sparql.resultset.RDFOutput;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.util.ResourceUtils;
@@ -172,6 +170,7 @@ public class SemanticWebEngine {
 		defineSourceID();
 		defineInitialInsts();
 		createInitialModelsBySource();
+		dbMappingSet = ModelFactory.createDefaultModel();
 	}
 
 	
@@ -827,7 +826,7 @@ public class SemanticWebEngine {
 				+ "}"
 			+ "}";
 		
-		System.out.println(q);
+		//System.out.println(q);
 		
 		query = QueryFactory.create(q);
 		qexec = QueryExecutionFactory.create(query, model);
@@ -1229,33 +1228,31 @@ public class SemanticWebEngine {
 		}
 		
 		ArrayList<Statement> stmts = getSchema(dbInitialModel, rule);
-		resultModel = constructModelDB(schema, variables, where, optional, dbInitialModel);
-
-		newMappingsURIs(rule, resultModel);
-		dbMappingSet = resultModel;
-		
-		// run a query
-		String q = "select * where {?s ?p ?o}";
-		query = QueryFactory.create(q);
-		qe = QueryExecutionFactory.create(query, dbMappingSet);
-		ResultSet res = qe.execSelect();
-		//ResultSetFormatter.out(System.out, res);
-		qe.close();
-		
-		//resultModel.add(stmts);
-		
 		dbMappingSet.add(stmts);
-		//dbMappingSet.commit();
 		
 		// run a query
-					q = "select * where {?s ?p ?o}";
-					query = QueryFactory.create(q);
-					qe = QueryExecutionFactory.create(query, dbMappingSet);
-					res = qe.execSelect();
-					//ResultSetFormatter.out(System.out, res);
-					qe.close();
+//		String q = "select * where {?s ?p ?o}";
+//		query = QueryFactory.create(q);
+//		qe = QueryExecutionFactory.create(query, dbMappingSet);
+//		ResultSet res = qe.execSelect();
+//		ResultSetFormatter.out(System.out, res);
+//		qe.close();
 		
-		//numMatches = updateMappingDB(rule, "test");//TODO ?????
+		resultModel = constructModelDB(schema, variables, where, optional, dbInitialModel);
+		newMappingsURIs(rule, resultModel);
+		dbMappingSet.add(resultModel);
+		
+		// run a query
+//		q = "select * where {?s ?p ?o}";
+//		query = QueryFactory.create(q);
+//		qe = QueryExecutionFactory.create(query, dbMappingSet);
+//		res = qe.execSelect();
+//		ResultSetFormatter.out(System.out, res);
+//		qe.close();
+		
+		
+		//TODO update the other sets and count instances
+		//numMatches = updateMappingDB(rule, "test");
 
 			
 		
@@ -1488,7 +1485,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+//		result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1935,23 +1932,35 @@ public class SemanticWebEngine {
 		String queryString;
 		QueryExecution qexec;
 		
-		String[] criteria = showMappingCriteria(rule).split("\\r?\\n");
+		String[] criteriaSplit;
+		String[] criteriaArray = showMappingCriteria(rule).split("\\r?\\n");
+		String criteria = criteriaArray[3];
+		
 		ArrayList<String> criteriaList = new ArrayList<String>();
 		ArrayList<Statement> schema = new ArrayList<Statement>();
 		
 		
 		//exclude rule criteria properties
-		for(int i=3; i < criteria.length-1; i++){
-			criteriaList.add(criteria[i]);
+		criteriaSplit = criteria.split("-");
+		for(int i=0; i < criteriaSplit.length; i++){
+			criteriaList.add(criteriaSplit[i].substring(criteriaSplit[i].indexOf("<")+1, criteriaSplit[i].indexOf(">")));
 		}
 		
 		
 		queryString = "SELECT ?s ?p ?o "
 				+ "WHERE {"
-				+ "?s ?p ?o "
-				+ "FILTER ( (regex(str(?p), '" + RDF.type + "') || regex(str(?p), '" + RDFS.domain + "') || regex(str(?p), '" + RDFS.range + "'))"
-						+ "&& !(regex(str (?o), 'Medicine')) && !isBlank(?s) ) "
+				+ "{"
+					+ "?s ?p ?o "
+					+ "FILTER ( regex(str(?p), '" + RDFS.domain + "') || regex(str(?p), '" + RDFS.range + "')"
+					+ " && !isBlank(?s) ) "
+				+ "}"
+				+ "UNION"
+				+ "{"
+					+ "?s ?p ?o "
+					+ "FILTER ( regex(str(?p), '" + RDF.type + "') && regex(str(?o), '" + RDF.Property + "'))"
+				+ "}"
 				+ "}";
+		
 		query = QueryFactory.create(queryString);
 		qexec = QueryExecutionFactory.create(query, model);
 		result = qexec.execSelect();
@@ -1969,6 +1978,7 @@ public class SemanticWebEngine {
 				schema.add(s);
 			}
 		}
+		qexec.close();
 		
 		return schema;
 	}
