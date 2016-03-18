@@ -148,7 +148,7 @@ public class HomePage {
 			panel.setPreferredSize(new Dimension(400, 150));
 			
 			list = listModelBySource.get(source);
-			result = swe.showSourceClasses(source.toLowerCase());
+			result = swe.showSourceClasses(source.toLowerCase(), "beginning");
 
 			if(result != null){
 				for(String s: result){
@@ -221,8 +221,8 @@ public class HomePage {
 			}
 
 			if(className != ""){
-				classProps = swe.showClassProperties(className, "");
-				classInstances = swe.countClassInstances(className, "");
+				classProps = swe.showClassProperties(className, "beginning");
+				classInstances = swe.countClassInstances(className, "beginning");
 				instancesTitle.setText("Number of instances: " + classInstances);
 				propsListModel.removeAllElements();
 				propsList.revalidate();

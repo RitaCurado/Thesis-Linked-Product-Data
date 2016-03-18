@@ -153,7 +153,7 @@ public class SecondPage {
 			else{
 				sourcesList.setEnabled(false);
 				chosenClass = mapping.substring(2, mapping.length()-2);
-				props = swe.showClassProperties(chosenClass, "test");
+				props = swe.showClassProperties(chosenClass, "afterAgg");
 				
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
@@ -197,10 +197,10 @@ public class SecondPage {
 			else{
 				mappingsList.setEnabled(false);
 
-				classes = swe.showSourceClasses(source.toLowerCase());
+				classes = swe.showSourceClasses(source.toLowerCase(), "afterAgg");
 				chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
 				
-				props = swe.showClassProperties(chosenClass, "");
+				props = swe.showClassProperties(chosenClass, "afterAgg");
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();

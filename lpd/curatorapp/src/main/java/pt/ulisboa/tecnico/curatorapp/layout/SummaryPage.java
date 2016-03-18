@@ -266,8 +266,8 @@ public class SummaryPage {
 			String className = "";
 			String instances = "0";
 			
-			if(swe.testDBexists())
-				db = "test";
+			//if(swe.testDBexists())
+				db = "afterMapp";
 
 			showInfo.removeAll();
 			

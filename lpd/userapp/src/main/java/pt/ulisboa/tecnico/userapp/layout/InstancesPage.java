@@ -39,7 +39,7 @@ public class InstancesPage {
 	private void createPage(){
 		JLabel source = new JLabel("Information source: " + swe.getPropertySource(className, false));
 		JLabel classNameLabel = new JLabel("Class name: " + className);
-		JLabel numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, ""));
+		JLabel numInstances = new JLabel("Number of instances: " + swe.countClassInstances(className, "beginning"));
 		
 		JButton labelButton = new JButton("Label");
 		JButton backButton = new JButton(" Back");
@@ -57,7 +57,7 @@ public class InstancesPage {
 		
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		output.setText(swe.selectAllInfo(className, ""));
+		output.setText(swe.selectAllInfo(className, "beginning"));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new BackListener());
 

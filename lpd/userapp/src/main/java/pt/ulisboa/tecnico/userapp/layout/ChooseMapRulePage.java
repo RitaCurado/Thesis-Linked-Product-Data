@@ -226,8 +226,8 @@ public class ChooseMapRulePage {
 			String className = "";
 			String instances = "0";
 			
-			if(swe.testDBexists())
-				db = "test";
+			//if(swe.testDBexists())
+				db = "afterAgg";
 
 			result.removeAll();
 			

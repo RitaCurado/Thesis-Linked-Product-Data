@@ -269,7 +269,7 @@ public class ChooseAggRulePage {
 				swe.filterData(rulesBySource);
 				
 				for(String src: sources){
-					numInstsUpdate.put(src, Integer.parseInt(swe.countClassInstances(src + "/Medicine", "")));
+					numInstsUpdate.put(src, Integer.parseInt(swe.countClassInstances(src + "/Medicine", "afterAgg")));
 				}
 				
 				swe.setInstsAfterAggs(numInstsUpdate);

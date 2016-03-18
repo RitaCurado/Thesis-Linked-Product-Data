@@ -41,7 +41,8 @@ public class SemanticWebEngine {
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
-	private Model dbInitialModel, dbSourcesOriginal, dbFilters, dbMappings;
+	private Model infarModel, infoModel;
+	private Model dbInitialModel, dbFilters, dbMappings; //, dbSourcesOriginal
 	private Model dbAllSet, dbMappingSet;
 	private int numMatches;
 	private ArrayList<String> sources;
@@ -128,8 +129,8 @@ public class SemanticWebEngine {
 			this.dbInitialModel = dataset.getDefaultModel();
 			
 			
-			Model infarModel = ModelFactory.createDefaultModel();
-			Model infoModel = ModelFactory.createDefaultModel();
+			infarModel = ModelFactory.createDefaultModel();
+			infoModel = ModelFactory.createDefaultModel();
 			
 			infarModel.read("../miniInfarDB.rdf");
 			infoModel.read("../miniInfoDB.rdf");
@@ -176,9 +177,14 @@ public class SemanticWebEngine {
 
 	
 	public void resetDB(){
-		dbInitialModel.removeAll();
-		dbInitialModel.add(dbSourcesOriginal);
+//		dbInitialModel.removeAll();
+//		dbInitialModel.add(dbSourcesOriginal);
+//		dbInitialModel.commit();
+		
+		dbInitialModel.add(infarModel);
+		dbInitialModel.add(infoModel);
 		dbInitialModel.commit();
+		dbAllSet.removeAll();
 	}
 	
 	private void defineSourceID(){
@@ -193,7 +199,7 @@ public class SemanticWebEngine {
 	
 	private void defineInitialInsts(){
 		for(String source: sources){
-			initialInsts.put(source, Integer.parseInt(this.countClassInstances(source + "/Medicine", "")));
+			initialInsts.put(source, Integer.parseInt(this.countClassInstances(source + "/Medicine", "beginning")));
 		}
 	}
 	
@@ -256,7 +262,7 @@ public class SemanticWebEngine {
 		return result;
 	}
 	
-	public boolean testDBexists(){
+	public boolean testDBexists(){ //TODO ELIMINAR FUNÇAO
 		if(dbMappingSet != null)
 			return true;
 		else
@@ -282,7 +288,7 @@ public class SemanticWebEngine {
 		queryString = "SELECT DISTINCT ?s\n"
 				+ "WHERE{"
 				+ " ?s a <http://www.w3.org/2000/01/rdf-schema#Class> ."
-				+ "FILTER (regex(str(?s), \"http://www.[A-Za-z+]*.pt\"))"
+				+ "FILTER (regex(str(?s), \"http://www.[A-Za-z]*.pt\"))"
 				+ "}";
 		
 		query = QueryFactory.create(queryString);
@@ -310,8 +316,9 @@ public class SemanticWebEngine {
 		return sources;
 	}
 	
-	public ArrayList<String> showSourceClasses(String source){
+	public ArrayList<String> showSourceClasses(String source, String flowtime){
 
+		Model model = null;
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -319,6 +326,22 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> classes = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		switch (flowtime) {
+			case "beginning":
+				model = dbInitialModel;
+				break;
+			case "afterAgg":
+				model = dbAllSet;
+				break;
+			case "afterMapp":
+				model = dbsWithoutMappings.get(source);
+				if(model == null)
+					model = dbMappingSet;
+				break;
+			default:
+				break;
+		}
 
 		String queryString = "SELECT DISTINCT ?class\n"
 				+ "WHERE {"
@@ -326,12 +349,12 @@ public class SemanticWebEngine {
 				+ "FILTER (regex(str(?class), '" + source + "')) }";
 
 		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, dbInitialModel);
+		qe = QueryExecutionFactory.create(query, model);
 		results = qe.execSelect();
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -344,7 +367,7 @@ public class SemanticWebEngine {
 		return classes;
 	}
 	
-	public String countClassInstances(String cl, String db){
+	public String countClassInstances(String cl, String flowtime){
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -353,14 +376,19 @@ public class SemanticWebEngine {
 		String numInstances = "";
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
-		Model model = dbInitialModel;
+		Model model = null;
 
-		switch (db) {
-			case "test":
-				model = dbMappingSet;
-				break;
-			case "":
+		switch (flowtime) {
+			case "beginning":
 				model = dbInitialModel;
+				break;
+			case "afterAgg":
+				model = dbAllSet;
+				break;
+			case "afterMapp":
+				model = dbsWithoutMappings.get(getPropertySource(cl, false));
+				if(model == null)
+					model = dbMappingSet;
 				break;
 			default:
 				break;
@@ -385,11 +413,11 @@ public class SemanticWebEngine {
 		return numInstances;
 	}
 
-	public ArrayList<String> showClassProperties(String cl, String db){
+	public ArrayList<String> showClassProperties(String cl, String flowtime){
 
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 
-		Model model = dbInitialModel;
+		Model model = null;
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -397,18 +425,17 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> props = new ArrayList<String>();
 		
-		switch(db){
-			case "filters":
-				model = dbFilters;
-				break;
-			case "mappings":
-				model = dbMappings;
-				break;
-			case "test":
-				model = dbMappingSet;
-				break;
-			case "":
+		switch (flowtime) {
+			case "beginning":
 				model = dbInitialModel;
+				break;
+			case "afterAgg":
+				model = dbAllSet;
+				break;
+			case "afterMapp":
+				model = dbsWithoutMappings.get(getPropertySource(cl, false));
+				if(model == null)
+					model = dbMappingSet;
 				break;
 			default:
 				break;
@@ -436,7 +463,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 		result = result.replace(" ", "");
 
@@ -450,8 +477,9 @@ public class SemanticWebEngine {
 		return props;
 	}
 	
-	public ArrayList<String> showNodeProperties(String cl){
+	public ArrayList<String> showNodeProperties(String cl, String flowtime){
 
+		Model model = null;
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
@@ -459,6 +487,22 @@ public class SemanticWebEngine {
 		String[] spltResult;
 		ArrayList<String> props = new ArrayList<String>();
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		switch (flowtime) {
+			case "beginning":
+				model = dbInitialModel;
+				break;
+			case "afterAgg":
+				model = dbAllSet;
+				break;
+			case "afterMapp":
+				model = dbsWithoutMappings.get(getPropertySource(cl, false));
+				if(model == null)
+					model = dbMappingSet;
+				break;
+			default:
+				break;
+		}
 		
 		String queryString = "SELECT DISTINCT ?property\n"
 				+ "WHERE {"
@@ -468,12 +512,12 @@ public class SemanticWebEngine {
 				+ " FILTER (regex(str(?cl), '" + cl + "'))}";
 
 		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, dbInitialModel);
+		qe = QueryExecutionFactory.create(query, model);
 		results = qe.execSelect();
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 		result = result.replace(" ", "");
 
@@ -538,7 +582,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		output = go.toString();
-		output = output.replace("-", "_");
+		//output = output.replace("-", "_");
 		output = output.replace("|", "");
 
 		qe.close();
@@ -636,43 +680,36 @@ public class SemanticWebEngine {
 	
 	/* ---- Query methods ---- */
 
-	public String selectAllInfo(String className, String db){
+	public String selectAllInfo(String className, String flowtime){
 		int count = 0, sid;
 		String output = "";
 		ArrayList<String> props = null;
 		String select = "", beginSelect = "", where = "", column = "";
 		
-		Model model = dbInitialModel;
+		Model model = null;
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
 		String queryString;
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
-		switch (db) {
-			case "test":
-				try {
-					props = this.showClassProperties(className, "test");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				model = dbMappingSet;
-				break;
-				
-			case "":
-				try {
-					props = this.showClassProperties(className, "");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		switch (flowtime) {
+			case "beginning":
 				model = dbInitialModel;
 				break;
-				
+			case "afterAgg":
+				model = dbAllSet;
+				break;
+			case "afterMapp":
+				model = dbsWithoutMappings.get(getPropertySource(className, false));
+				if(model == null)
+					model = dbMappingSet;
+				break;
 			default:
 				break;
 		}
 		
-		
+		props = this.showClassProperties(className, flowtime);
 
 		if(props != null){
 			for(String property: props){
@@ -716,7 +753,7 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(go, results, query);
 
 			output = go.toString();
-			output = output.replace("-", "_");
+			//output = output.replace("-", "_");
 
 			qe.close();
 		}
@@ -1187,8 +1224,8 @@ public class SemanticWebEngine {
 		String instances;
 		ArrayList<String> results = new ArrayList<String>();
 		
-		queryResult = selectAllInfo(ruleName, "test");
-		instances = countClassInstances(ruleName, "test");
+		queryResult = selectAllInfo(ruleName, "afterMapp");
+		instances = countClassInstances(ruleName, "afterMapp");
 		
 		results.add(queryResult);
 		results.add(instances);
@@ -1537,7 +1574,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1576,7 +1613,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1666,6 +1703,8 @@ public class SemanticWebEngine {
 		qe = QueryExecutionFactory.create(query, dbInitialModel);
 		results = qe.execSelect();
 		
+		resetAllSet();
+		
 		return results;
 	}
 	
@@ -1747,8 +1786,9 @@ public class SemanticWebEngine {
 			UpdateAction.parseExecute(delete, dbInitialModel);
 			
 			dbInitialModel.commit();
-			createInitialModelsBySource();
 		}
+		createInitialModelsBySource();
+		resetAllSet();
 		
 		// run a query
 			q = "select * where {?s ?p ?o}";

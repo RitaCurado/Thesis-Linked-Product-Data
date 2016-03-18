@@ -333,8 +333,8 @@ public class MappingPage {
 			else{
 				mappingsList.setEnabled(false);
 
-				classes = swe.showSourceClasses(source.toLowerCase());
-				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), "");
+				classes = swe.showSourceClasses(source.toLowerCase(), "afterAgg");
+				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), "afterAgg");
 				
 				showInfo.removeAll();
 
@@ -535,8 +535,8 @@ public class MappingPage {
 					clName = "http://" + source + "/Medicine";
 
 					try {
-						propsBySource.put(source, swe.showClassProperties(clName, ""));
-						nodesBySource.put(source, swe.showNodeProperties(clName));
+						propsBySource.put(source, swe.showClassProperties(clName, "afterAgg"));
+						nodesBySource.put(source, swe.showNodeProperties(clName, "afterAgg"));
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}

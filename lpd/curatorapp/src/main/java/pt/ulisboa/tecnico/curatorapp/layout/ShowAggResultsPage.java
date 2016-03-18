@@ -151,8 +151,8 @@ public class ShowAggResultsPage {
 			String source = (String) cb.getSelectedItem();
 			String className = "http://" + source + "/Medicine";
 			
-			String numInst = swe.countClassInstances(className, "");
-			String result = swe.selectAllInfo(className, "");
+			String numInst = swe.countClassInstances(className, "afterAgg");
+			String result = swe.selectAllInfo(className, "afterAgg");
 			
 			numInstances.setText("Number of instances: " + numInst);
 			output.setText(result);
