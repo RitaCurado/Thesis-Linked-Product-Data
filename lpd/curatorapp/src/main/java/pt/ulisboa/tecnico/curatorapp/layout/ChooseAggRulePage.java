@@ -241,7 +241,7 @@ public class ChooseAggRulePage {
 			sources = swe.getSources();
 			numInstsUpdate = new HashMap<String, Integer>();
 			
-			if(rulesModel.isEmpty()){
+			if(rulesModel.isEmpty() || rulesModel.getSize() < swe.getSources().size()){
 				JOptionPane.showMessageDialog(frame, "You have to select an aggregation rule per source.",
 						"Attention!", JOptionPane.WARNING_MESSAGE);
 			}

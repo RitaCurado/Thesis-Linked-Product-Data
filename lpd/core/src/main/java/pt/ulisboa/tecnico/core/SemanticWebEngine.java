@@ -683,8 +683,9 @@ public class SemanticWebEngine {
 	public String selectAllInfo(String className, String flowtime){
 		int count = 0, sid;
 		String output = "";
-		ArrayList<String> props = null;
-		String select = "", beginSelect = "", where = "", column = "";
+		ArrayList<String> props = null, nodes = null;
+		String sortedBegin, sortedSelect, sortedEnd;
+		String select = "", beginSelect = "", endSelect = "", where = "", column = "";
 		
 		Model model = null;
 		Query query;
@@ -710,6 +711,7 @@ public class SemanticWebEngine {
 		}
 		
 		props = this.showClassProperties(className, flowtime);
+		nodes = this.showNodeProperties(className, flowtime);
 
 		if(props != null){
 			for(String property: props){
@@ -729,18 +731,27 @@ public class SemanticWebEngine {
 				else{
 					sid = sourceID.get(s);
 
-					select += " ?" + sid + column;
 					
 					count = StringUtils.countMatches(property, "/");
-					if(count > 3)
+					if(count > 3){
+						endSelect += " ?" + sid + column;
 						where += this.writeClauses(null, property, "simpleNumC", sid, -1);
-					else
-						where += this.writeClauses(null, property, "simpleNum", sid, -1);
+					}
+					else{
+						if(!nodes.contains(property)){
+							select += " ?" + sid + column;
+							where += this.writeClauses(null, property, "simpleNum", sid, -1);
+						}
+					}
 				}
 
 			}
 			
-			select = beginSelect + select;
+			sortedBegin = orderString(beginSelect);
+	        sortedSelect = orderString(select);
+	        sortedEnd = orderString(endSelect);
+	        
+			select = sortedBegin + sortedSelect + sortedEnd;
 			
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
@@ -759,6 +770,20 @@ public class SemanticWebEngine {
 		}
 
 		return output;
+	}
+
+
+	private String orderString(String select) {
+		
+		String[] chars = select.split(" ");
+		Arrays.sort(chars);
+		String sortedSelect = "";
+		
+		for(String s: chars){
+			sortedSelect += s + " ";
+		}
+		
+		return sortedSelect;
 	}
 	
 	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass){
@@ -1082,7 +1107,7 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
+		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1445,7 +1470,7 @@ public class SemanticWebEngine {
 
 		result = go.toString();
 //		result = result.replace("-", "_");
-		result = result.replace("|", "");
+//		result = result.replace("|", "");
 
 		qe.close();
 		
@@ -1575,7 +1600,7 @@ public class SemanticWebEngine {
 
 		result = go.toString();
 		//result = result.replace("-", "_");
-		result = result.replace("|", "");
+		//result = result.replace("|", "");
 
 		qe.close();
 		
@@ -1658,6 +1683,7 @@ public class SemanticWebEngine {
 				spltCriteria = criteria.split("\\r?\\n");
 				criteria = spltCriteria[3];
 				criteria = criteria.replace("\"", "");
+				criteria = criteria.replace("|", "");
 				
 				criteriaProps = criteria.split(",");
 				
