@@ -170,11 +170,12 @@ public class SemanticWebEngine {
 		sources = getSources();
 		defineSourceID();
 		defineInitialInsts();
-		//createInitialModelsBySource();
 		dbMappingSet = ModelFactory.createDefaultModel();
 		dbAllSet = ModelFactory.createDefaultModel();
 	}
 
+	
+	/* ---- Setters ---- */
 	
 	public void resetDB(){
 //		dbInitialModel.removeAll();
@@ -186,6 +187,23 @@ public class SemanticWebEngine {
 		dbInitialModel.commit();
 		dbAllSet.removeAll();
 	}
+	
+	private void resetAllSet() {
+		dbAllSet.removeAll();
+		dbAllSet.add(dbMappingSet);
+		for(String key: dbsWithoutMappings.keySet()){
+			dbAllSet.add(dbsWithoutMappings.get(key));
+		}
+	}
+	
+	public void setInstsAfterAggs(HashMap<String, Integer> values){
+		instsAfterAggs = values;
+	}
+	
+	public void setNumMappings(int i){
+		numMatches = i;
+	}
+
 	
 	private void defineSourceID(){
 		
@@ -208,7 +226,6 @@ public class SemanticWebEngine {
 		Query query;
 		String queryString;
 		QueryExecution qexec;
-		//ResultSet results;
 		
 		for(String source: sources){
 			dbsWithoutMappings.put(source, ModelFactory.createDefaultModel());
@@ -230,13 +247,8 @@ public class SemanticWebEngine {
 		}
 	}
 	
-	public void setInstsAfterAggs(HashMap<String, Integer> values){
-		instsAfterAggs = values;
-	}
 	
-	public void setNumMappings(int i){
-		numMatches = i;
-	}
+	/* ---- Getters ---- */
 	
 	public HashMap<String, Integer> getInitialInsts(){
 		return initialInsts;
@@ -262,12 +274,6 @@ public class SemanticWebEngine {
 		return result;
 	}
 	
-	public boolean testDBexists(){ //TODO ELIMINAR FUNÇAO
-		if(dbMappingSet != null)
-			return true;
-		else
-			return false;
-	}
 	
 	
 	/* ---- Classes ---- */
@@ -418,7 +424,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -527,7 +532,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 		result = result.replace(" ", "");
 
@@ -581,7 +585,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 		result = result.replace(" ", "");
 
@@ -593,6 +596,64 @@ public class SemanticWebEngine {
 		}
 
 		return props;
+	}
+
+	private ArrayList<Statement> getSchema(Model model, String rule){
+		Statement s;
+		Query query;
+		QuerySolution qs;
+		ResultSet result;
+		String queryString;
+		QueryExecution qexec;
+		
+		String[] criteriaSplit;
+		String[] criteriaArray = showMappingCriteria(rule).split("\\r?\\n");
+		String criteria = criteriaArray[3];
+		
+		ArrayList<String> criteriaList = new ArrayList<String>();
+		ArrayList<Statement> schema = new ArrayList<Statement>();
+		
+		
+		//exclude rule criteria properties
+		criteriaSplit = criteria.split("-");
+		for(int i=0; i < criteriaSplit.length; i++){
+			criteriaList.add(criteriaSplit[i].substring(criteriaSplit[i].indexOf("<")+1, criteriaSplit[i].indexOf(">")));
+		}
+		
+		
+		queryString = "SELECT ?s ?p ?o "
+				+ "WHERE {"
+				+ "{"
+					+ "?s ?p ?o "
+					+ "FILTER ( regex(str(?p), '" + RDFS.domain + "') || regex(str(?p), '" + RDFS.range + "')"
+					+ " && !isBlank(?s) ) "
+				+ "}"
+				+ "UNION"
+				+ "{"
+					+ "?s ?p ?o "
+					+ "FILTER ( regex(str(?p), '" + RDF.type + "') && regex(str(?o), '" + RDF.Property + "'))"
+				+ "}"
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qexec = QueryExecutionFactory.create(query, model);
+		result = qexec.execSelect();
+		
+		while(result.hasNext()){
+			qs = result.next();
+			
+			Resource r = model.getResource(qs.get("s").toString());
+			Property p = model.getProperty(qs.get("p").toString());
+			RDFNode o = qs.get("o");
+			
+			if(!criteriaList.contains(r.getURI())){
+				s = ResourceFactory.createStatement(r, p, o);
+				schema.add(s);
+			}
+		}
+		qexec.close();
+		
+		return schema;
 	}
 
 	
@@ -646,7 +707,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		output = go.toString();
-		//output = output.replace("-", "_");
 		output = output.replace("|", "");
 
 		qe.close();
@@ -740,6 +800,32 @@ public class SemanticWebEngine {
 		return cProp;
 	}
 	
+	private String getParentNode(String parent){
+		String name;
+		String[] split;
+		String result = parent;
+		
+		result = result.substring(1, result.length()-1);
+		split = result.split("/");
+		
+		result = "";		
+		for(int i=0; i < split.length-1; i++){
+			result += split[i];
+			result += "/";
+		}
+		
+		name = split[split.length-1];
+		result += name.charAt(0);
+		
+		name = name.substring(1);
+		name = name.toLowerCase();
+		
+		result += name;
+		result += "Node";
+		
+		return result;
+	}
+
 	
 	
 	/* ---- Query methods ---- */
@@ -828,98 +914,11 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(go, results, query);
 
 			output = go.toString();
-			//output = output.replace("-", "_");
 
 			qe.close();
 		}
 
 		return output;
-	}
-
-
-	private String orderString(String select) {
-		
-		String[] chars = select.split(" ");
-		Arrays.sort(chars);
-		String sortedSelect = "";
-		
-		for(String s: chars){
-			sortedSelect += s + " ";
-		}
-		
-		return sortedSelect;
-	}
-	
-	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass){
-		
-		int index, countSlash;
-		String value, column, select, where, filter, result;
-		
-		index = countSlash = 0;
-		result = select = where = filter = "";
-		
-		ArrayList<String> props = showClassProperties(chosenClass, "");
-		
-		for(String key: searchCriteria.keySet()){
-			index++;
-			props.remove(key);
-			value = searchCriteria.get(key);
-			
-			column = getPropertyName(key) + index;
-			select += " ?" + column;
-			where += writeClauses(null, key, "simpleNum", index, -1);
-			
-			if(filter.equals(""))
-				filter += "FILTER( regex(?" + column + ", \"" + value + "\", \"i\")";
-			else
-				filter += " && regex(?" + column + ", \"" + value + "\", \"i\")";
-		}
-		filter += ")";
-		
-		for(String p: props){
-			index++;
-			
-			column = index + getPropertyName(p);
-			select += " ?" + column;
-			
-			countSlash = StringUtils.countMatches(p, "/");
-			
-			if(countSlash > 3){ //Complex properties
-				where += writeClauses(null, p, "simpleNumC", index, -1);
-			}
-			else
-				where += writeClauses(null, p, "simpleNum", index, -1);
-		}
-		
-		result = selectQueryDB(select, where, filter, chosenClass);
-		
-		return result;
-	}
-	
-	private String selectQueryDB(String select, String where, String filter, String chosenClass){
-		String q, result;
-		Query query;
-		QueryExecution qexec;
-		ResultSet results;
-		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		
-		q = "SELECT" + select + "\n"
-			+ "WHERE {"
-			+ " ?s a \"" + chosenClass + "\" ."
-			+ where
-			+ filter + "}";
-		
-		query = QueryFactory.create(q);
-		qexec = QueryExecutionFactory.create(query, dbInitialModel);
-		results = qexec.execSelect();
-		ResultSetFormatter.out(go, results, query);
-
-		result = go.toString();
-		result = result.replace("-", "_");
-
-		qexec.close();
-		
-		return result;
 	}
 	
 	private Model constructModelDB(String schema, String variables, String where, String optional, Model model){
@@ -1031,6 +1030,78 @@ public class SemanticWebEngine {
 		}
 
 		return "";
+	}
+	
+	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass){
+		
+		int index, countSlash;
+		String value, column, select, where, filter, result;
+		
+		index = countSlash = 0;
+		result = select = where = filter = "";
+		
+		ArrayList<String> props = showClassProperties(chosenClass, "");
+		
+		for(String key: searchCriteria.keySet()){
+			index++;
+			props.remove(key);
+			value = searchCriteria.get(key);
+			
+			column = getPropertyName(key) + index;
+			select += " ?" + column;
+			where += writeClauses(null, key, "simpleNum", index, -1);
+			
+			if(filter.equals(""))
+				filter += "FILTER( regex(?" + column + ", \"" + value + "\", \"i\")";
+			else
+				filter += " && regex(?" + column + ", \"" + value + "\", \"i\")";
+		}
+		filter += ")";
+		
+		for(String p: props){
+			index++;
+			
+			column = index + getPropertyName(p);
+			select += " ?" + column;
+			
+			countSlash = StringUtils.countMatches(p, "/");
+			
+			if(countSlash > 3){ //Complex properties
+				where += writeClauses(null, p, "simpleNumC", index, -1);
+			}
+			else
+				where += writeClauses(null, p, "simpleNum", index, -1);
+		}
+		
+		result = selectQueryDB(select, where, filter, chosenClass);
+		
+		return result;
+	}
+	
+	private String selectQueryDB(String select, String where, String filter, String chosenClass){
+		String q, result;
+		Query query;
+		QueryExecution qexec;
+		ResultSet results;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		q = "SELECT" + select + "\n"
+			+ "WHERE {"
+			+ " ?s a \"" + chosenClass + "\" ."
+			+ where
+			+ filter + "}";
+		
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, dbInitialModel);
+		results = qexec.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("-", "_");
+
+		qexec.close();
+		
+		return result;
 	}
 	
 	
@@ -1171,7 +1242,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1191,8 +1261,6 @@ public class SemanticWebEngine {
 		QueryExecution qe;
 		ResultSet results;
 		Model resultModel;
-		
-		//dbMappingSet = ModelFactory.createDefaultModel();
 		
 		int numMatches = 0;
 
@@ -1263,7 +1331,6 @@ public class SemanticWebEngine {
 		
 		resetAllSet();
 		
-		//TODO update the other sets and count instances dbsWithoutMappings
 		// run a query
 			queryString = "select * where {?s ?p ?o}";
 			query = QueryFactory.create(queryString);
@@ -1278,8 +1345,8 @@ public class SemanticWebEngine {
 			ResultSetFormatter.out(fos, results);
 			qe.close();
 		// ------------
+			
 		numMatches = updateMappingDB();
-		
 		resetAllSet();
 
 		// run a query
@@ -1298,56 +1365,114 @@ public class SemanticWebEngine {
 		return numMatches;
 	}
 
-
-	private void resetAllSet() {
-		dbAllSet.removeAll();
-		dbAllSet.add(dbMappingSet);
-		for(String key: dbsWithoutMappings.keySet()){
-			dbAllSet.add(dbsWithoutMappings.get(key));
+	private void newMappingsURIs(String rule, Model model){
+		ResIterator iter;
+		Resource rsrc;
+		Property prop;
+		QuerySolution qs;
+		Statement oldS, newS;
+		String oldURI, newURI, uri;
+				
+		int mappRscrID = 0;
+		FileOutputStream fos = null;
+		
+		
+		ArrayList<String> mappsURIs = new ArrayList<String>();
+		ArrayList<Resource> toUpdate = new ArrayList<Resource>();
+		
+	// ------------
+		String q = "SELECT DISTINCT ?s "
+					+ "WHERE {?s <" + RDF.type + "> '" + rule + "'}";
+		Query query = QueryFactory.create(q);
+		QueryExecution qexec = QueryExecutionFactory.create(query, model);
+		ResultSet result = qexec.execSelect();
+		
+		while(result.hasNext()){
+			qs = result.next();
+			uri = qs.get("s").toString();
+			mappsURIs.add(uri);
 		}
-	}
-	
-	public ArrayList<String> queryTestMapping(String ruleName){
-
-		String queryResult;
-		String instances;
-		ArrayList<String> results = new ArrayList<String>();
+		qexec.close();
+	// ------------
 		
-		queryResult = selectAllInfo(ruleName, "afterMapp");
-		instances = countClassInstances(ruleName, "afterMapp");
+		iter = model.listSubjects();
 		
-		results.add(queryResult);
-		results.add(instances);
-		
-		return results;
-	}
-	
-	private String getParentNode(String parent){
-		String name;
-		String[] split;
-		String result = parent;
-		
-		result = result.substring(1, result.length()-1);
-		split = result.split("/");
-		
-		result = "";		
-		for(int i=0; i < split.length-1; i++){
-			result += split[i];
-			result += "/";
+		while(iter.hasNext()){
+			rsrc = iter.next();
+			
+			oldURI = rsrc.getURI();
+			
+			if(oldURI != null && mappsURIs.contains(oldURI)){
+				toUpdate.add(model.getResource(oldURI));
+			}
 		}
 		
-		name = split[split.length-1];
-		result += name.charAt(0);
 		
-		name = name.substring(1);
-		name = name.toLowerCase();
+		for(Resource r: toUpdate){
+			
+			prop = model.getProperty("http://" + getPropertySource(rule, false), "/firstInst");
+			
+			oldS = model.getProperty(r, prop);
+			newS = oldS.changeObject(oldS.getObject().asResource().getURI());
+			
+			model.remove(oldS);
+			model.add(newS);
+			
+			mappRscrID++;
+			
+			newURI = "http://" + getPropertySource(rule, false) + "/";
+			newURI += getPropertyName(r.getURI());
+			newURI = newURI.substring(0, newURI.lastIndexOf("_"));
+			newURI += "_" + mappRscrID;
+			
+			ResourceUtils.renameResource(r, newURI);
+		}
 		
-		result += name;
-		result += "Node";
+		// run a query
+			q = "select * where {?s ?p ?o}";
+			query = QueryFactory.create(q);
+			qexec = QueryExecutionFactory.create(query, model);
+			result = qexec.execSelect();
+			fos = null;
+			try {
+				fos = new FileOutputStream(new File("updatedURIs.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, result);
+			qexec.close();
+		// ------------
+	}
+
+	public String showMappingCriteria(String rule){
+		
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString, result;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		rule = rule.replace("<", "");
+		rule = rule.replace(">", "");
+		rule = rule.replace(" ", "");
+		
+		queryString = "SELECT ?Mapping_Criteria\n"
+				+ "WHERE {"
+				+ "<" + rule + "> ?p ?Mapping_Criteria ."
+				+ " FILTER (regex(str(?p), '/rule')) }";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbMappings);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+
+		qe.close();
 		
 		return result;
 	}
-
+	
 	public HashMap<String,String> mappingConstructQuery(HashMap<String, String> subjectBySource, HashMap<String,
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
@@ -1510,35 +1635,19 @@ public class SemanticWebEngine {
 		return result;
 	}
 	
-	public String showMappingCriteria(String rule){
-	
-		Query query;
-		QueryExecution qe;
-		ResultSet results;
-		String queryString, result;
-		ByteArrayOutputStream go = new ByteArrayOutputStream();
-		
-		rule = rule.replace("<", "");
-		rule = rule.replace(">", "");
-		rule = rule.replace(" ", "");
-		
-		queryString = "SELECT ?Mapping_Criteria\n"
-				+ "WHERE {"
-				+ "<" + rule + "> ?p ?Mapping_Criteria ."
-				+ " FILTER (regex(str(?p), '/rule')) }";
-		
-		query = QueryFactory.create(queryString);
-		qe = QueryExecutionFactory.create(query, dbMappings);
-		results = qe.execSelect();
-		ResultSetFormatter.out(go, results, query);
+	public ArrayList<String> queryTestMapping(String ruleName){
 
-		result = go.toString();
-//		result = result.replace("-", "_");
-//		result = result.replace("|", "");
-
-		qe.close();
+		String queryResult;
+		String instances;
+		ArrayList<String> results = new ArrayList<String>();
 		
-		return result;
+		queryResult = selectAllInfo(ruleName, "afterMapp");
+		instances = countClassInstances(ruleName, "afterMapp");
+		
+		results.add(queryResult);
+		results.add(instances);
+		
+		return results;
 	}
 
 	
@@ -1663,8 +1772,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
-		//result = result.replace("|", "");
 
 		qe.close();
 		
@@ -1702,7 +1809,6 @@ public class SemanticWebEngine {
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		//result = result.replace("-", "_");
 		result = result.replace("|", "");
 
 		qe.close();
@@ -1895,144 +2001,18 @@ public class SemanticWebEngine {
 	}
 	
 	
-
-	private void newMappingsURIs(String rule, Model model){
-		ResIterator iter;
-		Resource rsrc;
-		Property prop;
-		QuerySolution qs;
-		Statement oldS, newS;
-		String oldURI, newURI, uri;
-				
-		int mappRscrID = 0;
-		FileOutputStream fos = null;
+	/* ---- Auxiliary Functions ---- */
+	
+	private String orderString(String select) {
 		
+		String[] chars = select.split(" ");
+		Arrays.sort(chars);
+		String sortedSelect = "";
 		
-		ArrayList<String> mappsURIs = new ArrayList<String>();
-		ArrayList<Resource> toUpdate = new ArrayList<Resource>();
-		
-	// ------------
-		String q = "SELECT DISTINCT ?s "
-					+ "WHERE {?s <" + RDF.type + "> '" + rule + "'}";
-		Query query = QueryFactory.create(q);
-		QueryExecution qexec = QueryExecutionFactory.create(query, model);
-		ResultSet result = qexec.execSelect();
-		
-		while(result.hasNext()){
-			qs = result.next();
-			uri = qs.get("s").toString();
-			mappsURIs.add(uri);
-		}
-		qexec.close();
-	// ------------
-		
-		iter = model.listSubjects();
-		
-		while(iter.hasNext()){
-			rsrc = iter.next();
-			
-			oldURI = rsrc.getURI();
-			
-			if(oldURI != null && mappsURIs.contains(oldURI)){
-				toUpdate.add(model.getResource(oldURI));
-			}
+		for(String s: chars){
+			sortedSelect += s + " ";
 		}
 		
-		
-		for(Resource r: toUpdate){
-			
-			prop = model.getProperty("http://" + getPropertySource(rule, false), "/firstInst");
-			
-			oldS = model.getProperty(r, prop);
-			newS = oldS.changeObject(oldS.getObject().asResource().getURI());
-			
-			model.remove(oldS);
-			model.add(newS);
-			
-			mappRscrID++;
-			
-			newURI = "http://" + getPropertySource(rule, false) + "/";
-			newURI += getPropertyName(r.getURI());
-			newURI = newURI.substring(0, newURI.lastIndexOf("_"));
-			newURI += "_" + mappRscrID;
-			
-			ResourceUtils.renameResource(r, newURI);
-		}
-		
-		// run a query
-			q = "select * where {?s ?p ?o}";
-			query = QueryFactory.create(q);
-			qexec = QueryExecutionFactory.create(query, model);
-			result = qexec.execSelect();
-			fos = null;
-			try {
-				fos = new FileOutputStream(new File("updatedURIs.txt"));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			ResultSetFormatter.out(fos, result);
-			qexec.close();
-		// ------------
+		return sortedSelect;
 	}
-	
-	
-	private ArrayList<Statement> getSchema(Model model, String rule){
-		Statement s;
-		Query query;
-		QuerySolution qs;
-		ResultSet result;
-		String queryString;
-		QueryExecution qexec;
-		
-		String[] criteriaSplit;
-		String[] criteriaArray = showMappingCriteria(rule).split("\\r?\\n");
-		String criteria = criteriaArray[3];
-		
-		ArrayList<String> criteriaList = new ArrayList<String>();
-		ArrayList<Statement> schema = new ArrayList<Statement>();
-		
-		
-		//exclude rule criteria properties
-		criteriaSplit = criteria.split("-");
-		for(int i=0; i < criteriaSplit.length; i++){
-			criteriaList.add(criteriaSplit[i].substring(criteriaSplit[i].indexOf("<")+1, criteriaSplit[i].indexOf(">")));
-		}
-		
-		
-		queryString = "SELECT ?s ?p ?o "
-				+ "WHERE {"
-				+ "{"
-					+ "?s ?p ?o "
-					+ "FILTER ( regex(str(?p), '" + RDFS.domain + "') || regex(str(?p), '" + RDFS.range + "')"
-					+ " && !isBlank(?s) ) "
-				+ "}"
-				+ "UNION"
-				+ "{"
-					+ "?s ?p ?o "
-					+ "FILTER ( regex(str(?p), '" + RDF.type + "') && regex(str(?o), '" + RDF.Property + "'))"
-				+ "}"
-				+ "}";
-		
-		query = QueryFactory.create(queryString);
-		qexec = QueryExecutionFactory.create(query, model);
-		result = qexec.execSelect();
-		//ResultSetFormatter.out(System.out, result);
-		
-		while(result.hasNext()){
-			qs = result.next();
-			
-			Resource r = model.getResource(qs.get("s").toString());
-			Property p = model.getProperty(qs.get("p").toString());
-			RDFNode o = qs.get("o");
-			
-			if(!criteriaList.contains(r.getURI())){
-				s = ResourceFactory.createStatement(r, p, o);
-				schema.add(s);
-			}
-		}
-		qexec.close();
-		
-		return schema;
-	}
-	
 }
