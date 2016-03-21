@@ -354,9 +354,7 @@ public class MappingPage {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int counter = 0;
 			String text;
-			String cbName = "";
 			String finalSource = "";
 			
 			sources.clear();
@@ -373,37 +371,20 @@ public class MappingPage {
 			if(checkBoxes.size() == 0)
 				finalSource = "";
 			else{
-				for(String source: sources){
-					counter = 0;
-					for(JCheckBox jcb: checkBoxes){
-						cbName = jcb.getText().toLowerCase();
-						if(source.contains(cbName))
-							counter++;
-					}
-					if(counter == checkBoxes.size()){
-						finalSource = "http://" + source;
-						break;
-					}
-					else
-						finalSource = "";
-				}
+				finalSource = "http://www.";
 				
-				if(finalSource == ""){
-					finalSource = "http://www.";
-					
-					for(JCheckBox jcb: checkBoxes){
-						text = jcb.getText();
-						finalSource += text.substring(4, text.length()-3);
-						finalSource += "_";
-					}
-					finalSource = finalSource.substring(0, finalSource.length()-1);
-					finalSource += ".pt";
-					
+				for(JCheckBox jcb: checkBoxes){
+					text = jcb.getText();
+					finalSource += text.substring(4, text.length()-3);
+					finalSource += "_";
 				}
+				finalSource = finalSource.substring(0, finalSource.length()-1);
+				finalSource += ".pt";
+				
+				finalSource = swe.getComposedSource(finalSource);
+				
 			}
-			
 			sourceName.setText(finalSource);
-			
 		}
 	}
 	

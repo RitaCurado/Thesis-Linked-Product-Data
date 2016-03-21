@@ -316,6 +316,70 @@ public class SemanticWebEngine {
 		return sources;
 	}
 	
+	public String getComposedSource(String newSource){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		int count = 0;
+		String queryString, result, source, composedSrc, newCompSource, resultSrc = "";
+		String[] spltResult, spltSource, spltNewSource;
+		
+		queryString = "SELECT DISTINCT ?s\n"
+				+ "WHERE{"
+				+ " ?s a <http://www.w3.org/2000/01/rdf-schema#Class> ."
+				+ "FILTER (regex(str(?s), \"http://www.[A-Za-z_]*.pt\"))"
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbMappings);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+		qe.close();
+		
+		result = go.toString();
+		spltResult = result.split("\\r?\\n");
+		
+		for(int i=3; i < spltResult.length-1; i++){
+			source = spltResult[i];
+			source = source.replace("|", "");
+			source = source.replace(" ", "");
+			source = source.replace("<", "");
+			source = source.replace(">", "");
+			
+			spltSource = source.split("/");
+			
+			if(!sources.contains(spltSource[2]))
+				sources.add(spltSource[2]);		//www.s1_s2.pt
+		}
+		
+		for(String src: sources){
+			count = 0;
+			spltSource = src.split("\\.");
+			composedSrc = spltSource[1];
+			
+			spltSource = newSource.split("\\.");
+			newCompSource = spltSource[1];
+			spltNewSource = newCompSource.split("_");
+			
+			for(String s: spltNewSource){
+				if(composedSrc.contains(s))
+					count++;
+			}
+			
+			if(count == spltNewSource.length){
+				resultSrc = src;
+				break;
+			}
+		}
+		
+		if(resultSrc == "")
+			resultSrc = newSource;
+		
+		return resultSrc;
+	}
+	
 	public ArrayList<String> showSourceClasses(String source, String flowtime){
 
 		Model model = null;
