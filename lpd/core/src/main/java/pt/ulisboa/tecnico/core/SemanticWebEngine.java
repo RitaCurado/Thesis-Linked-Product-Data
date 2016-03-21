@@ -158,6 +158,8 @@ public class SemanticWebEngine {
 			//renameProblematicURIs();
 			this.infarDC = new InfarmedDataConverter();
 			this.infoDC = new InfomedDataConverter();
+			
+			sources = getSources();
 		}
 		
 		if(s.contentEquals("user")){
@@ -165,9 +167,11 @@ public class SemanticWebEngine {
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbInitialModel = dataset.getDefaultModel();
+			
+			sources = getSources();
+			createInitialModelsBySource();
 		}
 		
-		sources = getSources();
 		defineSourceID();
 		defineInitialInsts();
 		dbMappingSet = ModelFactory.createDefaultModel();
@@ -1254,7 +1258,7 @@ public class SemanticWebEngine {
 		return rules;
 	}
 	
-	public int chooseMappingRule(String rule, String mode){
+	public int chooseMappingRule(String rule){
 
 		Query query;
 		QuerySolution qs;

@@ -171,7 +171,7 @@ public class ChooseMapRulePage {
 			rb = rb.substring(1, rb.length()-1);
 			
 			chosenRule = rb;
-			swe.chooseMappingRule(rb, "test");
+			swe.chooseMappingRule(rb);
 			
 			sources.add("- Select an option -");
 			sources.addAll(swe.getSources());

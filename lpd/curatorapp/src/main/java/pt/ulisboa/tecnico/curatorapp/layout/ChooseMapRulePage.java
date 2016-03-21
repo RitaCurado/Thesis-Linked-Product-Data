@@ -183,7 +183,7 @@ public class ChooseMapRulePage {
 			rb = rb.substring(1, rb.length()-1);
 			
 			chosenRule = rb;
-			instances = swe.chooseMappingRule(rb, "test");
+			instances = swe.chooseMappingRule(rb);
 			
 			mappingResult = swe.queryTestMapping(rb);
 			

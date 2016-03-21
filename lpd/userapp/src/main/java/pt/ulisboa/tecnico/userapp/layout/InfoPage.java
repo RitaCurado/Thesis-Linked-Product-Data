@@ -112,7 +112,10 @@ public class InfoPage {
 			queryCrit = swe.showAggregationCriteria(splitEach[1]);
 			
 			spltCrit = queryCrit.split("\\r?\\n");
+			
 			criteria = spltCrit[3];
+			criteria = criteria.replace("|", "");
+			criteria = criteria.replace(" ", "");
 			
 			text += "Source:    " + splitEach[0] + "\n";
 			text += "Rule:      " + splitEach[1] + "\n";

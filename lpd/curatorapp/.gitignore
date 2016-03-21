@@ -1,16 +1,9 @@
-/mappings.txt
-/aggs.txt
-/afterDelete.txt
-/beforeDelete.txt
-/result_query.txt
-/beforeConstruct.txt
-/constructRes.txt
-
 *target*
 *.jar
 *.war
 *.ear
 *.class
+*.txt
 
 # eclipse specific git ignore
 *.pydevproject
