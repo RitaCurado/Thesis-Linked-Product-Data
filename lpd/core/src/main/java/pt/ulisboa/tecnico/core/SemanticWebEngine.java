@@ -72,6 +72,9 @@ public class SemanticWebEngine {
 		dataset = TDBFactory.createDataset(directory);
 		this.dbMappings = dataset.getDefaultModel();
 		
+		dbMappingSet = ModelFactory.createDefaultModel();
+		dbAllSet = ModelFactory.createDefaultModel();
+		
 		
 		if(s.contentEquals("curator")){
 			
@@ -170,12 +173,11 @@ public class SemanticWebEngine {
 			
 			sources = getSources();
 			createInitialModelsBySource();
+			resetAllSet();
 		}
 		
 		defineSourceID();
 		defineInitialInsts();
-		dbMappingSet = ModelFactory.createDefaultModel();
-		dbAllSet = ModelFactory.createDefaultModel();
 	}
 
 	
@@ -506,9 +508,10 @@ public class SemanticWebEngine {
 				model = dbAllSet;
 				break;
 			case "afterMapp":
-				model = dbsWithoutMappings.get(getPropertySource(cl, false));
-				if(model == null)
-					model = dbMappingSet;
+//				model = dbsWithoutMappings.get(getPropertySource(cl, false));
+//				if(model == null)
+//					model = dbMappingSet;
+				model = dbAllSet;
 				break;
 			default:
 				break;
@@ -856,9 +859,10 @@ public class SemanticWebEngine {
 				model = dbAllSet;
 				break;
 			case "afterMapp":
-				model = dbsWithoutMappings.get(getPropertySource(className, false));
-				if(model == null)
-					model = dbMappingSet;
+//				model = dbsWithoutMappings.get(getPropertySource(className, false));
+//				if(model == null)
+//					model = dbMappingSet;
+				model = dbAllSet;
 				break;
 			default:
 				break;

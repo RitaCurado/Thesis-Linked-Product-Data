@@ -207,7 +207,7 @@ public class ChooseMapRulePage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			secondPage = new SecondPage(frame, swe, card, contentPanel);
+			secondPage = new SecondPage(frame, swe, card, contentPanel, chosenRule);
 			page2 = secondPage.getPage();
 			page2.setName("page2");
 
@@ -226,8 +226,12 @@ public class ChooseMapRulePage {
 			
 			String output = "";
 			String className = "";
-			String instances;			
-			String flowtime = "afterAgg";
+			String instances, flowtime;
+			
+			if(chosenRule.contentEquals(""))
+				flowtime = "afterAgg";
+			else
+				flowtime = "afterMapp";
 
 			result.removeAll();
 			

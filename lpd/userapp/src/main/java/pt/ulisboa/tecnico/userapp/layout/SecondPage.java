@@ -19,18 +19,22 @@ public class SecondPage {
 	private JSplitPane page2;
 	private String chosenClass;
 
-	private JComboBox<String> mappingsList;
-	private JComboBox<String> sourcesList;
+	//private JComboBox<String> mappingsList;
+	private JComboBox<String> searchList;
+	private String[] sourcesArray;
 
 	private ArrayList<JCheckBox> checkBoxes;
 	
+	private String chosenRule;
+	
 
-	public SecondPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel cotent){
+	public SecondPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel cotent, String chosenRule){
 		
 		this.swe = swe;
 		card = cl;
-		contentPanel = cotent;
 		frame = gui;
+		contentPanel = cotent;
+		this.chosenRule = chosenRule;
 		
 		page2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
@@ -54,41 +58,31 @@ public class SecondPage {
 
 		JScrollPane criteriaScroll;
 		criteriaPanel = new JPanel(new GridLayout(0, 2));
-		JPanel upPanel = new JPanel(new GridLayout(5, 1));
+		JPanel upPanel = new JPanel(new GridLayout(3, 1));
 		JPanel downPanel = new JPanel(new GridLayout(1, 6));
 		JPanel sourcePanel = new JPanel(new GridLayout(1, 2));
-		JPanel mappingPanel = new JPanel(new GridLayout(1, 2));
 		JSplitPane downPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 //		-------------
 		
-		ArrayList<String> sources = new ArrayList<String>();
-		sources.add("- Select an option -");
-		sources.addAll(swe.getSources());
+		ArrayList<String> searchIn = new ArrayList<String>();
+		searchIn.add("- Select an option -");
+		searchIn.add("All");
+		searchIn.addAll(swe.getSources());
 		
-		String[] sourcesArray = new String[sources.size()];
-		sourcesArray = sources.toArray(sourcesArray);
+		if(!chosenRule.contentEquals(""))
+			searchIn.add(swe.getPropertySource(chosenRule, false));
+		
+		sourcesArray = new String[searchIn.size()];
+		sourcesArray = searchIn.toArray(sourcesArray);
 
-		sourcesList = new JComboBox<String>(sourcesArray);
-//		-------------
-		ArrayList<String> mappingRules = new ArrayList<String>();
-		mappingRules.add("- Select an option -");
-		mappingRules.addAll(swe.showMappingRules(""));
-		
-		String[] mappsArray = new String[mappingRules.size()];
-		mappsArray = mappingRules.toArray(mappsArray);
-		
-		mappingsList = new JComboBox<String>(mappsArray);
-//		-------------
+		searchList = new JComboBox<String>(sourcesArray);
+		searchList.setSelectedIndex(0);
+		searchList.addActionListener(new SourcesListListener());
 		
 		criteriaPanel.setBackground(Color.WHITE);
 		criteriaScroll = new JScrollPane(criteriaPanel);
-		criteriaScroll.setPreferredSize(new Dimension(400, 270));
-
-		sourcesList.setSelectedIndex(0);
-		sourcesList.addActionListener(new SourcesListListener());
-		mappingsList.setSelectedIndex(0);
-		mappingsList.addActionListener(new MappListListener());
+		criteriaScroll.setPreferredSize(new Dimension(400, 320));
 
 		cancelButton.setForeground(Color.WHITE);
 		cancelButton.setFont(new Font("Arial", Font.BOLD, 16));
@@ -105,16 +99,12 @@ public class SecondPage {
 		searchButton.addActionListener(new SearchListener());
 //		--------------
 
-		sourcePanel.add(sourcesList);
+		sourcePanel.add(searchList);
 		sourcePanel.add(new JLabel());
-		mappingPanel.add(mappingsList);
-		mappingPanel.add(new JLabel());
 
 		upPanel.add(title);
-		upPanel.add(new JLabel("Sources:"));
+		upPanel.add(new JLabel("Search in:"));
 		upPanel.add(sourcePanel);
-		upPanel.add(new JLabel("Mapping Rules:"));
-		upPanel.add(mappingPanel);
 
 		downPanel.add(new JLabel());
 		downPanel.add(new JLabel());
@@ -132,50 +122,6 @@ public class SecondPage {
 		page2.setDividerSize(0);
 	}
 	
-	private class MappListListener implements ActionListener{
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public void actionPerformed(ActionEvent e) {
-			JComboBox<String> cb = (JComboBox<String>) e.getSource();
-			String mapping = (String) cb.getSelectedItem();
-			
-			JTextField tf;
-			JCheckBox checkB;
-			checkListener cl = new checkListener();
-			ArrayList<String> props = null;
-			
-			if(mapping.equals("- Select an option -")){
-				sourcesList.setEnabled(true);
-				criteriaPanel.removeAll();
-				criteriaPanel.revalidate();
-			}
-			else{
-				sourcesList.setEnabled(false);
-				chosenClass = mapping.substring(2, mapping.length()-2);
-				props = swe.showClassProperties(chosenClass, "afterAgg");
-				
-				criteriaPanel.removeAll();
-				criteriaPanel.revalidate();
-
-				for(String p: props){
-					p = p.replace(" ", "");
-
-					checkB = new JCheckBox(p);
-					checkB.addActionListener(cl);
-					checkB.setBackground(Color.WHITE);
-
-					tf = new JTextField();
-					tf.setEditable(false);
-					tf.setBackground(Color.WHITE);
-
-					criteriaPanel.add(checkB);
-					criteriaPanel.add(tf);
-				}
-			}
-			criteriaPanel.revalidate();
-		}
-	}
 	
 	private class SourcesListListener implements ActionListener{
 		
@@ -183,24 +129,53 @@ public class SecondPage {
 		@SuppressWarnings("unchecked")
 		public void actionPerformed(ActionEvent e) {
 			JComboBox<String> cb = (JComboBox<String>) e.getSource();
-			String source = (String) cb.getSelectedItem();
+			String choseSource = (String) cb.getSelectedItem();
 			
+			String db;
 			JTextField tf;
 			JCheckBox checkB;
 			checkListener cl = new checkListener();
-			ArrayList<String> classes, props;
 			
-			if(source.equals("- Select an option -")){
-				mappingsList.setEnabled(true);
-				criteriaPanel.removeAll();
-			}
-			else{
-				mappingsList.setEnabled(false);
-
-				classes = swe.showSourceClasses(source.toLowerCase(), "afterAgg");
-				chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
+			ArrayList<String> classes; 
+			ArrayList<String> props = new ArrayList<String>();
+			ArrayList<String> sourcesList = new ArrayList<String>();
+			
+			if(chosenRule.contentEquals(""))
+				db = "afterAgg";
+			else
+				db = "afterMapp";
+			
+			if(!choseSource.equals("- Select an option -")){
 				
-				props = swe.showClassProperties(chosenClass, "afterAgg");
+				if(choseSource.contentEquals("All")){
+					for(int j=0; j<sourcesArray.length; j++){
+						String c = sourcesArray[j];
+						if(!(c.contentEquals("All") || c.contentEquals("- Select an option -")))
+							sourcesList.add(c);
+					}
+					
+					
+					//String ruleSource = ;
+					if(!chosenRule.contentEquals("") && sourcesList.contains(swe.getPropertySource(chosenRule, false))){
+						props = swe.showClassProperties(chosenRule, db);
+						Collections.sort(props);
+					}
+					
+					else{
+						props.clear();
+						for(int i=2; i<sourcesArray.length; i++){
+							classes = swe.showSourceClasses(sourcesArray[i], db);
+							chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
+							props.addAll(swe.showClassProperties(chosenClass, db));
+							//Collections.sort(props);
+						}
+					}
+				}
+				else{
+					classes = swe.showSourceClasses(choseSource.toLowerCase(), db);
+					chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
+					props = swe.showClassProperties(chosenClass, db);
+				}
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();
