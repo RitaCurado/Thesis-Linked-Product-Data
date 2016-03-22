@@ -911,6 +911,8 @@ public class SemanticWebEngine {
 					+ "WHERE {"
 					+ " ?s a \"" + className + "\" ."
 					+ where + "}";
+			
+			//System.out.println(queryString);
 
 			query = QueryFactory.create(queryString);
 			qe = QueryExecutionFactory.create(query, model);

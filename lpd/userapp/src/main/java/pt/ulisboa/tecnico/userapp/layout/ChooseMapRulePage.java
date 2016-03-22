@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -49,6 +50,7 @@ public class ChooseMapRulePage {
 		pageChoose = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
 		sourcesList = new JComboBox<String>();
+		
 		numInstances = new JLabel("Number of instances: ");
 		
 		radioGroup = new ButtonGroup();
@@ -113,6 +115,13 @@ public class ChooseMapRulePage {
 		
 		//----//
 		
+		sourcesList.addItem("- Select an option -");
+		for(String src: swe.getSources()){
+			sourcesList.addItem(src);
+		}
+		sourcesList.addActionListener(new SourcesListListener());
+		sourcesList.setSelectedIndex(0);
+		
 		sourcesPanel.add(sourcesLabel);
 		sourcesPanel.add(sourcesList);
 		sourcesPanel.add(new JLabel(""));
@@ -165,23 +174,17 @@ public class ChooseMapRulePage {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
-			ArrayList<String> sources = new ArrayList<String>();
-			
 			String rb = radioGroup.getSelection().getActionCommand();
 			rb = rb.substring(1, rb.length()-1);
 			
 			chosenRule = rb;
 			swe.chooseMappingRule(rb);
 			
-			sources.add("- Select an option -");
-			sources.addAll(swe.getSources());
-			sources.add(swe.getPropertySource(chosenRule, false));
+			sourcesList.addItem(swe.getPropertySource(chosenRule, false));
+			sourcesList.repaint();
 			
-			String[] sourcesArray = new String[sources.size()];
-			sourcesArray = sources.toArray(sourcesArray);
-			sourcesList = new JComboBox<String>(sourcesArray);
-			sourcesList.setSelectedIndex(0);
-			sourcesList.addActionListener(new SourcesListListener());
+			JOptionPane.showMessageDialog(frame, "The rule '" + chosenRule + "' has been chosen",
+					"Information", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 	
@@ -221,13 +224,10 @@ public class ChooseMapRulePage {
 			JComboBox<String> cb = (JComboBox<String>) e.getSource();
 			String source = (String) cb.getSelectedItem();
 			
-			String db = "";
-			String results = "";
+			String output = "";
 			String className = "";
-			String instances = "0";
-			
-			//if(swe.testDBexists())
-				db = "afterAgg";
+			String instances;			
+			String flowtime = "afterAgg";
 
 			result.removeAll();
 			
@@ -235,16 +235,16 @@ public class ChooseMapRulePage {
 				
 				if(!source.contains("_")){
 					className = "http://" + source + "/Medicine";
-					results = swe.selectAllInfo(className, db);
-					instances = swe.countClassInstances(className, db);
+					output = swe.selectAllInfo(className, flowtime);
+					instances = swe.countClassInstances(className, flowtime);
 				}
-				else if(!db.contentEquals("")){
-					results = swe.selectAllInfo(chosenRule, db);
-					instances = swe.countClassInstances(chosenRule, db);
+				else {
+					output = swe.selectAllInfo(chosenRule, flowtime);
+					instances = swe.countClassInstances(chosenRule, flowtime);
 				}
 				
 				numInstances.setText("Number of instances: " + instances);
-				result.setText(results);
+				result.setText(output);
 			}
 		}
 	}
