@@ -58,6 +58,8 @@ public class InstancesPage {
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		output.setText(swe.selectAllInfo(className, "beginning"));
+		
+		backButton.setBackground(new Color(198, 218, 230));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new BackListener());
 
@@ -66,6 +68,8 @@ public class InstancesPage {
 		sourceInfo.add(classNameLabel);
 		
 		sourceInfo2.setLayout(new GridBagLayout());
+		
+		labelButton.setBackground(new Color(198, 218, 230));
 		labelButton.addActionListener(new LabelListener());
 		
 		gbc.fill = GridBagConstraints.HORIZONTAL;

@@ -17,15 +17,13 @@ public class SecondPage {
 	private SemanticWebEngine swe;
 	
 	private JSplitPane page2;
-	private String chosenClass;
-
-	//private JComboBox<String> mappingsList;
-	private JComboBox<String> searchList;
+	
+	private String searchSource;
+	private String chosenRule;
 	private String[] sourcesArray;
 
+	private JComboBox<String> searchList;
 	private ArrayList<JCheckBox> checkBoxes;
-	
-	private String chosenRule;
 	
 
 	public SecondPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel cotent, String chosenRule){
@@ -54,7 +52,7 @@ public class SecondPage {
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
 		JButton cancelButton = new JButton(" Cancel");
-		JButton searchButton = new JButton("Search ");
+		JButton searchButton = new JButton(" Search");
 
 		JScrollPane criteriaScroll;
 		criteriaPanel = new JPanel(new GridLayout(0, 2));
@@ -87,15 +85,13 @@ public class SecondPage {
 		cancelButton.setForeground(Color.WHITE);
 		cancelButton.setFont(new Font("Arial", Font.BOLD, 16));
 		cancelButton.setBackground(new Color(226, 006, 021));
-		cancelButton.setIcon(new ImageIcon("..\\src\\main\\resources\\delete85.png"));
+		cancelButton.setIcon(new ImageIcon("..\\src\\main\\resources\\close.png"));
 		cancelButton.addActionListener(new CancelListener());
 		
 		searchButton.setForeground(Color.WHITE);
 		searchButton.setFont(new Font("Arial", Font.BOLD, 16));
 		searchButton.setBackground(new Color(005, 220, 105));
-		searchButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search100.png"));
-		searchButton.setVerticalTextPosition(SwingConstants.CENTER);
-	    searchButton.setHorizontalTextPosition(SwingConstants.LEFT);
+		searchButton.setIcon(new ImageIcon("..\\src\\main\\resources\\search16.png"));
 		searchButton.addActionListener(new SearchListener());
 //		--------------
 
@@ -131,7 +127,7 @@ public class SecondPage {
 			JComboBox<String> cb = (JComboBox<String>) e.getSource();
 			String choseSource = (String) cb.getSelectedItem();
 			
-			String db;
+			String db, className;
 			JTextField tf;
 			JCheckBox checkB;
 			checkListener cl = new checkListener();
@@ -141,13 +137,14 @@ public class SecondPage {
 			ArrayList<String> sourcesList = new ArrayList<String>();
 			
 			if(chosenRule.contentEquals(""))
-				db = "afterAgg";
+				db = "allNewSet";
 			else
-				db = "afterMapp";
+				db = "oneNewSet";
 			
 			if(!choseSource.equals("- Select an option -")){
 				
 				if(choseSource.contentEquals("All")){
+					
 					for(int j=0; j<sourcesArray.length; j++){
 						String c = sourcesArray[j];
 						if(!(c.contentEquals("All") || c.contentEquals("- Select an option -")))
@@ -155,26 +152,25 @@ public class SecondPage {
 					}
 					
 					
-					//String ruleSource = ;
 					if(!chosenRule.contentEquals("") && sourcesList.contains(swe.getPropertySource(chosenRule, false))){
 						props = swe.showClassProperties(chosenRule, db);
 						Collections.sort(props);
-					}
-					
+						searchSource = chosenRule;
+					}					
 					else{
 						props.clear();
 						for(int i=2; i<sourcesArray.length; i++){
 							classes = swe.showSourceClasses(sourcesArray[i], db);
-							chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
-							props.addAll(swe.showClassProperties(chosenClass, db));
-							//Collections.sort(props);
+							props.addAll(swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), db));
+							searchSource = "";
 						}
 					}
 				}
 				else{
 					classes = swe.showSourceClasses(choseSource.toLowerCase(), db);
-					chosenClass = classes.get(0).substring(2, classes.get(0).length()-2);
-					props = swe.showClassProperties(chosenClass, db);
+					className = classes.get(0).substring(2, classes.get(0).length()-2);
+					props = swe.showClassProperties(className, db);
+					searchSource = className;
 				}
 
 				criteriaPanel.removeAll();
@@ -258,14 +254,13 @@ public class SecondPage {
 				}
 
 				//Make the query and produce the results in the resultsPpage
-				//list all properties from chosenClass where the properties searchCriteria have the chose values
-				//query input: searchCriteria; chosenClass
-				//query output: string (table with the results)
+				//	list all properties from chosen searchSource where the properties searchCriteria have the chose values
+				//	query input: searchCriteria; searchSource; all
+				//	query output: string (table with the results)
 				
-				//chosenClass = chosenClass.substring(2, chosenClass.length()-2);
-				String queryResult = swe.makeSelectQuery(searchCriteria, chosenClass);
+				String queryResult = swe.makeSelectQuery(searchCriteria, searchSource, searchList.getSelectedItem().toString());
 				
-				resultPage = new ResultsPage(card, contentPanel, queryResult);
+				resultPage = new ResultsPage(swe, frame, card, contentPanel, queryResult, chosenRule);
 				pageResult = resultPage.getPage();
 				pageResult.setName("pageResult");
 				

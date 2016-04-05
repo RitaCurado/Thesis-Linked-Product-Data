@@ -143,14 +143,16 @@ public class ChooseMapRulePage {
 		
 		//----//
 		
-		upPanel.setPreferredSize(new Dimension(400, 399));
+		upPanel.setPreferredSize(new Dimension(400, 400));
 		upPanel.add(title);
 		upPanel.add(infoPanel);
 		upPanel.setDividerSize(0);
 		
+		backButton.setBackground(new Color(198, 218, 230));
 		backButton.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		backButton.addActionListener(new BackListener());
 		
+		nextButton.setBackground(new Color(198, 218, 230));
 		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
 		nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -229,9 +231,9 @@ public class ChooseMapRulePage {
 			String instances, flowtime;
 			
 			if(chosenRule.contentEquals(""))
-				flowtime = "afterAgg";
+				flowtime = "allNewSet";
 			else
-				flowtime = "afterMapp";
+				flowtime = "oneNewSet";
 
 			result.removeAll();
 			

@@ -70,17 +70,19 @@ public class FirstPage {
 		upPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT); 
 		downPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		
+		show.setBackground(new Color(198, 218, 230));
 		show.setIcon(new ImageIcon("..\\src\\main\\resources\\listing16px.png"));
 		show.setVerticalTextPosition(SwingConstants.CENTER);
 	    show.setHorizontalTextPosition(SwingConstants.LEFT);
 		show.addActionListener(new InstListener());
 		
+		next.setBackground(new Color(198, 218, 230));
 		next.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		next.setVerticalTextPosition(SwingConstants.CENTER);
 	    next.setHorizontalTextPosition(SwingConstants.LEFT);
 		next.addActionListener(new NextListener());
 		
+		back.setBackground(new Color(198, 218, 230));
 		back.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
 		back.addActionListener(new BackListener());
 

@@ -267,7 +267,7 @@ public class SummaryPage {
 			String instances = "0";
 			
 			//if(swe.testDBexists())
-				db = "afterMapp";
+				db = "oneNewSet";
 
 			showInfo.removeAll();
 			
@@ -278,7 +278,7 @@ public class SummaryPage {
 					result = swe.selectAllInfo(className, db);
 					instances = swe.countClassInstances(className, db);
 				}
-				else if(!db.contentEquals("")){
+				else {
 					result = swe.selectAllInfo(chosenRule, db);
 					instances = swe.countClassInstances(chosenRule, db);
 				}

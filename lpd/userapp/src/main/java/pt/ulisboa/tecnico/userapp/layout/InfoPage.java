@@ -172,6 +172,7 @@ public class InfoPage {
 		infoPanel.add(middlePanel);
 		infoPanel.setDividerSize(0);
 		
+		nextButton.setBackground(new Color(198, 218, 230));
 		nextButton.setIcon(new ImageIcon("..\\src\\main\\resources\\right arrow16px.png"));
 		nextButton.setVerticalTextPosition(SwingConstants.CENTER);
 		nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -198,7 +199,7 @@ public class InfoPage {
 			String criteria;
 			
 			rule = rule.substring(2, rule.length()-2);
-			criteria = swe.showMappingCriteria(rule);
+			criteria = swe.showMappingCriteria(rule, false);
 			
 			criteria = criteria.replace(",", ",\n ");
 			

@@ -407,10 +407,10 @@ public class SemanticWebEngine {
 			case "beginning":
 				model = dbInitialModel;
 				break;
-			case "afterAgg":
+			case "allNewSet":
 				model = dbAllSet;
 				break;
-			case "afterMapp":
+			case "oneNewSet":
 				model = dbsWithoutMappings.get(source);
 				if(model == null)
 					model = dbMappingSet;
@@ -457,10 +457,10 @@ public class SemanticWebEngine {
 			case "beginning":
 				model = dbInitialModel;
 				break;
-			case "afterAgg":
+			case "allNewSet":
 				model = dbAllSet;
 				break;
-			case "afterMapp":
+			case "oneNewSet":
 				model = dbsWithoutMappings.get(getPropertySource(cl, false));
 				if(model == null)
 					model = dbMappingSet;
@@ -487,6 +487,52 @@ public class SemanticWebEngine {
 		
 		return numInstances;
 	}
+	
+	public ArrayList<String> showAllProperties(String flowtime){
+		
+		Model model = null;
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		String[] spltResult;
+		ArrayList<String> props = new ArrayList<String>();
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		switch (flowtime) {
+			case "beginning":
+				model = dbInitialModel;
+				break;
+			case "allNewSet":
+				model = dbAllSet;
+				break;
+			default:
+				break;
+		}
+		
+		String queryString = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, model);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("|", "");
+		result = result.replace(" ", "");
+
+		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			props.add(spltResult[i]);
+		}
+
+		return props;
+	}
 
 	public ArrayList<String> showClassProperties(String cl, String flowtime){
 
@@ -497,21 +543,22 @@ public class SemanticWebEngine {
 		QueryExecution qe;
 		ResultSet results;
 		String result;
-		String[] spltResult;
+		String[] spltResult;		
+		ArrayList<String> nodes = null;
 		ArrayList<String> props = new ArrayList<String>();
+		ArrayList<String> toRemove = new ArrayList<String>();
 		
 		switch (flowtime) {
 			case "beginning":
 				model = dbInitialModel;
 				break;
-			case "afterAgg":
+			case "allNewSet":
 				model = dbAllSet;
 				break;
-			case "afterMapp":
-//				model = dbsWithoutMappings.get(getPropertySource(cl, false));
-//				if(model == null)
-//					model = dbMappingSet;
-				model = dbAllSet;
+			case "oneNewSet":
+				model = dbsWithoutMappings.get(getPropertySource(cl, false));
+				if(model == null)
+					model = dbMappingSet;
 				break;
 			default:
 				break;
@@ -548,6 +595,13 @@ public class SemanticWebEngine {
 		for(int i=3; i < spltResult.length-1; i++){
 			props.add(spltResult[i]);
 		}
+		
+		nodes = showNodeProperties(cl, flowtime);
+		for(String p: props){
+			if(nodes.contains(p) || p.contains("/firstInst") || p.contains("/match"))
+				toRemove.add(p);
+		}
+		props.removeAll(toRemove);
 
 		return props;
 	}
@@ -567,10 +621,10 @@ public class SemanticWebEngine {
 			case "beginning":
 				model = dbInitialModel;
 				break;
-			case "afterAgg":
+			case "allNewSet":
 				model = dbAllSet;
 				break;
-			case "afterMapp":
+			case "oneNewSet":
 				model = dbsWithoutMappings.get(getPropertySource(cl, false));
 				if(model == null)
 					model = dbMappingSet;
@@ -614,8 +668,8 @@ public class SemanticWebEngine {
 		QueryExecution qexec;
 		
 		String[] criteriaSplit;
-		String[] criteriaArray = showMappingCriteria(rule).split("\\r?\\n");
-		String criteria = criteriaArray[3];
+		//String[] criteriaArray = showMappingCriteria(rule, true).split("\\r?\\n");
+		String criteria = showMappingCriteria(rule, true);
 		
 		ArrayList<String> criteriaList = new ArrayList<String>();
 		ArrayList<Statement> schema = new ArrayList<Statement>();
@@ -692,9 +746,7 @@ public class SemanticWebEngine {
 		String output = "";
 		Model modelDB;
 		
-		if(db.equals("Filters"))
-			modelDB = dbFilters;
-		else
+		
 			modelDB = dbInitialModel;
 		
 		String propName = this.getPropertyName(property);
@@ -855,14 +907,13 @@ public class SemanticWebEngine {
 			case "beginning":
 				model = dbInitialModel;
 				break;
-			case "afterAgg":
+			case "allNewSet":
 				model = dbAllSet;
 				break;
-			case "afterMapp":
-//				model = dbsWithoutMappings.get(getPropertySource(className, false));
-//				if(model == null)
-//					model = dbMappingSet;
-				model = dbAllSet;
+			case "oneNewSet":
+				model = dbsWithoutMappings.get(getPropertySource(className, false));
+				if(model == null)
+					model = dbMappingSet;
 				break;
 			default:
 				break;
@@ -874,8 +925,8 @@ public class SemanticWebEngine {
 		if(props != null){
 			for(String property: props){
 				
-				if(property.contains("/match") || property.contains("firstInst"))
-					continue;
+//				if(property.contains("/match") || property.contains("firstInst"))
+//					continue;
 				
 				String s = getPropertySource(property, false);
 
@@ -1042,72 +1093,293 @@ public class SemanticWebEngine {
 		return "";
 	}
 	
-	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass){
+	private HashMap<String, String> writeWhereToAll(HashMap<String, String> searchCriteria, ArrayList<String> props){
+		Integer srcID;
+		String select, endSelect, where, optional;
+		String column, source, sourceWhere, sourceFilter;
 		
-		int index, countSlash;
-		String value, column, select, where, filter, result;
+		select = endSelect = where = optional = "";
 		
-		index = countSlash = 0;
-		result = select = where = filter = "";
+		HashMap<String, String> whereBySource = new HashMap<String, String>();
+		HashMap<String, String> filterBySource = new HashMap<String, String>();
+		HashMap<String, String> results = new HashMap<String, String>();
 		
-		ArrayList<String> props = showClassProperties(chosenClass, "");
-		
+		//searchCriteria = <property, value>
 		for(String key: searchCriteria.keySet()){
-			index++;
-			props.remove(key);
-			value = searchCriteria.get(key);
+			source = getPropertySource(key, false);
+
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
 			
-			column = getPropertyName(key) + index;
+			column = srcID + getPropertyName(key);
 			select += " ?" + column;
-			where += writeClauses(null, key, "simpleNum", index, -1);
-			
-			if(filter.equals(""))
-				filter += "FILTER( regex(?" + column + ", \"" + value + "\", \"i\")";
+
+			if(!whereBySource.containsKey(key))
+				whereBySource.put(key, "");
+
+			sourceWhere = whereBySource.get(key);
+
+			if(StringUtils.countMatches(key, "/") > 3)
+				sourceWhere += writeClauses(null, key, "simpleNumC", srcID, -1);
 			else
-				filter += " && regex(?" + column + ", \"" + value + "\", \"i\")";
+				sourceWhere += writeClauses(null, key, "simpleNum", srcID, -1);
+
+			whereBySource.put(key, sourceWhere);
+
+			if(!filterBySource.containsKey(key))
+				filterBySource.put(key, "");
+
+			sourceFilter = filterBySource.get(key);
+			if(sourceFilter.isEmpty()){
+				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+			}
+			else{
+				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+			}
+			filterBySource.put(key, sourceFilter);
+
+			if(StringUtils.countMatches(key, "/") > 3)
+				optional += "OPTIONAL { ?s " + getComposedProperty(key) + " [" + key + " ?" + column + " ] }\n";
+			else
+				optional += "OPTIONAL { ?s " + key + " ?" + column + " }\n";
+
+			props.remove(key);
+		}
+		
+		//left props
+		for(String prop: props){
+			source = getPropertySource(prop, false);
+			
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+			
+			column = srcID + getPropertyName(prop);
+			
+			if(StringUtils.countMatches(prop, "/") > 3){
+				endSelect += " ?" + column;
+				optional += "OPTIONAL { ?s " + getComposedProperty(prop) + " [" + prop + " ?" + column + " ] }\n";
+			}
+			else{
+				select += " ?" + column;
+				optional += "OPTIONAL { ?s " + prop + " ?" + column + " }\n";
+			}
+		}
+		
+		for(String key: filterBySource.keySet()){
+			filterBySource.put(key, filterBySource.get(key)+ ")");
+		}
+
+		for(String src: whereBySource.keySet()){
+			where += "{" + whereBySource.get(src) + filterBySource.get(src) + "}";
+			where += " UNION ";
+		}
+		where = where.substring(0, where.lastIndexOf("UNION "));
+	
+		where += optional;
+		
+		select = orderString(select);
+		endSelect = orderString(endSelect);
+		
+		select += endSelect;
+		
+		results.put("select", select);
+		results.put("where", where);
+		
+		return results;
+	}
+	
+	private HashMap<String, String> writeWhereToOne(HashMap<String, String> searchCriteria, ArrayList<String> props, 
+														String chosenSearch, String db){
+		
+		HashMap<String, String> results = new HashMap<String, String>();
+		String source, column;
+		String select, endSelect, where, filter;
+		Integer srcID;
+		
+		ArrayList<String> nodes = null;
+		select = endSelect = where = filter = "";
+		
+		//searchCriteria = <property, value>
+		for(String key: searchCriteria.keySet()){
+			
+			source = getPropertySource(key, false);
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+			
+			column = srcID + getPropertyName(key);
+			
+			if(StringUtils.countMatches(key, "/") > 3){
+				endSelect += " ?" + column;
+				where += writeClauses(null, key, "simpleNumC", srcID, -1);
+			}
+			else{
+				select += " ?" + column;
+				where += writeClauses(null, key, "simpleNum", srcID, -1);
+			}
+				
+			if(filter.isEmpty())
+				filter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+			else
+				filter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+			
+			props.remove(key);
 		}
 		filter += ")";
 		
-		for(String p: props){
-			index++;
+		//left props
+		for(String prop: props){
+			source = getPropertySource(prop, false);
 			
-			column = index + getPropertyName(p);
-			select += " ?" + column;
+			String clName = "http://" + source + "/Medicine";
+			nodes = showNodeProperties(clName, db);
 			
-			countSlash = StringUtils.countMatches(p, "/");
+			if(nodes.contains(prop))
+				continue;
 			
-			if(countSlash > 3){ //Complex properties
-				where += writeClauses(null, p, "simpleNumC", index, -1);
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+			
+			column = srcID + getPropertyName(prop);
+			
+			if(StringUtils.countMatches(prop, "/") > 3){
+				endSelect += " ?" + column;
+				where += writeClauses(null, prop, "simpleNumC", srcID, -1);
 			}
-			else
-				where += writeClauses(null, p, "simpleNum", index, -1);
+			else{
+				select += " ?" + column;
+				where += writeClauses(null, prop, "simpleNum", srcID, -1);
+			}
 		}
 		
-		result = selectQueryDB(select, where, filter, chosenClass);
+		select = orderString(select);
+		endSelect = orderString(endSelect);
+		
+		select += endSelect;
+		
+		where = where + filter;
+		
+		results.put("select", select);
+		results.put("where", where);
+		
+		return results;
+	}
+	
+	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass, String chosenSearch){
+		
+		ArrayList<String> props = null;// = showClassProperties(chosenClass, "afterMapp");
+		String db, select, where;
+		String criteria, result, newProp;
+		//String source, sourceWhere, sourceFilter;
+		
+		String[] criteriaArray, mappingParts;
+		
+		ArrayList<String> newProps = new ArrayList<String>();
+		HashMap<String, String> whereResults = new HashMap<String, String>();
+		
+		result = select = where = "";
+		
+		if(chosenClass.contentEquals(""))
+			db = "allNewSet";
+		else
+			db = "oneNewSet";
+
+		if(chosenSearch.contentEquals("All")){
+			if(chosenClass.contentEquals("")){
+				props = showAllProperties(db);
+			}
+			else{
+				props = showClassProperties(chosenClass, db);
+				criteria = showMappingCriteria(chosenClass, true);
+				criteriaArray = criteria.split(",");
+				
+				for(String prop: searchCriteria.keySet()){
+					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
+						mappingParts = null;
+						for(int i=0; i < criteriaArray.length; i++){
+							if(criteriaArray[i].contains(getPropertyName(prop))){
+								mappingParts = criteriaArray[i].split("-");
+								for(int j=0; j < mappingParts.length; j++){
+									newProp = mappingParts[j];
+									newProp = newProp.substring(newProp.indexOf("<"), newProp.indexOf(">")+1);
+									searchCriteria.put(newProp, searchCriteria.get(prop));
+								}
+								break;
+							}
+						}
+					}
+				}
+				
+				for(String prop: props){
+					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
+						mappingParts = null;
+						for(int i=0; i < criteriaArray.length; i++){
+							if(criteriaArray[i].contains(getPropertyName(prop))){
+								mappingParts = criteriaArray[i].split("-");
+								for(int j=0; j < mappingParts.length; j++){
+									newProp = mappingParts[j];
+									newProp = newProp.substring(newProp.indexOf("<"), newProp.indexOf(">")+1);
+									newProps.add(newProp);
+								}
+								break;
+							}
+						}
+					}
+				}
+				props.addAll(newProps);
+			}
+			whereResults = writeWhereToAll(searchCriteria, props);
+		}
+		else{
+			props = showClassProperties(chosenClass, db);
+			whereResults = writeWhereToOne(searchCriteria, props, chosenSearch, db);
+		}
+		
+		select = whereResults.get("select");
+		where = whereResults.get("where");
+		
+		
+		result = selectQueryDB(select, where, chosenClass, chosenSearch);
 		
 		return result;
 	}
 	
-	private String selectQueryDB(String select, String where, String filter, String chosenClass){
-		String q, result;
+	private String selectQueryDB(String select, String where, String chosenClass, String chosenSearch){
+		Model db = null;
+		String q, aditionalInfo, result;
 		Query query;
 		QueryExecution qexec;
 		ResultSet results;
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
+		aditionalInfo = "";
+		
+		if(chosenSearch.contentEquals("All"))
+			db = dbAllSet;
+		else{
+			db = dbsWithoutMappings.get(chosenSearch);
+			if(db == null && !chosenClass.isEmpty())
+				db = dbMappingSet;
+			
+			aditionalInfo += " ?s a '" + chosenClass + "' .";
+		}
+		
 		q = "SELECT" + select + "\n"
 			+ "WHERE {"
-			+ " ?s a \"" + chosenClass + "\" ."
-			+ where
-			+ filter + "}";
+				+ aditionalInfo
+				+ where
+			+ "}";
 		
+		//System.out.println(q);
 		query = QueryFactory.create(q);
-		qexec = QueryExecutionFactory.create(query, dbInitialModel);
+		qexec = QueryExecutionFactory.create(query, dbAllSet);
 		results = qexec.execSelect();
 		ResultSetFormatter.out(go, results, query);
 
 		result = go.toString();
-		result = result.replace("-", "_");
 
 		qexec.close();
 		
@@ -1454,11 +1726,12 @@ public class SemanticWebEngine {
 		// ------------
 	}
 
-	public String showMappingCriteria(String rule){
+	public String showMappingCriteria(String rule, boolean split){
 		
 		Query query;
 		QueryExecution qe;
 		ResultSet results;
+		String [] splitCriteria;
 		String queryString, result;
 		ByteArrayOutputStream go = new ByteArrayOutputStream();
 		
@@ -1479,6 +1752,14 @@ public class SemanticWebEngine {
 		result = go.toString();
 
 		qe.close();
+		
+		if(split){
+			splitCriteria = result.split("\\r?\\n");
+			result = "";
+			for(int i=3; i < splitCriteria.length-1; i++){
+				result += splitCriteria[i];
+			}
+		}
 		
 		return result;
 	}
@@ -1651,8 +1932,8 @@ public class SemanticWebEngine {
 		String instances;
 		ArrayList<String> results = new ArrayList<String>();
 		
-		queryResult = selectAllInfo(ruleName, "afterMapp");
-		instances = countClassInstances(ruleName, "afterMapp");
+		queryResult = selectAllInfo(ruleName, "oneNewSet");
+		instances = countClassInstances(ruleName, "oneNewSet");
 		
 		results.add(queryResult);
 		results.add(instances);
