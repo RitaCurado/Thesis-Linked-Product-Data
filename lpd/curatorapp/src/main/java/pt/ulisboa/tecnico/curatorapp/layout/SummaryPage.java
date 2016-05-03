@@ -37,6 +37,7 @@ public class SummaryPage {
 	private JTextArea showInfo;
 	private JLabel numInstances;
 	private String chosenRule;
+	private int minNumInsts;
 	
 	private JSplitPane pageSummary;
 
@@ -133,8 +134,8 @@ public class SummaryPage {
 			
 			mapping = (Map.Entry) entriesIterator.next();
 			
-			afterAggsArray[i][0] = mapping.getKey();
-			afterAggsArray[i][1] = mapping.getValue();
+			afterAggsArray[i][0] = mapping.getKey(); //sourceName
+			afterAggsArray[i][1] = mapping.getValue(); //numInstances
 		}
 		
 		valuesAggsTable = new JTable(afterAggsArray, columnNames);
@@ -158,6 +159,7 @@ public class SummaryPage {
 		tablesPanel.setDividerSize(1);
 //		--------------
 		
+		minNumInsts = getMinValue(afterAggsArray);
 		
 		numMatches = new JLabel("  " + swe.getNumMatches());
 		numMatches.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -176,7 +178,11 @@ public class SummaryPage {
 		equation = equation.substring(0, equation.length()-2);
 		equation += ") - " + swe.getNumMatches() + " = ";
 		
-		numFinal = new JLabel(equation + swe.getResultInstNum());
+		if(swe.getNumMatches() > minNumInsts)
+			numFinal = new JLabel(equation + "error (" + minNumInsts + " instances maximum)");
+		else
+			numFinal = new JLabel(equation + swe.getResultInstNum());
+		
 		numFinal.setFont(new Font("Arial", Font.PLAIN, 13));
 		
 		
@@ -275,11 +281,11 @@ public class SummaryPage {
 				
 				if(!source.contains("_")){
 					className = "http://" + source + "/Medicine";
-					result = swe.selectAllInfo(className, db);
+					result = swe.selectAllInfo(className, db, null);
 					instances = swe.countClassInstances(className, db);
 				}
 				else {
-					result = swe.selectAllInfo(chosenRule, db);
+					result = swe.selectAllInfo(chosenRule, db, null);
 					instances = swe.countClassInstances(chosenRule, db);
 				}
 				
@@ -295,5 +301,18 @@ public class SummaryPage {
 		public void actionPerformed(ActionEvent e) {
 			frame.dispose();
 		}
+	}
+	
+	private int getMinValue(Object[][] values){
+		int min = (int) values[0][1];
+		int v;
+		
+		for(int i = 1; i<values.length; i++){
+			v = (int) values[i][1];
+			if(v < min)
+				min = v;
+		}
+		
+		return min;
 	}
 }

@@ -859,6 +859,7 @@ public class SemanticWebEngine {
 		return cProp;
 	}
 	
+	/*
 	private String getParentNode(String parent){
 		String name;
 		String[] split;
@@ -884,17 +885,18 @@ public class SemanticWebEngine {
 		
 		return result;
 	}
-
+	*/
 	
 	
 	/* ---- Query methods ---- */
 
-	public String selectAllInfo(String className, String flowtime){
+	public String selectAllInfo(String className, String flowtime, ArrayList<String> multiValueProps){
 		int count = 0, sid;
 		String output = "";
 		ArrayList<String> props = null, nodes = null;
 		String sortedBegin, sortedSelect, sortedEnd;
-		String select = "", beginSelect = "", endSelect = "", where = "", column = "";
+		String select = "", beginSelect = "", endSelect = "", selectGroups = "";
+		String where = "", groupBy = "", column = "";
 		
 		Model model = null;
 		Query query;
@@ -925,9 +927,6 @@ public class SemanticWebEngine {
 		if(props != null){
 			for(String property: props){
 				
-//				if(property.contains("/match") || property.contains("firstInst"))
-//					continue;
-				
 				String s = getPropertySource(property, false);
 
 				count = StringUtils.countMatches(property, ":");
@@ -948,7 +947,12 @@ public class SemanticWebEngine {
 					}
 					else{
 						if(!nodes.contains(property)){
-							select += " ?" + sid + column;
+							if(multiValueProps!=null && multiValueProps.contains(property)){
+								selectGroups += " (GROUP_CONCAT(?" + sid + column + "; separator = '; ') as ?" + sid + column + "s)";
+							}
+							else{
+								select += " ?" + sid + column;
+							}
 							where += this.writeClauses(null, property, "simpleNum", sid, -1);
 						}
 					}
@@ -960,12 +964,16 @@ public class SemanticWebEngine {
 	        sortedSelect = orderString(select);
 	        sortedEnd = orderString(endSelect);
 	        
-			select = sortedBegin + sortedSelect + sortedEnd;
+			select = sortedBegin + sortedSelect + selectGroups + sortedEnd;
+			
+			if(multiValueProps != null)
+				groupBy = "GROUP BY " + sortedBegin + sortedSelect + sortedEnd;
 			
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
 					+ " ?s a \"" + className + "\" ."
-					+ where + "}";
+					+ where + "}"
+					+ groupBy;
 			
 			//System.out.println(queryString);
 
@@ -1398,7 +1406,7 @@ public class SemanticWebEngine {
 		mainClass = dbMappings.createResource(baseURI + "/MappingRule");
 		
 		if(!checkPropertyExistance(baseURI + "/schema", dbMappings)){
-			System.out.println("nao existe nada ainda");
+			//System.out.println("nao existe nada ainda");
 			
 			mainClass.addProperty(RDF.type, RDFS.Class);
 			
@@ -1781,7 +1789,6 @@ public class SemanticWebEngine {
 			ArrayList<String>> propsBySource, HashMap<String,ArrayList<String>> nodesBySource,
 			String sourceName, String className, String[] mappingRules){
 
-		int bid = 0;
 		int propID = 0;
 		int numSources;
 		
@@ -1853,7 +1860,7 @@ public class SemanticWebEngine {
 		
 //		--- Treat properties that don't appear in any mapping rule ---
 		int countSlash;
-		String parent, parentNode;
+		String parent;
 		ArrayList<String> properties, nodes;
 		
 		
@@ -1872,20 +1879,19 @@ public class SemanticWebEngine {
 					parent = getComposedProperty(p);
 					
 					if(nodes.contains(parent)){
-						bid++;
-						parentNode = getParentNode(parent);
 						
 						schema += " " + parent + " <" + RDFS.domain + "> '" + newClass + "' .";
-						schema += " _:b" + bid + " <" + RDF.type + "> '" + parentNode + "' .";
 						
-						variables += " ?s1 " + parent + " _:b" + bid + " .";
-						optional += " ?" + subjectBySource.get(key) + " " + parent + " _:b" + bid + " .";
+						variables += " ?s1 " + parent + " ?o" + propID + " .";
+						optional += " ?" + subjectBySource.get(key) + " " + parent + " ?o" + propID + " .";
 						
-						bnodeByParent.put(parent, bid);
+						bnodeByParent.put(parent, propID);
 						nodes.remove(parent);
+						
+						propID++;
 					}
 					
-					variables += " _:b" + bnodeByParent.get(getComposedProperty(p)) + " " + p + " ?o" + propID + " .";
+					variables += " ?o" + bnodeByParent.get(getComposedProperty(p)) + " " + p + " ?o" + propID + " .";
 					optional += writeClauses(subjectBySource.get(key), p, "normalMappingC", -1, propID);
 					
 				}
@@ -1893,16 +1899,13 @@ public class SemanticWebEngine {
 					schema += " " + p + " <" + RDFS.domain + "> '" + newClass + "' .";
 					
 					if(nodes.contains(p)){
-						bid++;
-						parentNode = getParentNode(p);
 						
-						schema += " _:b" + bid + " <" + RDF.type + "> '" + parentNode + "' .";
+						variables += " ?s1 " + p + " ?o" + propID + " .";
+						optional += " ?" + subjectBySource.get(key) + " " + p + " ?o" + propID + " .";
 						
-						variables += " ?s1 " + p + " _:b" + bid + " .";
-						optional += " ?" + subjectBySource.get(key) + " " + p + " _:b" + bid + " .";
-						
-						bnodeByParent.put(p, bid);
+						bnodeByParent.put(p, propID);
 						nodes.remove(p);
+						
 					}
 					else{
 					
@@ -1941,11 +1944,34 @@ public class SemanticWebEngine {
 	
 	public ArrayList<String> queryTestMapping(String ruleName){
 
-		String queryResult;
-		String instances;
-		ArrayList<String> results = new ArrayList<String>();
+		String queryString, queryResult, instances, prop;
+		Query query;
+		QuerySolution qs;
+		QueryExecution qexec;
+		ResultSet resultSet;
 		
-		queryResult = selectAllInfo(ruleName, "oneNewSet");
+		
+		ArrayList<String> results = new ArrayList<String>();
+		ArrayList<String> multiValueProps = new ArrayList<String>();
+		
+		queryString = "SELECT distinct ?p\n"
+				+ "WHERE {"
+				+ " ?s a '" + ruleName + "' ."
+				+ " ?s ?p ?o1, ?o2 ."
+				+ " FILTER ((?o1 != ?o2) && !regex(str(?p), 'match')) }";
+
+		query = QueryFactory.create(queryString);
+		qexec = QueryExecutionFactory.create(query, dbMappingSet);
+		resultSet = qexec.execSelect();
+		//ResultSetFormatter.out(System.out, resultSet);
+		
+		while(resultSet.hasNext()){
+			qs = resultSet.next();
+			prop = qs.get("p").toString();
+			multiValueProps.add("<" + prop + ">");
+		}
+		
+		queryResult = selectAllInfo(ruleName, "oneNewSet", multiValueProps);
 		instances = countClassInstances(ruleName, "oneNewSet");
 		
 		results.add(queryResult);
@@ -1964,7 +1990,7 @@ public class SemanticWebEngine {
 		Resource mainClass, criteriaProp, newRule;
 		
 		if(!checkPropertyExistance(baseURI + "/criteria", dbFilters)){
-			System.out.println("nao existe nada ainda");
+			//System.out.println("nao existe nada ainda");
 			mainClass = dbFilters.createResource(baseURI + "/AggregationRule");
 			mainClass.addProperty(RDF.type, RDFS.Class);
 			
