@@ -12,6 +12,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import pt.ulisboa.tecnico.core.HoverListCellRenderer;
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
 import pt.ulisboa.tecnico.curatorapp.layout.InstancesPage;
 import pt.ulisboa.tecnico.curatorapp.layout.PropertyValuesPage;
@@ -161,7 +162,11 @@ public class HomePage {
 			
 			tabList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			tabList.addListSelectionListener(sl);
-
+			
+			HoverListCellRenderer renderer = new HoverListCellRenderer();
+			tabList.setCellRenderer(renderer);
+			tabList.addMouseListener(renderer.getHandler(tabList));
+			tabList.addMouseMotionListener(renderer.getHandler(tabList));
 
 			scroll = scrollBySource.get(source);
 			scroll.setViewportView(tabList);
@@ -191,6 +196,11 @@ public class HomePage {
 		propsList = new JList<String>(propsListModel);
 
 		propsList.addListSelectionListener(new propsSelectListener());
+		
+		HoverListCellRenderer renderer = new HoverListCellRenderer();
+		propsList.setCellRenderer(renderer);
+		propsList.addMouseListener(renderer.getHandler(propsList));
+		propsList.addMouseMotionListener(renderer.getHandler(propsList));
 
 		propsPanel.setLayout(new BorderLayout());
 		propsPanel.setPreferredSize(new Dimension(400, 150));
@@ -317,5 +327,5 @@ public class HomePage {
 			card.show(contentPanel, "pageAggregation");
 		}
 	}
-
+	
 }

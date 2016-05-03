@@ -83,7 +83,7 @@ public class AggregationPage {
 //		--- leftPanel ---
 		leftPanel.setPreferredSize(new Dimension(400, 100));
 		
-		JLabel title = new JLabel("Data Aggregation Rules");
+		JLabel title = new JLabel("Data Filtering Rules");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
 		JLabel rulesLabel = new JLabel("New Rules");

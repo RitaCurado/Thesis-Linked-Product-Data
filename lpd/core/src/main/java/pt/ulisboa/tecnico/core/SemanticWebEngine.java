@@ -369,7 +369,7 @@ public class SemanticWebEngine {
 		for(String src: sources){
 			count = 0;
 			spltSource = src.split("\\.");
-			composedSrc = spltSource[1];
+			composedSrc = spltSource[1];	//s1_s2
 			
 			spltSource = newSource.split("\\.");
 			newCompSource = spltSource[1];
@@ -1132,10 +1132,10 @@ public class SemanticWebEngine {
 
 			sourceFilter = filterBySource.get(key);
 			if(sourceFilter.isEmpty()){
-				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			}
 			else{
-				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			}
 			filterBySource.put(key, sourceFilter);
 
@@ -1221,9 +1221,9 @@ public class SemanticWebEngine {
 			}
 				
 			if(filter.isEmpty())
-				filter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+				filter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			else
-				filter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "')";
+				filter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			
 			props.remove(key);
 		}
@@ -1432,7 +1432,7 @@ public class SemanticWebEngine {
 			ResultSet results = qexec.execSelect();
 			FileOutputStream fos = null;
 			try {
-				fos = new FileOutputStream(new File("mappings.txt"));
+				fos = new FileOutputStream(new File("afterCreateMapping.txt"));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -1453,6 +1453,19 @@ public class SemanticWebEngine {
 		UpdateAction.parseExecute(update, dbMappings);
 		
 		dbMappings.commit();
+		
+		// run a query
+			String q = "select * where {?s ?p ?o}";
+			Query query = QueryFactory.create(q);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbMappings);
+			ResultSet results = qexec.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File("afterDeleteMapping.txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, results);
 	}
 	
 	public int updateMappingDB(){

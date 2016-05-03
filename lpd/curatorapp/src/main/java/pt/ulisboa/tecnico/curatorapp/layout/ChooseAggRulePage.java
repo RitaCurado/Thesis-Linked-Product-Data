@@ -83,7 +83,7 @@ public class ChooseAggRulePage {
 		
 		// ---- //
 		
-		JLabel title = new JLabel("Choose Aggregation Rule");
+		JLabel title = new JLabel("Choose Filtering Rule");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
 		JLabel subtitle = new JLabel("Choose one rule per source");

@@ -140,7 +140,7 @@ public class SummaryPage {
 		valuesAggsTable = new JTable(afterAggsArray, columnNames);
 		aggScroll = new JScrollPane(valuesAggsTable);
 		
-		aggsInsts = new JLabel("Number of instances after aggregation rules:");
+		aggsInsts = new JLabel("Number of instances after filtering:");
 		aggsInsts.setFont(new Font("Arial", Font.BOLD, 13));
 		
 		afterAggInstsPanel.setBackground(Color.WHITE);

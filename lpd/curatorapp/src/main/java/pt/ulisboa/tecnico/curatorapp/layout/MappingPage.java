@@ -50,6 +50,7 @@ public class MappingPage {
 	private ArrayList<JCheckBox> checkBoxes;
 	private String ruleNameDefault, newRuleName;
 	private String ruleDefault, newRule;
+	private String finalSource;
 	
 	public MappingPage(JFrame gui, SemanticWebEngine swe, CardLayout cl, JPanel content){
 		this.swe = swe;
@@ -71,6 +72,7 @@ public class MappingPage {
 		checkBoxes = new ArrayList<JCheckBox>();
 		ruleNameDefault = "Ex: MappingBySomeProperty";
 		ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>&<www.s1.com/p4>-<www.s2.com/p1>";
+		finalSource = "";
 
 		this.createPage();
 	}
@@ -354,8 +356,7 @@ public class MappingPage {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			String text;
-			String finalSource = "";
+			String text, composedSource="";
 			
 			sources.clear();
 			sources = swe.getSources();
@@ -371,17 +372,21 @@ public class MappingPage {
 			if(checkBoxes.size() == 0)
 				finalSource = "";
 			else{
-				finalSource = "http://www.";
+				composedSource = "http://www.";
 				
 				for(JCheckBox jcb: checkBoxes){
 					text = jcb.getText();
-					finalSource += text.substring(4, text.length()-3);
-					finalSource += "_";
+					composedSource += text.substring(4, text.length()-3);
+					composedSource += "_";
 				}
-				finalSource = finalSource.substring(0, finalSource.length()-1);
-				finalSource += ".pt";
+				composedSource = composedSource.substring(0, composedSource.length()-1);
+				composedSource += ".pt";
 				
-				finalSource = swe.getComposedSource(finalSource);
+				finalSource = swe.getComposedSource(composedSource);
+				
+				if(!finalSource.contains("http://")){
+					finalSource = "http://" + finalSource;
+				}
 				
 			}
 			sourceName.setText(finalSource);
@@ -524,9 +529,9 @@ public class MappingPage {
 				}
 
 				HashMap<String, String> queryParts = swe.mappingConstructQuery(subjectBySource, propsBySource,
-						nodesBySource, sourceName.getText(), newRuleName, newRule.split("&"));
+														nodesBySource, finalSource, newRuleName, newRule.split("&"));
 				
-				swe.createMappingRule(sourceName.getText(), ruleName.getText(), queryParts);
+				swe.createMappingRule(finalSource, newRuleName, queryParts);
 				
 				for(int i=mappingsList.getItemCount()-1; i>0; i--){
 					mappingsList.removeItemAt(i);
@@ -546,6 +551,7 @@ public class MappingPage {
 				mappingsList.revalidate();
 				
 				sourcesList.setSelectedIndex(0);
+				sourcesList.revalidate();
 				mappingsList.setEnabled(true);
 				
 				for(JCheckBox cb: checkBoxes){
