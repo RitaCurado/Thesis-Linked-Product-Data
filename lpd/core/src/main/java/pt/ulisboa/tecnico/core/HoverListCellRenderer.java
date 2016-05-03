@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
+@SuppressWarnings("serial")
 public class HoverListCellRenderer extends DefaultListCellRenderer{
 
 	private final Color HOVER_COLOR = Color.CYAN;
