@@ -1194,9 +1194,9 @@ public class SemanticWebEngine {
 			column = srcID + getPropertyName(key);
 			
 //			SELECT + WHERE
-			if(!whereBySource.containsKey(key))
-				whereBySource.put(key, "");
-			sourceWhere = whereBySource.get(key);
+			if(!whereBySource.containsKey(source))
+				whereBySource.put(source, "");
+			sourceWhere = whereBySource.get(source);
 
 			if(StringUtils.countMatches(key, "/") > 3){
 
@@ -1215,12 +1215,12 @@ public class SemanticWebEngine {
 				
 				sourceWhere += writeClauses(null, key, "simpleNum", srcID, -1);
 			}
-			whereBySource.put(key, sourceWhere);
+			whereBySource.put(source, sourceWhere);
 
 //			FILTER
-			if(!filterBySource.containsKey(key))
-				filterBySource.put(key, "");
-			sourceFilter = filterBySource.get(key);
+			if(!filterBySource.containsKey(source))
+				filterBySource.put(source, "");
+			sourceFilter = filterBySource.get(source);
 			
 			if(sourceFilter.isEmpty()){
 				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
@@ -1228,7 +1228,7 @@ public class SemanticWebEngine {
 			else{
 				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			}
-			filterBySource.put(key, sourceFilter);
+			filterBySource.put(source, sourceFilter);
 			
 //			OPTIONAL
 			if(StringUtils.countMatches(key, "/") > 3)
@@ -1405,6 +1405,7 @@ public class SemanticWebEngine {
 				
 		ArrayList<String> multipleValueProp = null;
 		ArrayList<String> newProps = new ArrayList<String>();
+		HashMap<String, String> newCriteria = new HashMap<String, String>();
 		HashMap<String, String> whereResults = new HashMap<String, String>();
 		
 		result = select = where = groupBy = "";
@@ -1418,6 +1419,8 @@ public class SemanticWebEngine {
 		else{
 			db = "oneNewSet";
 			multipleValueProp = getDuplicateProps(chosenClass);
+			if(multipleValueProp.isEmpty())
+				multipleValueProp = null;
 		}
 
 		if(chosenSearch.contentEquals("All")){
@@ -1447,13 +1450,14 @@ public class SemanticWebEngine {
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
 									newProp = newProp.substring(newProp.indexOf("<"), newProp.indexOf(">")+1);
-									searchCriteria.put(newProp, searchCriteria.get(prop));
+									newCriteria.put(newProp, searchCriteria.get(prop));
 								}
 								break;
 							}
 						}
 					}
 				}
+				searchCriteria.putAll(newCriteria);
 				
 				for(String prop: props){
 					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
