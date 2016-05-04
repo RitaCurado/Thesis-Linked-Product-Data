@@ -4,6 +4,9 @@
 /TDB_test/
 /TDB_mappings/
 /TDB_filters/
+
+/TDB_mappings_curator/
+/TDB_filters_curator/
 /TDB_sources_original/tdb.lock
 
 /output.txt
