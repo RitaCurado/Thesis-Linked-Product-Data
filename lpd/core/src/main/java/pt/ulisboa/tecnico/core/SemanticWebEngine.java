@@ -1398,6 +1398,7 @@ public class SemanticWebEngine {
 		ArrayList<String> props = null;
 		String db, select, where, groupBy;
 		String criteria, result, newProp;
+		String like1, like2;
 		//String source, sourceWhere, sourceFilter;
 		
 		String[] criteriaArray, mappingParts;
@@ -1407,6 +1408,8 @@ public class SemanticWebEngine {
 		HashMap<String, String> whereResults = new HashMap<String, String>();
 		
 		result = select = where = groupBy = "";
+		
+		
 		
 		if(chosenClass.contentEquals("")){
 			db = "allNewSet";
@@ -1423,7 +1426,12 @@ public class SemanticWebEngine {
 			}
 			else{
 				props = showClassProperties(chosenClass, db);
+				
 				criteria = showMappingCriteria(chosenClass, true);
+				criteria = criteria.replace("|", "");
+				criteria = criteria.replace("\"", "");
+				criteria = criteria.replace(" ", "");
+				
 				criteriaArray = criteria.split(",");
 				
 				for(String prop: searchCriteria.keySet()){
@@ -1431,9 +1439,10 @@ public class SemanticWebEngine {
 						mappingParts = null;
 						for(int i=0; i < criteriaArray.length; i++){
 							
-							if(criteriaArray[i].matches("<http://(.*)" + getPropertyName(prop) + ":(.*)>") ||
-									criteriaArray[i].matches("<http://(.*):" + getPropertyName(prop) + ">")){
-								
+							like1 = "<(.*)/" + getPropertyName(prop) + ">-<(.*)>";
+							like2 = "<(.*)>-<(.*)/" + getPropertyName(prop) + ">";
+							
+							if(criteriaArray[i].matches(like1) || criteriaArray[i].matches(like2)){
 								mappingParts = criteriaArray[i].split("-");
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
@@ -1451,9 +1460,10 @@ public class SemanticWebEngine {
 						mappingParts = null;
 						for(int i=0; i < criteriaArray.length; i++){
 							
-							if(criteriaArray[i].matches("<http://(.*)" + getPropertyName(prop) + ":(.*)>") ||
-									criteriaArray[i].matches("<http://(.*):" + getPropertyName(prop) + ">")){
-								
+							like1 = "<(.*)/" + getPropertyName(prop) + ">-<(.*)>";
+							like2 = "<(.*)>-<(.*)/" + getPropertyName(prop) + ">";
+							
+							if(criteriaArray[i].matches(like1) || criteriaArray[i].matches(like2)){								
 								mappingParts = criteriaArray[i].split("-");
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
