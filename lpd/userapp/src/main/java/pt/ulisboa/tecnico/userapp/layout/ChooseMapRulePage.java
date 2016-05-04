@@ -241,11 +241,11 @@ public class ChooseMapRulePage {
 				
 				if(!source.contains("_")){
 					className = "http://" + source + "/Medicine";
-					output = swe.selectAllInfo(className, flowtime);
+					output = swe.selectAllInfo(className, flowtime, null);
 					instances = swe.countClassInstances(className, flowtime);
 				}
 				else {
-					output = swe.selectAllInfo(chosenRule, flowtime);
+					output = swe.selectAllInfo(chosenRule, flowtime, null);
 					instances = swe.countClassInstances(chosenRule, flowtime);
 				}
 				

@@ -88,6 +88,7 @@ public class ChooseAggRulePage {
 		
 		JLabel subtitle = new JLabel("Choose one rule per source");
 		subtitle.setFont(new Font("Arial", Font.PLAIN, 13));
+		subtitle.setForeground(Color.RED);
 		
 		ArrayList<String> sources = new ArrayList<String>();
 		

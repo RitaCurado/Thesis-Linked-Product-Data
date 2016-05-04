@@ -64,14 +64,6 @@ public class SemanticWebEngine {
 		instsAfterAggs = new HashMap<String, Integer>();
 		dbsWithoutMappings = new HashMap<String, Model>();
 		
-		directory = "..\\TDB_filters";
-		dataset = TDBFactory.createDataset(directory);
-		this.dbFilters = dataset.getDefaultModel();
-		
-		directory = "..\\TDB_mappings";
-		dataset = TDBFactory.createDataset(directory);
-		this.dbMappings = dataset.getDefaultModel();
-		
 		dbMappingSet = ModelFactory.createDefaultModel();
 		dbAllSet = ModelFactory.createDefaultModel();
 		
@@ -123,14 +115,30 @@ public class SemanticWebEngine {
 			
 			try {
 				FileUtils.deleteDirectory(new File("..\\TDB"));
+				FileUtils.deleteDirectory(new File("..\\TDB_filters"));
+				FileUtils.deleteDirectory(new File("..\\TDB_mappings"));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+						
+			try {
+				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_filters_curator"), FileUtils.getFile("..\\TDB_filters"));
+				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_mappings_curator"), FileUtils.getFile("..\\TDB_mappings"));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 			
+			directory = "..\\TDB_filters";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbFilters = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_mappings";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbMappings = dataset.getDefaultModel();
+			
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbInitialModel = dataset.getDefaultModel();
-			
 			
 			infarModel = ModelFactory.createDefaultModel();
 			infoModel = ModelFactory.createDefaultModel();
@@ -166,6 +174,14 @@ public class SemanticWebEngine {
 		}
 		
 		if(s.contentEquals("user")){
+			
+			directory = "..\\TDB_filters";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbFilters = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_mappings";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbMappings = dataset.getDefaultModel();
 			
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
@@ -1278,7 +1294,7 @@ public class SemanticWebEngine {
 	
 	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass, String chosenSearch){
 		
-		ArrayList<String> props = null;// = showClassProperties(chosenClass, "afterMapp");
+		ArrayList<String> props = null;
 		String db, select, where;
 		String criteria, result, newProp;
 		//String source, sourceWhere, sourceFilter;
@@ -1308,7 +1324,8 @@ public class SemanticWebEngine {
 					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
 						mappingParts = null;
 						for(int i=0; i < criteriaArray.length; i++){
-							if(criteriaArray[i].contains(getPropertyName(prop))){
+							if(criteriaArray[i].matches("<http://(.*)" + getPropertyName(prop) + ":(.*)>") ||
+									criteriaArray[i].matches("<http://(.*):" + getPropertyName(prop) + ">")){
 								mappingParts = criteriaArray[i].split("-");
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
@@ -2091,9 +2108,9 @@ public class SemanticWebEngine {
 		rule = rule.replace(">", "");
 		rule = rule.replace(" ", "");
 		
-		queryString = "SELECT ?Aggregation_Criteria\n"
+		queryString = "SELECT ?Filtering_Criteria\n"
 				+ "WHERE {"
-				+ "<" + rule + "> ?p ?Aggregation_Criteria ."
+				+ "<" + rule + "> ?p ?Filtering_Criteria ."
 				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> }";
 		
 		query = QueryFactory.create(queryString);

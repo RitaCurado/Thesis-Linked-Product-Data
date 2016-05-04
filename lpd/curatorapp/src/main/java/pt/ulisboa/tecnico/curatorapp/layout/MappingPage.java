@@ -107,7 +107,7 @@ public class MappingPage {
 		
 //		--- upPanel ---
 		
-		JLabel title = new JLabel("Sources Mapping Rules");
+		JLabel title = new JLabel("Create Mapping Rules");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
 		ArrayList<String> mappingRules = new ArrayList<String>();
