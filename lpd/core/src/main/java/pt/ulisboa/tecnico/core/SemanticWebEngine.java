@@ -1171,12 +1171,13 @@ public class SemanticWebEngine {
 		return "";
 	}
 	
-	private HashMap<String, String> writeWhereToAll(HashMap<String, String> searchCriteria, ArrayList<String> props){
+	private HashMap<String, String> writeWhereToAll(HashMap<String, String> searchCriteria, ArrayList<String> props,
+														ArrayList<String> multipleValueProp){
 		Integer srcID;
-		String select, endSelect, where, optional;
+		String select, endSelect, multSelect, where, optional, groupBy;
 		String column, source, sourceWhere, sourceFilter;
 		
-		select = endSelect = where = optional = "";
+		select = endSelect = multSelect = where = optional = groupBy = "";
 		
 		HashMap<String, String> whereBySource = new HashMap<String, String>();
 		HashMap<String, String> filterBySource = new HashMap<String, String>();
@@ -1191,24 +1192,36 @@ public class SemanticWebEngine {
 				srcID = 0;
 			
 			column = srcID + getPropertyName(key);
-			select += " ?" + column;
-
+			
+//			SELECT + WHERE
 			if(!whereBySource.containsKey(key))
 				whereBySource.put(key, "");
-
 			sourceWhere = whereBySource.get(key);
 
-			if(StringUtils.countMatches(key, "/") > 3)
-				sourceWhere += writeClauses(null, key, "simpleNumC", srcID, -1);
-			else
-				sourceWhere += writeClauses(null, key, "simpleNum", srcID, -1);
+			if(StringUtils.countMatches(key, "/") > 3){
 
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+				
+				sourceWhere += writeClauses(null, key, "simpleNumC", srcID, -1);
+			}
+			else{
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+				
+				sourceWhere += writeClauses(null, key, "simpleNum", srcID, -1);
+			}
 			whereBySource.put(key, sourceWhere);
 
+//			FILTER
 			if(!filterBySource.containsKey(key))
 				filterBySource.put(key, "");
-
 			sourceFilter = filterBySource.get(key);
+			
 			if(sourceFilter.isEmpty()){
 				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			}
@@ -1216,7 +1229,8 @@ public class SemanticWebEngine {
 				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
 			}
 			filterBySource.put(key, sourceFilter);
-
+			
+//			OPTIONAL
 			if(StringUtils.countMatches(key, "/") > 3)
 				optional += "OPTIONAL { ?s " + getComposedProperty(key) + " [" + key + " ?" + column + " ] }\n";
 			else
@@ -1225,7 +1239,7 @@ public class SemanticWebEngine {
 			props.remove(key);
 		}
 		
-		//left props
+		//remaining props
 		for(String prop: props){
 			source = getPropertySource(prop, false);
 			
@@ -1236,11 +1250,21 @@ public class SemanticWebEngine {
 			column = srcID + getPropertyName(prop);
 			
 			if(StringUtils.countMatches(prop, "/") > 3){
-				endSelect += " ?" + column;
+				
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+				
 				optional += "OPTIONAL { ?s " + getComposedProperty(prop) + " [" + prop + " ?" + column + " ] }\n";
 			}
 			else{
-				select += " ?" + column;
+				
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+				
 				optional += "OPTIONAL { ?s " + prop + " ?" + column + " }\n";
 			}
 		}
@@ -1254,30 +1278,33 @@ public class SemanticWebEngine {
 			where += " UNION ";
 		}
 		where = where.substring(0, where.lastIndexOf("UNION "));
-	
 		where += optional;
 		
 		select = orderString(select);
 		endSelect = orderString(endSelect);
 		
-		select += endSelect;
+		if(multipleValueProp != null)
+			groupBy = " GROUP BY " + select + endSelect;
+
+		select += multSelect + endSelect;
 		
 		results.put("select", select);
 		results.put("where", where);
+		results.put("groupBy", groupBy);
 		
 		return results;
 	}
 	
 	private HashMap<String, String> writeWhereToOne(HashMap<String, String> searchCriteria, ArrayList<String> props, 
-														String chosenSearch, String db){
+														ArrayList<String> multipleValueProp, String chosenSearch, String db){
 		
 		HashMap<String, String> results = new HashMap<String, String>();
 		String source, column;
-		String select, endSelect, where, filter;
+		String select, endSelect, multSelect, where, filter, groupBy;
 		Integer srcID;
 		
 		ArrayList<String> nodes = null;
-		select = endSelect = where = filter = "";
+		select = endSelect = multSelect = where = filter = groupBy = "";
 		
 		//searchCriteria = <property, value>
 		for(String key: searchCriteria.keySet()){
@@ -1290,11 +1317,19 @@ public class SemanticWebEngine {
 			column = srcID + getPropertyName(key);
 			
 			if(StringUtils.countMatches(key, "/") > 3){
-				endSelect += " ?" + column;
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+				
 				where += writeClauses(null, key, "simpleNumC", srcID, -1);
 			}
 			else{
-				select += " ?" + column;
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+				
 				where += writeClauses(null, key, "simpleNum", srcID, -1);
 			}
 				
@@ -1307,7 +1342,7 @@ public class SemanticWebEngine {
 		}
 		filter += ")";
 		
-		//left props
+		//remaining props
 		for(String prop: props){
 			source = getPropertySource(prop, false);
 			
@@ -1324,11 +1359,19 @@ public class SemanticWebEngine {
 			column = srcID + getPropertyName(prop);
 			
 			if(StringUtils.countMatches(prop, "/") > 3){
-				endSelect += " ?" + column;
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+				
 				where += writeClauses(null, prop, "simpleNumC", srcID, -1);
 			}
 			else{
-				select += " ?" + column;
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+				
 				where += writeClauses(null, prop, "simpleNum", srcID, -1);
 			}
 		}
@@ -1336,12 +1379,16 @@ public class SemanticWebEngine {
 		select = orderString(select);
 		endSelect = orderString(endSelect);
 		
-		select += endSelect;
+		if(multipleValueProp != null)
+			groupBy = " GROUP BY " + select + endSelect;
+
+		select += multSelect + endSelect;
 		
 		where = where + filter;
 		
 		results.put("select", select);
 		results.put("where", where);
+		results.put("groupBy", groupBy);
 		
 		return results;
 	}
@@ -1349,21 +1396,26 @@ public class SemanticWebEngine {
 	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass, String chosenSearch){
 		
 		ArrayList<String> props = null;
-		String db, select, where;
+		String db, select, where, groupBy;
 		String criteria, result, newProp;
 		//String source, sourceWhere, sourceFilter;
 		
 		String[] criteriaArray, mappingParts;
-		
+				
+		ArrayList<String> multipleValueProp = null;
 		ArrayList<String> newProps = new ArrayList<String>();
 		HashMap<String, String> whereResults = new HashMap<String, String>();
 		
-		result = select = where = "";
+		result = select = where = groupBy = "";
 		
-		if(chosenClass.contentEquals(""))
+		if(chosenClass.contentEquals("")){
 			db = "allNewSet";
-		else
+			multipleValueProp = null;
+		}
+		else{
 			db = "oneNewSet";
+			multipleValueProp = getDuplicateProps(chosenClass);
+		}
 
 		if(chosenSearch.contentEquals("All")){
 			if(chosenClass.contentEquals("")){
@@ -1378,8 +1430,10 @@ public class SemanticWebEngine {
 					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
 						mappingParts = null;
 						for(int i=0; i < criteriaArray.length; i++){
+							
 							if(criteriaArray[i].matches("<http://(.*)" + getPropertyName(prop) + ":(.*)>") ||
 									criteriaArray[i].matches("<http://(.*):" + getPropertyName(prop) + ">")){
+								
 								mappingParts = criteriaArray[i].split("-");
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
@@ -1396,7 +1450,10 @@ public class SemanticWebEngine {
 					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
 						mappingParts = null;
 						for(int i=0; i < criteriaArray.length; i++){
-							if(criteriaArray[i].contains(getPropertyName(prop))){
+							
+							if(criteriaArray[i].matches("<http://(.*)" + getPropertyName(prop) + ":(.*)>") ||
+									criteriaArray[i].matches("<http://(.*):" + getPropertyName(prop) + ">")){
+								
 								mappingParts = criteriaArray[i].split("-");
 								for(int j=0; j < mappingParts.length; j++){
 									newProp = mappingParts[j];
@@ -1410,23 +1467,23 @@ public class SemanticWebEngine {
 				}
 				props.addAll(newProps);
 			}
-			whereResults = writeWhereToAll(searchCriteria, props);
+			whereResults = writeWhereToAll(searchCriteria, props, multipleValueProp);
 		}
 		else{
 			props = showClassProperties(chosenClass, db);
-			whereResults = writeWhereToOne(searchCriteria, props, chosenSearch, db);
+			whereResults = writeWhereToOne(searchCriteria, props, multipleValueProp, chosenSearch, db);
 		}
 		
 		select = whereResults.get("select");
 		where = whereResults.get("where");
+		groupBy = whereResults.get("groupBy");
 		
-		
-		result = selectQueryDB(select, where, chosenClass, chosenSearch);
+		result = selectQueryDB(select, where, groupBy, chosenClass, chosenSearch);
 		
 		return result;
 	}
 	
-	private String selectQueryDB(String select, String where, String chosenClass, String chosenSearch){
+	private String selectQueryDB(String select, String where, String groupBy, String chosenClass, String chosenSearch){
 		Model db = null;
 		String q, aditionalInfo, result;
 		Query query;
@@ -1450,7 +1507,8 @@ public class SemanticWebEngine {
 			+ "WHERE {"
 				+ aditionalInfo
 				+ where
-			+ "}";
+			+ "}"
+			+ groupBy;
 		
 		//System.out.println(q);
 		query = QueryFactory.create(q);

@@ -197,7 +197,7 @@ public class ChooseMapRulePage {
 			
 			contentPanel.remove(pageChoose);
 			contentPanel.revalidate();
-			card.show(contentPanel, "page1");
+			card.show(contentPanel, "pageInfo");
 		}
 	}
 	
@@ -226,6 +226,8 @@ public class ChooseMapRulePage {
 			JComboBox<String> cb = (JComboBox<String>) e.getSource();
 			String source = (String) cb.getSelectedItem();
 			
+			ArrayList<String> multipleValueProps;
+			
 			String output = "";
 			String className = "";
 			String instances, flowtime;
@@ -245,7 +247,9 @@ public class ChooseMapRulePage {
 					instances = swe.countClassInstances(className, flowtime);
 				}
 				else {
-					output = swe.selectAllInfo(chosenRule, flowtime, null);
+					
+					multipleValueProps = swe.getDuplicateProps(chosenRule);
+					output = swe.selectAllInfo(chosenRule, flowtime, multipleValueProps);
 					instances = swe.countClassInstances(chosenRule, flowtime);
 				}
 				

@@ -80,6 +80,7 @@ public class InfoPage {
 		
 		JTextArea filterArea = new JTextArea();
 		JButton nextButton = new JButton("Next ");
+		JButton back = new JButton(" Back");
 		
 		ButtonGroup bg = new ButtonGroup();
 		
@@ -178,7 +179,11 @@ public class InfoPage {
 		nextButton.setHorizontalTextPosition(SwingConstants.LEFT);
 		nextButton.addActionListener(new NextListener());
 		
-		buttonPanel.add(new JLabel(""));
+		back.setBackground(new Color(198, 218, 230));
+		back.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
+		back.addActionListener(new BackListener());
+		
+		buttonPanel.add(back);
 		buttonPanel.add(new JLabel(""));
 		buttonPanel.add(new JLabel(""));
 		buttonPanel.add(new JLabel(""));
@@ -209,17 +214,28 @@ public class InfoPage {
 	
 	private class NextListener implements ActionListener{
 		
-		private JSplitPane page1;
-		private FirstPage firstPage;
+		private JSplitPane pageChoose;
+		private ChooseMapRulePage choosePage;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
-			firstPage = new FirstPage(frame, swe, card, contentPanel);
-			page1 = firstPage.getPage();
-			page1.setName("page1");
+			choosePage = new ChooseMapRulePage(frame, swe, card, contentPanel);
+			pageChoose = choosePage.getPage();
+			pageChoose.setName("pageChoose");
+
+			contentPanel.add(pageChoose, "pageChoose");
+			card.show(contentPanel, "pageChoose");
+		}
+	}
+	
+	private class BackListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
 			
-			contentPanel.add(page1, "page1");
+			contentPanel.remove(pageInfo);
+			contentPanel.revalidate();
 			card.show(contentPanel, "page1");
 		}
 	}

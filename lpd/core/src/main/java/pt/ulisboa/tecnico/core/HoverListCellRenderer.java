@@ -49,9 +49,11 @@ public class HoverListCellRenderer extends DefaultListCellRenderer{
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
-			int index = list.locationToIndex(e.getPoint());
-			setHoverIndex(list.getCellBounds(index, index).contains(e.getPoint())
-					? index : -1);
+			if(list.getModel().getSize() != 0){
+				int index = list.locationToIndex(e.getPoint());
+				setHoverIndex(list.getCellBounds(index, index).contains(e.getPoint())
+						? index : -1);
+			}
 		}
 
 		private void setHoverIndex(int index) {

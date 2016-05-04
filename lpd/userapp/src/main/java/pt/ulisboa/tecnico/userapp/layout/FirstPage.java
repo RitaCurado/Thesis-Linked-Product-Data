@@ -8,6 +8,7 @@ import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import pt.ulisboa.tecnico.core.HoverListCellRenderer;
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
 
 public class FirstPage {
@@ -62,7 +63,7 @@ public class FirstPage {
 		JLabel infoTitle = new JLabel("Sources' Classes:");
 		JButton show = new JButton("Instances ");
 		JButton next = new JButton("Next ");
-		JButton back = new JButton(" Back");
+//		JButton back = new JButton(" Back");
 		
 		instances = new JPanel();
 		nextPanel = new JPanel();
@@ -82,9 +83,9 @@ public class FirstPage {
 	    next.setHorizontalTextPosition(SwingConstants.LEFT);
 		next.addActionListener(new NextListener());
 		
-		back.setBackground(new Color(198, 218, 230));
-		back.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
-		back.addActionListener(new BackListener());
+//		back.setBackground(new Color(198, 218, 230));
+//		back.setIcon(new ImageIcon("..\\src\\main\\resources\\return16px.png"));
+//		back.addActionListener(new BackListener());
 
 		this.createTabbedPane();
 
@@ -104,7 +105,7 @@ public class FirstPage {
 		this.createPropsPane();
 
 		nextPanel.setLayout(new GridLayout(1, 6));
-		nextPanel.add(back);
+		nextPanel.add(new JLabel());
 		nextPanel.add(new JLabel());
 		nextPanel.add(new JLabel());
 		nextPanel.add(new JLabel());
@@ -162,7 +163,11 @@ public class FirstPage {
 			
 			tabList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			tabList.addListSelectionListener(sl);
-
+			
+			HoverListCellRenderer renderer = new HoverListCellRenderer();
+			tabList.setCellRenderer(renderer);
+			tabList.addMouseListener(renderer.getHandler(tabList));
+			tabList.addMouseMotionListener(renderer.getHandler(tabList));
 
 			scroll = scrollBySource.get(source);
 			scroll.setViewportView(tabList);
@@ -192,6 +197,11 @@ public class FirstPage {
 		propsList = new JList<String>(propsListModel);
 
 		propsList.addListSelectionListener(new PropsSelectListener());
+		
+		HoverListCellRenderer renderer = new HoverListCellRenderer();
+		propsList.setCellRenderer(renderer);
+		propsList.addMouseListener(renderer.getHandler(propsList));
+		propsList.addMouseMotionListener(renderer.getHandler(propsList));
 
 		propsPanel.setLayout(new BorderLayout());
 		propsPanel.setPreferredSize(new Dimension(400, 150));
@@ -293,31 +303,31 @@ public class FirstPage {
 	}
 
 	private class NextListener implements ActionListener{
-
-		private ChooseMapRulePage choosePage;
-		private JSplitPane pageChoose;
+		
+		private JSplitPane pageInfo;
+		private InfoPage infoPage;
 		
 		@Override
 		public void actionPerformed(ActionEvent event) {
-
-			choosePage = new ChooseMapRulePage(frame, swe, card, contentPanel);
-			pageChoose = choosePage.getPage();
-			pageChoose.setName("pageChoose");
-
-			contentPanel.add(pageChoose, "pageChoose");
-			card.show(contentPanel, "pageChoose");
-		}
-	}
-
-	private class BackListener implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
 			
-			contentPanel.remove(page1);
-			contentPanel.revalidate();
+			infoPage = new InfoPage(frame, swe, card, contentPanel);
+			pageInfo = infoPage.getPage();
+			pageInfo.setName("pageInfo");
+
+			contentPanel.add(pageInfo, "pageInfo");
 			card.show(contentPanel, "pageInfo");
 		}
 	}
+
+//	private class BackListener implements ActionListener{
+//
+//		@Override
+//		public void actionPerformed(ActionEvent e) {
+//			
+//			contentPanel.remove(page1);
+//			contentPanel.revalidate();
+//			card.show(contentPanel, "pageInfo");
+//		}
+//	}
 	
 }

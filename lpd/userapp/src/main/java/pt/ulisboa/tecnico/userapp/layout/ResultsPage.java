@@ -81,7 +81,8 @@ public class ResultsPage {
 		
 		buttonPanel.add(backButton);
 		buttonPanel.add(new JLabel(""));
-		buttonPanel.add(homepage);
+//		buttonPanel.add(homepage);
+		buttonPanel.add(new JLabel(""));
 		buttonPanel.add(new JLabel(""));
 		buttonPanel.add(finishButton);
 		
