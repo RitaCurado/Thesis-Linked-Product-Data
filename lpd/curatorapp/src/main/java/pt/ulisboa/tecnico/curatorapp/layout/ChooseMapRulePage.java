@@ -71,7 +71,7 @@ public class ChooseMapRulePage {
 		JLabel title = new JLabel("Choose Mapping Rule:");
 		title.setFont(new Font("Arial", Font.BOLD, 15));
 		
-		JScrollPane scrollOptions = new JScrollPane();
+		JScrollPane scrollOptions;
 		JScrollPane scrollResult = new JScrollPane();
 		JPanel upPanel = new JPanel(new GridLayout(0, 1));
 		JPanel radioPanel = new JPanel(new GridLayout(0, 1));
@@ -100,8 +100,8 @@ public class ChooseMapRulePage {
 			radioPanel.add(rb);
 		}
 		
-		scrollOptions.setPreferredSize(new Dimension(730, 130));
-		scrollOptions.setViewportView(radioPanel);
+		scrollOptions = new JScrollPane(radioPanel);
+		scrollOptions.setPreferredSize(new Dimension(730, 100));
 		
 		okButton.setForeground(Color.WHITE);
 		okButton.setFont(new Font("Arial", Font.BOLD, 15));
@@ -192,6 +192,7 @@ public class ChooseMapRulePage {
 			numMatches.setText("Number of mapped instances: " + instances);
 			
 			swe.setNumMappings(instances);
+			swe.setNumInstAfterMapp(Integer.parseInt(mappingResult.get(1)));
 		}
 	}
 	

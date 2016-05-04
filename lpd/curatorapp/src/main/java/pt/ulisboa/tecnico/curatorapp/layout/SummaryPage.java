@@ -71,9 +71,9 @@ public class SummaryPage {
 		JSplitPane infoPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane tablesPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane instancesPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		JSplitPane leftPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane rightPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-		
+
+		JPanel leftPanel = new JPanel(new GridLayout(0, 1));
 		JPanel sourcesPanel = new JPanel(new GridLayout(2, 3));
 		JScrollPane scrolInfo;
 		
@@ -81,13 +81,14 @@ public class SummaryPage {
 		JScrollPane initialScroll, aggScroll;
 		
 		JPanel matchesPanel = new JPanel(new GridLayout(2, 1));
+		JPanel instAfterMatchesPanel = new JPanel(new GridLayout(2, 1));
 		JPanel finalInstPanel = new JPanel(new GridLayout(2, 1));
 		JPanel buttonPanel = new JPanel(new GridLayout(1, 7));
 
 		JSplitPane initialInstsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		JSplitPane afterAggInstsPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		
-		JLabel initInsts, aggsInsts, numMatches, numFinal;
+		JLabel initInsts, aggsInsts, numMatches, instAfterMatch, numFinal;
 		JLabel title = new JLabel("Summary");
 		JLabel sourcesLabel = new JLabel("Sources:");
 		JButton okButton = new JButton("Ok");
@@ -118,8 +119,6 @@ public class SummaryPage {
 		
 		initInsts = new JLabel("Initial number of instances:");
 		initInsts.setFont(new Font("Arial", Font.BOLD, 13));
-		
-		//initialInstsPanel.setPreferredSize(new Dimension(300, 150));
 		
 		initialInstsPanel.setBackground(Color.WHITE);
 		initialInstsPanel.add(initInsts);
@@ -169,6 +168,14 @@ public class SummaryPage {
 		
 		//----//
 		
+		instAfterMatch = new JLabel("   " + swe.getNumInstAfterMapp());
+		instAfterMatch.setFont(new Font("Arial", Font.PLAIN, 13));
+		
+		instAfterMatchesPanel.add(new JLabel("Number of instances after mapping:"));
+		instAfterMatchesPanel.add(instAfterMatch);
+		
+		//----//
+		
 		equation = "  (";
 		
 		for(int i=0; i < afterAggsArray.length; i++){
@@ -176,9 +183,9 @@ public class SummaryPage {
 		}
 		
 		equation = equation.substring(0, equation.length()-2);
-		equation += ") - " + swe.getNumMatches() + " = ";
+		equation += ") - " + swe.getNumInstAfterMapp() + " = ";
 		
-		if(swe.getNumMatches() > minNumInsts)
+		if(swe.getNumInstAfterMapp() > minNumInsts)
 			numFinal = new JLabel(equation + "error (" + minNumInsts + " instances maximum)");
 		else
 			numFinal = new JLabel(equation + swe.getResultInstNum());
@@ -190,10 +197,9 @@ public class SummaryPage {
 		finalInstPanel.add(numFinal);
 		
 		leftPanel.setPreferredSize(new Dimension(250, 100));
-		leftPanel.setResizeWeight(0.5);
 		leftPanel.add(matchesPanel);
+		leftPanel.add(instAfterMatchesPanel);
 		leftPanel.add(finalInstPanel);
-		leftPanel.setDividerSize(1);
 		
 		//----//
 		
@@ -285,7 +291,8 @@ public class SummaryPage {
 					instances = swe.countClassInstances(className, db);
 				}
 				else {
-					result = swe.selectAllInfo(chosenRule, db, null);
+					ArrayList<String> multiValueProps = swe.getDuplicateProps(chosenRule);
+					result = swe.selectAllInfo(chosenRule, db, multiValueProps);
 					instances = swe.countClassInstances(chosenRule, db);
 				}
 				

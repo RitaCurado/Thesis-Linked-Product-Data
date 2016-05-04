@@ -44,7 +44,7 @@ public class SemanticWebEngine {
 	private Model infarModel, infoModel;
 	private Model dbInitialModel, dbFilters, dbMappings; //, dbSourcesOriginal
 	private Model dbAllSet, dbMappingSet;
-	private int numMatches;
+	private int numMatches, numInstAfterMapp;
 	private ArrayList<String> sources;
 	private HashMap<String, Integer> sourceID;
 	private HashMap<String, Integer> initialInsts;
@@ -175,6 +175,22 @@ public class SemanticWebEngine {
 		
 		if(s.contentEquals("user")){
 			
+			try {
+				FileUtils.deleteDirectory(new File("..\\TDB"));
+				FileUtils.deleteDirectory(new File("..\\TDB_filters"));
+				FileUtils.deleteDirectory(new File("..\\TDB_mappings"));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+						
+			try {
+				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_user"), FileUtils.getFile("..\\TDB"));
+				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_filters_curator"), FileUtils.getFile("..\\TDB_filters"));
+				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_mappings_curator"), FileUtils.getFile("..\\TDB_mappings"));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
 			directory = "..\\TDB_filters";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbFilters = dataset.getDefaultModel();
@@ -186,6 +202,9 @@ public class SemanticWebEngine {
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbInitialModel = dataset.getDefaultModel();
+			
+			infarModel = ModelFactory.createDefaultModel();
+			infoModel = ModelFactory.createDefaultModel();
 			
 			sources = getSources();
 			createInitialModelsBySource();
@@ -225,7 +244,10 @@ public class SemanticWebEngine {
 	public void setNumMappings(int i){
 		numMatches = i;
 	}
-
+	
+	public void setNumInstAfterMapp(int numInstAfterMapp) {
+		this.numInstAfterMapp = numInstAfterMapp;
+	}
 	
 	private void defineSourceID(){
 		
@@ -284,6 +306,10 @@ public class SemanticWebEngine {
 		return numMatches;
 	}
 	
+	public int getNumInstAfterMapp() {
+		return numInstAfterMapp;
+	}
+	
 	public int getResultInstNum(){
 		int result = 0;
 		
@@ -291,7 +317,7 @@ public class SemanticWebEngine {
 			result += instsAfterAggs.get(source);
 		}
 		
-		result -= numMatches;
+		result -= numInstAfterMapp;
 		
 		return result;
 	}
@@ -905,6 +931,34 @@ public class SemanticWebEngine {
 	
 	
 	/* ---- Query methods ---- */
+	public ArrayList<String> getDuplicateProps(String className){
+		
+		ArrayList<String> multiValueProps = new ArrayList<String>();
+		String queryString, property;
+		Query query;
+		QuerySolution qs;
+		QueryExecution qexec;
+		ResultSet resultSet;
+		
+		queryString = "SELECT distinct ?p\n"
+				+ "WHERE {"
+				+ " ?s a '" + className + "' ."
+				+ " ?s ?p ?o1, ?o2 ."
+				+ " FILTER ((?o1 != ?o2) && !regex(str(?p), 'match')) }";
+
+		query = QueryFactory.create(queryString);
+		qexec = QueryExecutionFactory.create(query, dbMappingSet);
+		resultSet = qexec.execSelect();
+		//ResultSetFormatter.out(System.out, resultSet);
+		
+		while(resultSet.hasNext()){
+			qs = resultSet.next();
+			property = qs.get("p").toString();
+			multiValueProps.add("<" + property + ">");
+		}
+		
+		return multiValueProps;
+	}
 
 	public String selectAllInfo(String className, String flowtime, ArrayList<String> multiValueProps){
 		int count = 0, sid;
@@ -1961,32 +2015,10 @@ public class SemanticWebEngine {
 	
 	public ArrayList<String> queryTestMapping(String ruleName){
 
-		String queryString, queryResult, instances, prop;
-		Query query;
-		QuerySolution qs;
-		QueryExecution qexec;
-		ResultSet resultSet;
-		
+		String queryResult, instances;
 		
 		ArrayList<String> results = new ArrayList<String>();
-		ArrayList<String> multiValueProps = new ArrayList<String>();
-		
-		queryString = "SELECT distinct ?p\n"
-				+ "WHERE {"
-				+ " ?s a '" + ruleName + "' ."
-				+ " ?s ?p ?o1, ?o2 ."
-				+ " FILTER ((?o1 != ?o2) && !regex(str(?p), 'match')) }";
-
-		query = QueryFactory.create(queryString);
-		qexec = QueryExecutionFactory.create(query, dbMappingSet);
-		resultSet = qexec.execSelect();
-		//ResultSetFormatter.out(System.out, resultSet);
-		
-		while(resultSet.hasNext()){
-			qs = resultSet.next();
-			prop = qs.get("p").toString();
-			multiValueProps.add("<" + prop + ">");
-		}
+		ArrayList<String> multiValueProps = getDuplicateProps(ruleName);
 		
 		queryResult = selectAllInfo(ruleName, "oneNewSet", multiValueProps);
 		instances = countClassInstances(ruleName, "oneNewSet");
