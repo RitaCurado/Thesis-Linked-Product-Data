@@ -6,7 +6,6 @@ import javax.swing.*;
 
 import pt.ulisboa.tecnico.core.SemanticWebEngine;
 import pt.ulisboa.tecnico.userapp.layout.FirstPage;
-import pt.ulisboa.tecnico.userapp.layout.InfoPage;
 
 
 public class UserApp extends JFrame{
