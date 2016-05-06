@@ -43,6 +43,7 @@ public class SemanticWebEngine {
 
 	private Model infarModel, infoModel;
 	private Model dbInitialModel, dbFilters, dbMappings; //, dbSourcesOriginal
+	private Model dbSourcesOriginal;
 	private Model dbAllSet, dbMappingSet;
 	private int numMatches, numInstAfterMapp;
 	private ArrayList<String> sources;
@@ -69,50 +70,7 @@ public class SemanticWebEngine {
 		
 		
 		if(s.contentEquals("curator")){
-			
-//			directory = "..\\TDB_test";
-//			dataset = TDBFactory.createDataset(directory);
-//			this.dbMappingSet = dataset.getDefaultModel();
-			
 			/*
-			directory = "..\\TDB_sources_original";
-			dataset = TDBFactory.createDataset(directory);
-			this.dbSourcesOriginal = dataset.getDefaultModel();
-
-			if (dbSourcesOriginal.isEmpty()) {
-				System.out.println("Model is empty!!");
-				dataset.begin(ReadWrite.WRITE);
-
-				try {
-					this.infarDC = new InfarmedDataConverter(dbSourcesOriginal);
-					this.infoDC = new InfomedDataConverter(dbSourcesOriginal);
-					dataset.commit();
-				}
-
-				finally {
-					dataset.end();
-				}
-
-				// run a query
-				String q = "select * where {?s ?p ?o}";
-				Query query = QueryFactory.create(q);
-				QueryExecution qexec = QueryExecutionFactory.create(query, dbSourcesOriginal);
-				ResultSet results = qexec.execSelect();
-				FileOutputStream fos = null;
-				try {
-					fos = new FileOutputStream(new File("output.txt"));
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				ResultSetFormatter.out(fos, results);
-			}
-			else{
-				System.out.println("Model exists");
-				this.infarDC = new InfarmedDataConverter();
-				this.infoDC = new InfomedDataConverter();
-			}
-			*/
-			
 			try {
 				FileUtils.deleteDirectory(new File("..\\TDB"));
 				FileUtils.deleteDirectory(new File("..\\TDB_filters"));
@@ -146,12 +104,39 @@ public class SemanticWebEngine {
 			infarModel.read("../miniInfarDB.rdf");
 			infoModel.read("../miniInfoDB.rdf");
 			
-			//dbModel.add(dbSourcesOriginal);
 			dbInitialModel.add(infarModel);
 			dbInitialModel.add(infoModel);
+			*/
+			
+			
+			try {
+				FileUtils.deleteDirectory(new File("..\\TDB"));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+			directory = "..\\TDB_sources_original";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbSourcesOriginal = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_filters";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbFilters = dataset.getDefaultModel();
+			
+			directory = "..\\TDB_mappings";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbMappings = dataset.getDefaultModel();
+			
+			directory = "..\\TDB";
+			dataset = TDBFactory.createDataset(directory);
+			this.dbInitialModel = dataset.getDefaultModel();
+			
+			dbInitialModel.add(dbSourcesOriginal);
+			
+			
 			dbInitialModel.commit();
 			
-			// run a query
+		/*	// run a query
 				String q = "select * where {?s ?p ?o}";
 				Query query = QueryFactory.create(q);
 				QueryExecution qexec = QueryExecutionFactory.create(query, dbInitialModel);
@@ -165,8 +150,8 @@ public class SemanticWebEngine {
 				ResultSetFormatter.out(fos, results);
 				qexec.close();
 			// ------------
+		*/
 			
-			//renameProblematicURIs();
 			this.infarDC = new InfarmedDataConverter();
 			this.infoDC = new InfomedDataConverter();
 			
@@ -213,8 +198,29 @@ public class SemanticWebEngine {
 		
 		defineSourceID();
 		defineInitialInsts();
+		
+//		infarModel.add(dbsWithoutMappings.get("www.infarmed.pt"));
+//		infoModel.add(dbsWithoutMappings.get("www.infomed.pt"));
+//		
+//		initialProducts(infarModel, "infarProduct.txt");
+//		initialProducts(infoModel, "infoProduct.txt");
 	}
 
+//	private void initialProducts(Model model, String fileName){
+//		// run a query
+//		String q = "select * where {?s ?p ?o}";
+//		Query query = QueryFactory.create(q);
+//		QueryExecution qexec = QueryExecutionFactory.create(query, model);
+//		ResultSet results = qexec.execSelect();
+//		FileOutputStream fos = null;
+//		try {
+//			fos = new FileOutputStream(new File(fileName));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		ResultSetFormatter.out(fos, results);
+//		qexec.close();
+//	}
 	
 	/* ---- Setters ---- */
 	
@@ -2349,6 +2355,12 @@ public class SemanticWebEngine {
 		query = QueryFactory.create(queryString);
 		qe = QueryExecutionFactory.create(query, dbInitialModel);
 		results = qe.execSelect();
+		
+//		try {
+//			ResultSetFormatter.out(new FileOutputStream(new File("filt.txt")), results, query);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
 		
 		resetAllSet();
 		

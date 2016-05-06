@@ -153,7 +153,7 @@ public class AggregationPage {
 		gbc.gridy = 0;
 		gbc.gridwidth = 2;
 		gbc.insets = new Insets(0,0,10,0);  //bottom padding
-		buttonPanel.add(removeButton, gbc);
+		buttonPanel.add(createButton, gbc);
 		
 		gbc.gridx = 0;
 		gbc.gridy = 1;
@@ -163,7 +163,7 @@ public class AggregationPage {
 		gbc.gridx = 1;
 		gbc.gridy = 1;
 		gbc.gridwidth = 1;
-		buttonPanel.add(nextButton, gbc);
+		buttonPanel.add(removeButton, gbc);
 		
 		leftPanel.add(choicesPanel);
 		leftPanel.add(buttonPanel);
@@ -179,7 +179,7 @@ public class AggregationPage {
 		createButton.addActionListener(new CreateListener());
 		
 		createPanel.add(new JLabel("Choose the properties that have to assume the same value in duplicated entries"));
-		createPanel.add(createButton);
+		createPanel.add(nextButton);
 		
 		rightPanel.add(criteriaPanel);
 		rightPanel.add(createPanel);
