@@ -41,8 +41,8 @@ public class SemanticWebEngine {
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
-	private Model infarModel, infoModel;
-	private Model dbInitialModel, dbFilters, dbMappings; //, dbSourcesOriginal
+//	private Model infarModel, infoModel;
+	private Model dbInitialModel, dbFilters, dbMappings;
 	private Model dbSourcesOriginal;
 	private Model dbAllSet, dbMappingSet;
 	private int numMatches, numInstAfterMapp;
@@ -71,6 +71,9 @@ public class SemanticWebEngine {
 		
 		if(s.contentEquals("curator")){
 			/*
+			 
+			//tests with users - curators
+			 
 			try {
 				FileUtils.deleteDirectory(new File("..\\TDB"));
 				FileUtils.deleteDirectory(new File("..\\TDB_filters"));
@@ -159,22 +162,25 @@ public class SemanticWebEngine {
 		}
 		
 		if(s.contentEquals("user")){
+			/*
 			
+			//tests with users - researchers
 			try {
-				FileUtils.deleteDirectory(new File("..\\TDB"));
+				//FileUtils.deleteDirectory(new File("..\\TDB"));
 				FileUtils.deleteDirectory(new File("..\\TDB_filters"));
-				FileUtils.deleteDirectory(new File("..\\TDB_mappings"));
+				//FileUtils.deleteDirectory(new File("..\\TDB_mappings"));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 						
 			try {
-				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_user"), FileUtils.getFile("..\\TDB"));
+				//FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_user"), FileUtils.getFile("..\\TDB"));
 				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_filters_curator"), FileUtils.getFile("..\\TDB_filters"));
 				FileUtils.copyDirectory(FileUtils.getFile("..\\TDB_mappings_curator"), FileUtils.getFile("..\\TDB_mappings"));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
+			*/
 			
 			directory = "..\\TDB_filters";
 			dataset = TDBFactory.createDataset(directory);
@@ -188,8 +194,8 @@ public class SemanticWebEngine {
 			dataset = TDBFactory.createDataset(directory);
 			this.dbInitialModel = dataset.getDefaultModel();
 			
-			infarModel = ModelFactory.createDefaultModel();
-			infoModel = ModelFactory.createDefaultModel();
+//			infarModel = ModelFactory.createDefaultModel();
+//			infoModel = ModelFactory.createDefaultModel();
 			
 			sources = getSources();
 			createInitialModelsBySource();
@@ -201,37 +207,21 @@ public class SemanticWebEngine {
 		
 //		infarModel.add(dbsWithoutMappings.get("www.infarmed.pt"));
 //		infoModel.add(dbsWithoutMappings.get("www.infomed.pt"));
-//		
-//		initialProducts(infarModel, "infarProduct.txt");
-//		initialProducts(infoModel, "infoProduct.txt");
 	}
-
-//	private void initialProducts(Model model, String fileName){
-//		// run a query
-//		String q = "select * where {?s ?p ?o}";
-//		Query query = QueryFactory.create(q);
-//		QueryExecution qexec = QueryExecutionFactory.create(query, model);
-//		ResultSet results = qexec.execSelect();
-//		FileOutputStream fos = null;
-//		try {
-//			fos = new FileOutputStream(new File(fileName));
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		ResultSetFormatter.out(fos, results);
-//		qexec.close();
-//	}
 	
 	/* ---- Setters ---- */
 	
 	public void resetDB(){
-//		dbInitialModel.removeAll();
-//		dbInitialModel.add(dbSourcesOriginal);
+		
+		dbInitialModel.removeAll();
+		dbInitialModel.add(dbSourcesOriginal);
+		dbInitialModel.commit();
+		
+		//users tests
+//		dbInitialModel.add(infarModel);
+//		dbInitialModel.add(infoModel);
 //		dbInitialModel.commit();
 		
-		dbInitialModel.add(infarModel);
-		dbInitialModel.add(infoModel);
-		dbInitialModel.commit();
 		dbAllSet.removeAll();
 	}
 	
