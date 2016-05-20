@@ -50,7 +50,7 @@ public class HomePage {
 		sourceInfo = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-		sources = swe.getSources();
+		sources = (ArrayList<String>) swe.getSources();
 		tabbedPane = new JTabbedPane();
 		instancesTitle = new JLabel("Number of instances: ");
 
@@ -173,7 +173,11 @@ public class HomePage {
 			panel.add(scroll);
 			
 			sSplit = source.split("\\.");
-			sourceName = sSplit[1];
+			if(sSplit.length == 2)
+				sourceName = sSplit[0];
+			else
+				sourceName = sSplit[1];
+			
 			tab = sourceName.substring(0, 1).toUpperCase() + sourceName.substring(1);
 			tabbedPane.addTab(tab, panel);
 		}
@@ -231,7 +235,7 @@ public class HomePage {
 			}
 
 			if(className != ""){
-				classProps = swe.showClassProperties(className, "beginning");
+				classProps = swe.showClassPropertiesToCurator(className, "beginning");
 				classInstances = swe.countClassInstances(className, "beginning");
 				instancesTitle.setText("Number of instances: " + classInstances);
 				propsListModel.removeAllElements();
@@ -286,17 +290,22 @@ public class HomePage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 
-			if(className != ""){
-
-				instPage = new InstancesPage(swe, frame, className, card, contentPanel);
-				pageInstances = instPage.getPage();
-				pageInstances.setName("pageInst");
-
-				contentPanel.add(pageInstances, "pageInst");
-				card.show(contentPanel, "pageInst");
+			if(swe.getInitialInsts().get(swe.getPropertySource(className, false)) != null){
+				if(className != ""){
+					
+					instPage = new InstancesPage(swe, frame, className, card, contentPanel);
+					pageInstances = instPage.getPage();
+					pageInstances.setName("pageInst");
+					
+					contentPanel.add(pageInstances, "pageInst");
+					card.show(contentPanel, "pageInst");
+				}
+				else{
+					JOptionPane.showMessageDialog(frame, "You have to select a class first.", "Attention!", JOptionPane.WARNING_MESSAGE);
+				}
 			}
 			else{
-				JOptionPane.showMessageDialog(frame, "You have to select a class first.", "Attention!", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(frame, "There are no instances for this class.", "Information!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 	}

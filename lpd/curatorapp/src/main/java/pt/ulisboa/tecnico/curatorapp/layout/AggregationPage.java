@@ -251,7 +251,7 @@ public class AggregationPage {
 				createButton.setEnabled(true);
 
 				classes = swe.showSourceClasses(source.toLowerCase(), "beginning");
-				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), "beginning");
+				props = swe.showClassPropertiesToCurator(classes.get(0).substring(2, classes.get(0).length()-2), "beginning");
 
 				criteriaPanel.removeAll();
 				criteriaPanel.revalidate();

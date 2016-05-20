@@ -239,7 +239,7 @@ public class ChooseAggRulePage {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
-			sources = swe.getSources();
+			sources = (ArrayList<String>) swe.getSources();
 			numInstsUpdate = new HashMap<String, Integer>();
 			
 			if(rulesModel.isEmpty() || rulesModel.getSize() < swe.getSources().size()){

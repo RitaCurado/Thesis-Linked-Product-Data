@@ -14,6 +14,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -68,7 +69,7 @@ public class MappingPage {
 		showInfo = new JTextArea();
 		showInfo.setFont(new Font("Courier New", Font.PLAIN, 13));
 		
-		sources = swe.getSources();
+		sources = (ArrayList<String>) swe.getSources();
 		checkBoxes = new ArrayList<JCheckBox>();
 		ruleNameDefault = "Ex: MappingBySomeProperty";
 		ruleDefault = "Ex: <www.s1.com/p1>-<www.s2.com/p3>&<www.s1.com/p4>-<www.s2.com/p1>";
@@ -335,8 +336,8 @@ public class MappingPage {
 			else{
 				mappingsList.setEnabled(false);
 
-				classes = swe.showSourceClasses(source.toLowerCase(), "allNewSet");
-				props = swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), "allNewSet");
+				classes = swe.showSourceClasses(source.toLowerCase(), "oneNewSet");
+				props = swe.showClassPropertiesToCurator(classes.get(0).substring(2, classes.get(0).length()-2), "oneNewSet");
 				
 				showInfo.removeAll();
 
@@ -359,7 +360,7 @@ public class MappingPage {
 			String text, composedSource="";
 			
 			sources.clear();
-			sources = swe.getSources();
+			sources = (ArrayList<String>) swe.getSources();
 
 			JCheckBox cb = (JCheckBox) e.getSource();
 
@@ -372,15 +373,20 @@ public class MappingPage {
 			if(checkBoxes.size() == 0)
 				finalSource = "";
 			else{
-				composedSource = "http://www.";
+				//composedSource = "http://www.";
+				composedSource = "";
 				
 				for(JCheckBox jcb: checkBoxes){
 					text = jcb.getText();
-					composedSource += text.substring(4, text.length()-3);
+					if(text.contains("www"))
+						composedSource += text.substring(4, text.length()-3);
+					else
+						composedSource += text.substring(0, text.lastIndexOf("."));
 					composedSource += "_";
 				}
 				composedSource = composedSource.substring(0, composedSource.length()-1);
-				composedSource += ".pt";
+				//composedSource += ".pt";
+				composedSource += ".org";
 				
 				finalSource = swe.getComposedSource(composedSource);
 				
@@ -499,7 +505,7 @@ public class MappingPage {
 			String source = "";
 			HashMap<String, String> subjectBySource = new HashMap<String, String>();
 			HashMap<String, ArrayList<String>> propsBySource = new HashMap<String, ArrayList<String>>();
-			HashMap<String, ArrayList<String>> nodesBySource = new HashMap<String, ArrayList<String>>();
+			HashMap<String, Map<String, String>> nodesBySource = new HashMap<String, Map<String, String>>();
 			
 			if(ruleName.getText().contentEquals(ruleNameDefault) || rules.getText().contentEquals(ruleDefault)){
 				JOptionPane.showMessageDialog(frame, 
@@ -518,10 +524,12 @@ public class MappingPage {
 					source = cb.getText();
 					
 					subjectBySource.put(source, "s" + sid);
-					clName = "http://" + source + "/Medicine";
+					//clName = "http://" + source + "/Medicine";
+					clName = swe.showSourceClasses(source, "allNewSet").get(0);
+					clName = clName.substring(clName.lastIndexOf("<")+1, clName.lastIndexOf(">"));
 
 					try {
-						propsBySource.put(source, swe.showClassProperties(clName, "allNewSet"));
+						propsBySource.put(source, swe.showClassPropertiesToCurator(clName, "oneNewSet"));
 						nodesBySource.put(source, swe.showNodeProperties(clName, "allNewSet"));
 					} catch (Exception e1) {
 						e1.printStackTrace();

@@ -199,7 +199,7 @@ public class ShowAggResultsPage {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			
-			swe.resetDB();
+			//swe.resetDB();
 			
 			contentPanel.remove(pageAggResult);
 			contentPanel.revalidate();
