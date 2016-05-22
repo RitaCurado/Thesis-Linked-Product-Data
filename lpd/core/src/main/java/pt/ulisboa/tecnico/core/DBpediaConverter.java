@@ -58,8 +58,8 @@ public class DBpediaConverter {
 		properties.add(model.createResource("http://dbpedia.org/property/children"));
 		properties.add(model.createResource("http://dbpedia.org/property/parents"));
 		properties.add(model.createResource("http://dbpedia.org/property/spouse"));
+		properties.add(model.createResource("http://dbpedia.org/property/name"));
 		properties.add(model.createResource("http://dbpedia.org/ontology/abstract"));
-		properties.add(model.createResource("http://dbpedia.org/ontology/name"));
 		properties.add(model.createResource("http://dbpedia.org/ontology/imdbid"));
 
 		for(Resource p: properties){

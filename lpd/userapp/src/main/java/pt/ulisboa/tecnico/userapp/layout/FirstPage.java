@@ -43,7 +43,7 @@ public class FirstPage {
 		properties = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 		tabbedPane = new JTabbedPane();
 		
-		sources = swe.getSources();
+		sources = (ArrayList<String>) swe.getSources();
 		instancesTitle = new JLabel("Number of instances: ");
 
 		this.createPage();
@@ -174,7 +174,12 @@ public class FirstPage {
 			panel.add(scroll);
 			
 			String[] sSplit = source.split("\\.");
-			String sourceName = sSplit[1];
+			String sourceName;
+			if(sSplit.length == 2)
+				sourceName = sSplit[0];
+			else
+				sourceName = sSplit[1];
+			
 			String tab = sourceName.substring(0, 1).toUpperCase() + sourceName.substring(1);
 			tabbedPane.addTab(tab, panel);
 		}

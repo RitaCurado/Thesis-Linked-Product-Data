@@ -105,6 +105,18 @@ public class SemanticWebEngine {
 			
 			dbpediaDC = new DBpediaConverter(db1);
 			imdbDC = new LimdbConverter(db2);
+			
+			createInitialModelsBySource(db1);
+			createInitialModelsBySource(db2);
+			
+			ignoringDBLang(db1);
+			ignoringDBLang(db2);
+			
+			sources = new ArrayList<String>(initialDBs.keySet());
+			for(String src:sources){
+				dbInitialModel.add(initialDBs.get(src));
+			}
+			dbInitialModel.commit();
 		}
 		
 		if(s.contentEquals("user")){
@@ -120,21 +132,14 @@ public class SemanticWebEngine {
 			directory = "..\\TDB";
 			dataset = TDBFactory.createDataset(directory);
 			this.dbInitialModel = dataset.getDefaultModel();
+			
+			sources = (ArrayList<String>) getSources(dbInitialModel);
+			createInitialModelsBySource();
+			for(String src: sources){
+				initialDBs.put(src, dbsWithoutMappings.get(src));
+			}
 		}
 		
-		createInitialModelsBySource(db1);
-		createInitialModelsBySource(db2);
-		sources = new ArrayList<String>(initialDBs.keySet());
-		for(String src:sources){
-			dbInitialModel.add(initialDBs.get(src));
-		}
-		dbInitialModel.commit();
-		
-//		sources = (ArrayList<String>) getSources(dbInitialModel);
-//		createInitialModelsBySource();
-//		for(String src: sources){
-//			initialDBs.put(src, dbsWithoutMappings.get(src));
-//		}
 		
 		defineInitialInsts();
 		defineSourceID();
@@ -609,6 +614,75 @@ public class SemanticWebEngine {
 //				toRemove.add(p);
 //		}
 //		props.removeAll(toRemove);
+
+		return props;
+	}
+	
+	public ArrayList<String> showClassPropertiesToUser(String cl){
+		
+		ArrayList<String> props = new ArrayList<String>();
+		
+		if(cl.contentEquals("All")){
+			props.add("<http://purl.org/dc/terms/title>");
+			props.add("<http://dbpedia.org/property/name>");
+			props.add("<http://dbpedia_data.linkedmdb.org/name:actor_name>");
+		}
+		if(cl.contains("dbpedia")){
+			props.add("<http://dbpedia.org/property/name>");
+		}
+		if(cl.contains("linkedmdb")){
+			props.add("<http://purl.org/dc/terms/title>");
+		}
+		if(cl.contains("_")){
+			props.add("<http://dbpedia_data.linkedmdb.org/name:actor_name>");
+			props.add("<http://purl.org/dc/terms/title>");
+		}
+		
+		return props;
+	}
+	
+	public ArrayList<String> showAllProperties(String flowtime){
+		
+		Model model = null;
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String result;
+		String[] spltResult;
+		ArrayList<String> props = new ArrayList<String>();
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		switch (flowtime) {
+			case "beginning":
+				model = dbInitialModel;
+				break;
+			case "allNewSet":
+				model = dbAllSet;
+				break;
+			default:
+				break;
+		}
+		
+		String queryString = "SELECT DISTINCT ?property\n"
+				+ "WHERE {"
+				+ " ?property a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ "}";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, model);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+		result = result.replace("|", "");
+		result = result.replace(" ", "");
+
+		qe.close();
+		
+		spltResult = result.split("\\r?\\n");
+		for(int i=3; i < spltResult.length-1; i++){
+			props.add(spltResult[i]);
+		}
 
 		return props;
 	}
@@ -1357,7 +1431,7 @@ public class SemanticWebEngine {
 		int propID = 0;
 		int numSources;
 		
-		String newClass, srcClass;
+		String newClass;
 		String parent;
 		String matchProp, firstMatchProp;
 		String propConj = "";
@@ -1371,7 +1445,7 @@ public class SemanticWebEngine {
 		String optional = "";
 		String rule = "";
 		
-		ArrayList<String> list, types = new ArrayList<String>();
+		ArrayList<String> list;
 		HashMap<String, Integer> sourcesIndex = getSourcesIndex(sourceName);
 		HashMap<String, Integer> bnodeByParent = new HashMap<String, Integer>();
 		HashMap<String, String> result = new HashMap<String, String>();
@@ -1398,12 +1472,6 @@ public class SemanticWebEngine {
 			for(String property: ruleProperties){
 				
 				source = getPropertySource(property, false);
-				
-//				if(!types.contains(source)){
-//					srcClass = showSourceClasses(source, "beginning").get(0);
-//					typeWhere += " ?" + subjectBySource.get(source) + " a " + srcClass + " .";
-//					types.add(source);
-//				}
 				
 				list = (ArrayList<String>) propsBySource.get(source);
 				list.remove(property);
@@ -1758,6 +1826,36 @@ public class SemanticWebEngine {
 		return results;
 	}
 	
+	public String showChosenRules(){
+		Query query;
+		QueryExecution qe;
+		ResultSet results;
+		String queryString, queryResult, result;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		String[] spltResult;
+		
+		queryString = "SELECT ?Chosen_Rules\n"
+				+ "WHERE {"
+				+ " ?s ?p ?Chosen_Rules ."
+				+ " ?p a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ."
+				+ " FILTER (regex(str(?s), 'http://filters') && regex(str(?p), 'http://filters/chosenRules')) }";
+		
+		query = QueryFactory.create(queryString);
+		qe = QueryExecutionFactory.create(query, dbFilters);
+		results = qe.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		queryResult = go.toString();
+		
+		spltResult = queryResult.split("\\r?\\n");
+		result = spltResult[3];
+
+		qe.close();
+		
+		return result;
+	}
+	
 	
 	
 	
@@ -1823,12 +1921,12 @@ public class SemanticWebEngine {
 						where += this.writeClauses(null, property, "simpleNumC", nodes.get(property), sid, -1);
 					}
 					else{
-//						if(multiValueProps!=null && multiValueProps.contains(property)){
-//							selectGroups += " (GROUP_CONCAT(?" + sid + column + "; separator = '; ') as ?" + sid + column + "s)";
-//						}
-//						else{
+						if(multiValueProps!=null && multiValueProps.contains(property)){
+							selectGroups += " (GROUP_CONCAT(?" + sid + column + "; separator = '; ') as ?" + sid + column + "s)";
+						}
+						else{
 							select += " ?" + sid + column;
-//						}
+						}
 						where += " OPTIONAL {" + this.writeClauses(null, property, "simpleNum", null, sid, -1) + "}";
 					}
 				}
@@ -1841,8 +1939,8 @@ public class SemanticWebEngine {
 	        
 			select = sortedBegin + sortedSelect + selectGroups + sortedEnd;
 			
-//			if(multiValueProps != null)
-//				groupBy = "GROUP BY " + sortedBegin + sortedSelect + sortedEnd;
+			if(multiValueProps != null)
+				groupBy = "GROUP BY " + sortedBegin + sortedSelect + sortedEnd;
 			
 			queryString = "SELECT " + select + "\n"
 					+ "WHERE {"
@@ -1850,7 +1948,7 @@ public class SemanticWebEngine {
 					+ where + "}"
 					+ groupBy;
 			
-			System.out.println(queryString);
+			//System.out.println(queryString);
 
 			query = QueryFactory.create(queryString);
 			qe = QueryExecutionFactory.create(query, model);
@@ -1908,7 +2006,7 @@ public class SemanticWebEngine {
 				+ optional
 			+ "}";
 		
-		System.out.println(q);
+		//System.out.println(q);
 		
 		query = QueryFactory.create(q);
 		qexec = QueryExecutionFactory.create(query, model);
@@ -2104,8 +2202,10 @@ public class SemanticWebEngine {
 			sub = "<" + qs.get("s").toString() + ">";
 			name = qs.get("name").toString();
 			
-			toDelete.add(sub + " <http://dbpedia.org/property/name> '" + name + "'");
-			toInsert.add(sub + " <http://dbpedia.org/property/name> '" + name.substring(0, name.lastIndexOf("@")) + "'");
+			if(name.contains("@")){
+				toDelete.add(sub + " <http://dbpedia.org/property/name> '" + name + "'");
+				toInsert.add(sub + " <http://dbpedia.org/property/name> '" + name.substring(0, name.lastIndexOf("@")) + "'");
+			}
 		}
 		qexec.close();
 		
@@ -2124,5 +2224,380 @@ public class SemanticWebEngine {
 			UpdateAction.parseExecute(insertStr, model);
 		}
 		qexec.close();
+	}
+	
+	private HashMap<String, String> writeWhereToAll(HashMap<String, String> searchCriteria, ArrayList<String> props,
+			ArrayList<String> multipleValueProp){
+		Integer srcID;
+		String select, endSelect, multSelect, where, optional, groupBy;
+		String column, source, sourceWhere, sourceFilter;
+
+		select = endSelect = multSelect = where = optional = groupBy = "";
+		
+		HashMap<String, String> nodes = new HashMap<String, String>();
+		HashMap<String, String> whereBySource = new HashMap<String, String>();
+		HashMap<String, String> filterBySource = new HashMap<String, String>();
+		HashMap<String, String> results = new HashMap<String, String>();
+
+		//searchCriteria = <property, value>
+		for(String key: searchCriteria.keySet()){
+			source = getPropertySource(key, false);
+			nodes = (HashMap<String, String>) showNodeProperties(showSourceClasses(source, "allNewSet").get(0), "allNewSet");
+
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+
+			column = srcID + getPropertyName(key);
+
+			//SELECT + WHERE
+			if(!whereBySource.containsKey(source))
+				whereBySource.put(source, "");
+			sourceWhere = whereBySource.get(source);
+			
+
+			//if(StringUtils.countMatches(key, "/") > 3){
+			if(nodes.containsKey(key)){
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+
+				sourceWhere += writeClauses(null, key, "simpleNumC", nodes.get(key), srcID, -1);
+			}
+			else{
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+
+				sourceWhere += writeClauses(null, key, "simpleNum", null, srcID, -1);
+			}
+			whereBySource.put(source, sourceWhere);
+
+			//FILTER
+			if(!filterBySource.containsKey(source))
+				filterBySource.put(source, "");
+			sourceFilter = filterBySource.get(source);
+
+			if(sourceFilter.isEmpty()){
+				sourceFilter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
+			}
+			else{
+				sourceFilter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
+			}
+			filterBySource.put(source, sourceFilter);
+
+			//OPTIONAL
+			if(StringUtils.countMatches(key, "/") > 3)
+				optional += "OPTIONAL { ?s " + getComposedProperty(key) + " [" + key + " ?" + column + " ] }\n";
+			else
+				optional += "OPTIONAL { ?s " + key + " ?" + column + " }\n";
+
+			props.remove(key);
+		}
+
+		//remaining props
+		for(String prop: props){
+			source = getPropertySource(prop, false);
+
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+
+			column = srcID + getPropertyName(prop);
+
+			if(StringUtils.countMatches(prop, "/") > 3){
+
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+
+				optional += "OPTIONAL { ?s " + getComposedProperty(prop) + " [" + prop + " ?" + column + " ] }\n";
+			}
+			else{
+
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+
+				optional += "OPTIONAL { ?s " + prop + " ?" + column + " }\n";
+			}
+		}
+
+		for(String key: filterBySource.keySet()){
+			filterBySource.put(key, filterBySource.get(key)+ ")");
+		}
+
+		for(String src: whereBySource.keySet()){
+			where += "{" + whereBySource.get(src) + filterBySource.get(src) + "}";
+			where += " UNION ";
+		}
+		where = where.substring(0, where.lastIndexOf("UNION "));
+		where += optional;
+
+		select = orderString(select);
+		endSelect = orderString(endSelect);
+
+		if(multipleValueProp != null)
+			groupBy = " GROUP BY " + select + endSelect;
+
+		select += multSelect + endSelect;
+
+		results.put("select", select);
+		results.put("where", where);
+		results.put("groupBy", groupBy);
+
+		return results;
+	}
+
+	private HashMap<String, String> writeWhereToOne(HashMap<String, String> searchCriteria, ArrayList<String> props, 
+			ArrayList<String> multipleValueProp, String chosenSearch, String db){
+
+
+		HashMap<String, String> results = new HashMap<String, String>();
+		String source, column;
+		String select, endSelect, multSelect, where, filter, groupBy;
+		Integer srcID;
+
+		HashMap<String, String> nodes = new HashMap<String, String>();
+		select = endSelect = multSelect = where = filter = groupBy = "";
+
+		//searchCriteria = <property, value>
+		for(String key: searchCriteria.keySet()){
+
+			//source = getPropertySource(key, false);
+			source = getPropertyDomainSource(key);
+			nodes = (HashMap<String, String>) showNodeProperties(showSourceClasses(source, db).get(0), db);
+			
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+
+			column = srcID + getPropertyName(key);
+
+			//if(StringUtils.countMatches(key, "/") > 3){
+			if(nodes.containsKey(key)){
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+
+				where += writeClauses(null, key, "simpleNumC", nodes.get(key), srcID, -1);
+			}
+			else{
+				if(multipleValueProp != null && multipleValueProp.contains(key))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+
+				where += writeClauses(null, key, "simpleNum", null, srcID, -1);
+			}
+
+			if(filter.isEmpty())
+				filter += "FILTER ( regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
+			else
+				filter += " && regex(str(?" + column + "), '" + searchCriteria.get(key) + "', 'i')";
+
+			props.remove(key);
+		}
+		filter += ")";
+
+		//remaining props
+		for(String prop: props){
+			source = getPropertySource(prop, false);
+
+			String clName = showSourceClasses(source, db).get(0);
+			nodes = (HashMap<String, String>) showNodeProperties(clName, db);
+
+			if(nodes.containsKey(prop))
+				continue;
+
+			srcID = sourceID.get(source);
+			if(srcID == null)
+				srcID = 0;
+
+			column = srcID + getPropertyName(prop);
+
+			//if(StringUtils.countMatches(prop, "/") > 3){
+			if(nodes.containsKey(prop)){
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					endSelect += " ?" + column;
+				
+				where += " OPTIONAL {" + writeClauses(null, prop, "simpleNumC", nodes.get(prop), srcID, -1) + "}";
+			}
+			else{
+				if(multipleValueProp != null && multipleValueProp.contains(prop))
+					multSelect += " (GROUP_CONCAT(?" + column + "; separator = '; ') as ?" + column + "s)";
+				else
+					select += " ?" + column;
+
+				where += " OPTIONAL {" + writeClauses(null, prop, "simpleNum", null, srcID, -1)+ "}";
+			}
+		}
+
+		select = orderString(select);
+		endSelect = orderString(endSelect);
+
+		if(multipleValueProp != null)
+			groupBy = " GROUP BY " + select + endSelect;
+
+		select += multSelect + endSelect;
+
+		where = where + filter;
+
+		results.put("select", select);
+		results.put("where", where);
+		results.put("groupBy", groupBy);
+
+		return results;
+	}
+	
+	public String makeSelectQuery(HashMap<String, String> searchCriteria, String chosenClass, String chosenSearch){
+		
+		ArrayList<String> props = null;
+		String db, select, where, groupBy;
+		String criteria, result, newProp;
+		String like1, like2;
+		//String source, sourceWhere, sourceFilter;
+		
+		String[] criteriaArray, mappingParts;
+				
+		ArrayList<String> multipleValueProp = null;
+		ArrayList<String> newProps = new ArrayList<String>();
+		HashMap<String, String> newCriteria = new HashMap<String, String>();
+		HashMap<String, String> whereResults = new HashMap<String, String>();
+		
+		result = select = where = groupBy = "";
+		
+		//TODO
+		
+		if(chosenClass.contentEquals("")){
+			db = "allNewSet";
+			multipleValueProp = null;
+		}
+		else{
+			db = "oneNewSet";
+			multipleValueProp = getDuplicateProps(chosenClass);
+			if(multipleValueProp.isEmpty())
+				multipleValueProp = null;
+		}
+
+		if(chosenSearch.contentEquals("All")){
+			if(chosenClass.contentEquals("")){
+				props = showClassProperties("All", db);
+			}
+			else{
+				props = showClassProperties(chosenClass, db);
+				
+				criteria = showMappingCriteria(chosenClass, true);
+				criteria = criteria.replace("|", "");
+				criteria = criteria.replace("\"", "");
+				criteria = criteria.replace(" ", "");
+				
+				criteriaArray = criteria.split(",");
+				
+				for(String prop: searchCriteria.keySet()){
+					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
+						mappingParts = null;
+						for(int i=0; i < criteriaArray.length; i++){
+							
+							like1 = "<(.*)/" + getPropertyName(prop) + ">-<(.*)>";
+							like2 = "<(.*)>-<(.*)/" + getPropertyName(prop) + ">";
+							
+							if(criteriaArray[i].matches(like1) || criteriaArray[i].matches(like2)){
+								mappingParts = criteriaArray[i].split("-");
+								for(int j=0; j < mappingParts.length; j++){
+									newProp = mappingParts[j];
+									newProp = newProp.substring(newProp.indexOf("<"), newProp.indexOf(">")+1);
+									newCriteria.put(newProp, searchCriteria.get(prop));
+								}
+								break;
+							}
+						}
+					}
+				}
+				searchCriteria.putAll(newCriteria);
+				
+				for(String prop: props){
+					if(prop.contains(":") && getPropertySource(prop, true).equals(getPropertySource(chosenClass, true))){
+						mappingParts = null;
+						for(int i=0; i < criteriaArray.length; i++){
+							
+							like1 = "<(.*)/" + getPropertyName(prop) + ">-<(.*)>";
+							like2 = "<(.*)>-<(.*)/" + getPropertyName(prop) + ">";
+							
+							if(criteriaArray[i].matches(like1) || criteriaArray[i].matches(like2)){								
+								mappingParts = criteriaArray[i].split("-");
+								for(int j=0; j < mappingParts.length; j++){
+									newProp = mappingParts[j];
+									newProp = newProp.substring(newProp.indexOf("<"), newProp.indexOf(">")+1);
+									newProps.add(newProp);
+								}
+								break;
+							}
+						}
+					}
+				}
+				props.addAll(newProps);
+			}
+			whereResults = writeWhereToAll(searchCriteria, props, multipleValueProp);
+		}
+		else{
+			props = showClassProperties(chosenClass, db);
+			whereResults = writeWhereToOne(searchCriteria, props, multipleValueProp, chosenSearch, db);
+		}
+		
+		select = whereResults.get("select");
+		where = whereResults.get("where");
+		groupBy = whereResults.get("groupBy");
+		
+		result = selectQueryDB(select, where, groupBy, chosenClass, chosenSearch);
+		
+		return result;
+	}
+	
+	private String selectQueryDB(String select, String where, String groupBy, String chosenClass, String chosenSearch){
+		Model db = null;
+		String q, aditionalInfo, result;
+		Query query;
+		QueryExecution qexec;
+		ResultSet results;
+		ByteArrayOutputStream go = new ByteArrayOutputStream();
+		
+		aditionalInfo = "";
+		
+		if(chosenSearch.contentEquals("All"))
+			db = dbAllSet;
+		else{
+			db = dbsWithoutMappings.get(chosenSearch);
+			if(db == null && !chosenClass.isEmpty())
+				db = dbMappingSet;
+			
+			aditionalInfo += " ?s a '" + chosenClass + "' .";
+		}
+		
+		q = "SELECT" + select + "\n"
+			+ "WHERE {"
+				+ aditionalInfo
+				+ where
+			+ "}"
+			+ groupBy;
+		
+		System.out.println(q);
+		query = QueryFactory.create(q);
+		qexec = QueryExecutionFactory.create(query, dbAllSet);
+		results = qexec.execSelect();
+		ResultSetFormatter.out(go, results, query);
+
+		result = go.toString();
+
+		qexec.close();
+		
+		return result;
 	}
 }

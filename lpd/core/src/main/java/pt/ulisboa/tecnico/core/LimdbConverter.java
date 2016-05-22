@@ -95,7 +95,7 @@ public class LimdbConverter {
 				qs = results.next();
 				
 				r = model.createResource(qs.get("s").toString());
-				r.addProperty(RDF.type, "http://data.linkedmdb.org/resource/movie/film");
+				r.addProperty(RDF.type, model.getResource("http://data.linkedmdb.org/resource/movie/film"));
 
 				if(qs.contains("title")){
 					r = model.createResource(qs.get("s").toString());

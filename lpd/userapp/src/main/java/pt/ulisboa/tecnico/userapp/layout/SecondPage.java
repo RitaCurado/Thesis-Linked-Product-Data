@@ -153,7 +153,7 @@ public class SecondPage {
 					
 					
 					if(!chosenRule.contentEquals("") && sourcesList.contains(swe.getPropertySource(chosenRule, false))){
-						props = swe.showClassProperties(chosenRule, db);
+						props = swe.showClassPropertiesToUser(chosenRule);
 						Collections.sort(props);
 						searchSource = chosenRule;
 					}					
@@ -161,7 +161,7 @@ public class SecondPage {
 						props.clear();
 						for(int i=2; i<sourcesArray.length; i++){
 							classes = swe.showSourceClasses(sourcesArray[i], db);
-							props.addAll(swe.showClassProperties(classes.get(0).substring(2, classes.get(0).length()-2), db));
+							props.addAll(swe.showClassPropertiesToUser(classes.get(0).substring(2, classes.get(0).length()-2)));
 							searchSource = "";
 						}
 					}
@@ -169,7 +169,7 @@ public class SecondPage {
 				else{
 					classes = swe.showSourceClasses(choseSource.toLowerCase(), db);
 					className = classes.get(0).substring(2, classes.get(0).length()-2);
-					props = swe.showClassProperties(className, db);
+					props = swe.showClassPropertiesToUser(className);
 					searchSource = className;
 				}
 
