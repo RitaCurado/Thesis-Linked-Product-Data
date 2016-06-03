@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+//import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +38,7 @@ import org.apache.jena.vocabulary.RDFS;
 
 
 public class SemanticWebEngine {
-
+	
 	InfarmedDataConverter infarDC;
 	InfomedDataConverter infoDC;
 
@@ -159,6 +160,7 @@ public class SemanticWebEngine {
 			this.infoDC = new InfomedDataConverter();
 			
 			sources = getSources();
+			
 		}
 		
 		if(s.contentEquals("user")){
@@ -207,6 +209,24 @@ public class SemanticWebEngine {
 		
 //		infarModel.add(dbsWithoutMappings.get("www.infarmed.pt"));
 //		infoModel.add(dbsWithoutMappings.get("www.infomed.pt"));
+	}
+	
+	public void getInfoByClass(String filename){
+		
+		for(String src: sources){
+			String q = "select * where {?s ?p ?o . ?s a ?prod. FILTER regex(?prod, '" + src + "/Medicine', 'i') }";
+			Query query = QueryFactory.create(q);
+			QueryExecution qexec = QueryExecutionFactory.create(query, dbInitialModel);
+			ResultSet results = qexec.execSelect();
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(new File(src + filename + ".txt"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			ResultSetFormatter.out(fos, results);
+			qexec.close();
+		}
 	}
 	
 	/* ---- Setters ---- */
@@ -1105,7 +1125,6 @@ public class SemanticWebEngine {
 			e.printStackTrace();
 		}
 		ResultSetFormatter.out(fos, results);
-		
 		qexec.close();
 		
 		return result;
@@ -2390,12 +2409,11 @@ public class SemanticWebEngine {
 			s = qs.get("s").toString();
 			s1 = qs.get("s1").toString();
 			
-			
 			if(!toKeep.contains(s) && !toDelete.contains(s)){
 				toKeep.add(s);
 				toDelete.add(s1);
 			}
-			if(toKeep.contains(s)){
+			else if(toKeep.contains(s)){
 				toDelete.add(s1);
 			}
 		}
